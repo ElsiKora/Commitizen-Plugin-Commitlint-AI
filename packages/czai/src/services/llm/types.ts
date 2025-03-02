@@ -24,16 +24,20 @@ export type CommitConfig = {
 
 export type LLMPromptContext = {
   typeEnum?: string[];
+  typeDescription?: string;
   typeDescriptions?: Record<string, { description: string; emoji?: string; title?: string }>;
   caseFnOptions?: string[];
   headerMaxLength?: number;
   headerMinLength?: number;
+  scopeDescription?: string;
   subject: {
+    description?: string;
     case?: string[];
     maxLength?: number;
     minLength?: number;
   };
   body?: {
+    description?: string;
     maxLength?: number;
     minLength?: number;
     leadingBlank?: boolean;

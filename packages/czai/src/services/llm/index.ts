@@ -12,8 +12,26 @@ export * from './types.js';
 export { getLLMConfig, setLLMConfig } from './config.js';
 
 export async function selectLLMProvider(inquirer: any): Promise<void> {
-  // If we already have a config, return
-  if (getLLMConfig()) return;
+  // Check if we already have a config
+  const existingConfig = getLLMConfig();
+  
+  if (existingConfig) {
+    const { useExisting } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'useExisting',
+        message: `Use existing ${existingConfig.provider === 'openai' ? 'OpenAI' : 'Anthropic'} configuration?`,
+        choices: [
+          { name: `Yes, use ${existingConfig.provider === 'openai' ? 'OpenAI' : 'Anthropic'} (${existingConfig.model})`, value: true },
+          { name: 'No, configure a different provider', value: false }
+        ]
+      }
+    ]);
+    
+    if (useExisting) {
+      return;
+    }
+  }
   
   const { provider } = await inquirer.prompt([
     {
@@ -88,9 +106,26 @@ export async function generateCommitMessage(context: LLMPromptContext): Promise<
   
   // Get git diff for better context
   try {
+    // Get staged files for scope inference
     const { stdout: stagedFiles } = await execAsync('git diff --name-only --cached');
     context.files = stagedFiles;
     
+    // Get directory structure for better scope inference
+    if (stagedFiles.trim()) {
+      const directories = stagedFiles
+        .split('\n')
+        .filter(Boolean)
+        .map(file => {
+          const parts = file.split('/');
+          return parts.length > 1 ? parts[0] : 'root';
+        })
+        .filter((v, i, a) => a.indexOf(v) === i) // Remove duplicates
+        .join(', ');
+      
+      context.files += `\n\nModified directories: ${directories}`;
+    }
+    
+    // Get the diff for content analysis
     const { stdout: diff } = await execAsync('git diff --cached');
     context.diff = diff;
   } catch (error) {

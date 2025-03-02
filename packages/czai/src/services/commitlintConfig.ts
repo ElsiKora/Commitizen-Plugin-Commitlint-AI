@@ -18,8 +18,16 @@ export function extractLLMPromptContext(
   }
 
   // Extract type descriptions from prompt config
-  if (prompt.questions?.type?.enum) {
-    context.typeDescriptions = prompt.questions.type.enum;
+  if (prompt.questions?.type) {
+    // Get the type description
+    if (prompt.questions.type.description) {
+      context.typeDescription = prompt.questions.type.description;
+    }
+    
+    // Get the enum descriptions
+    if (prompt.questions.type.enum) {
+      context.typeDescriptions = prompt.questions.type.enum;
+    }
   }
 
   // Extract case function options for subject
@@ -28,6 +36,15 @@ export function extractLLMPromptContext(
     if (subjectCaseRule && subjectCaseRule.length >= 3 && Array.isArray(subjectCaseRule[2])) {
       context.subject.case = subjectCaseRule[2] as string[];
     }
+  }
+  
+  // Extract scope and subject descriptions from prompt config
+  if (prompt.questions?.scope?.description) {
+    context.scopeDescription = prompt.questions.scope.description;
+  }
+  
+  if (prompt.questions?.subject?.description) {
+    context.subject.description = prompt.questions.subject.description;
   }
 
   // Extract header max length

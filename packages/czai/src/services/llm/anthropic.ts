@@ -33,6 +33,14 @@ The commit should follow this format:
 Available types:
 ${typeOptions}
 
+Scope guidelines:
+- The scope should represent the area of the codebase being modified
+- If the changes affect multiple areas, use a comma-separated list or select the most significant area
+- If unsure, use "global" as the scope
+- If the scope is not relevant, it can be omitted
+- Analyze the changed files and determine the most appropriate scope based on directories, modules or components
+- Scopes are usually short (one or two words) and lowercase
+
 Subject constraints:
 ${context.subject.case ? '- Case style: ' + context.subject.case.join(', ') : ''}
 ${context.subject.maxLength ? '- Max length: ' + context.subject.maxLength + ' characters' : ''}

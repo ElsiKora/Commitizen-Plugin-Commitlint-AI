@@ -58,6 +58,7 @@
 		"word-wrap": "^1.2.5"
 	},
 	"devDependencies": {
+		"@anthropic-ai/sdk": "^0.39.0",
 		"@commitlint/config-conventional": "^19.7.1",
 		"@elsikora/commitizen-plugin-commitlint-ai": "file:packages/czai",
 		"@elsikora/eslint-config": "^3.3.4",
