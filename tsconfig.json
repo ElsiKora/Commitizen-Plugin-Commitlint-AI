@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["es2022"],
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"strict": true,
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"isolatedModules": true,
+		"skipLibCheck": true,
+		"downlevelIteration": true,
+		"composite": true,
+		"rootDir": "./src",
+		"outDir": "./lib"
+	},
+	"include": ["./src"],
+	"exclude": ["./src/**/*.test.ts", "./src/**/*-test.ts", "./lib/**/*"],
+	"references": [{ "path": "../cli" }]
+}

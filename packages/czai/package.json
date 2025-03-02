@@ -1,0 +1,89 @@
+{
+	"name": "@elsikora/cfommitizen-plugin-commitlint-ai",
+	"version": "19.6.1",
+	"description": "Commitizen adapter using the commitlint.config.js",
+	"keywords": [
+		"conventional-changelog",
+		"commitlint",
+		"cz",
+		"commitizen",
+		"cz-commitlint"
+	],
+	"homepage": "https://commitlint.js.org/",
+	"bugs": {
+		"url": "https://github.com/conventional-changelog/commitlint/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/conventional-changelog/commitlint.git",
+		"directory": "@commitlint/cz-commitlint"
+	},
+	"license": "MIT",
+	"author": "ElsiKora",
+	"type": "module",
+	"exports": {
+		"import": "./dist/esm/index.js",
+		"require": "./index.cjs"
+	},
+	"main": "./lib/index.js",
+	"files": [
+		"index.cjs",
+		"lib"
+	],
+	"scripts": {
+		"commit": "git-cz",
+		"format": "prettier --check .",
+		"format:fix": "prettier --write .",
+		"lint": "eslint ./",
+		"lint:all": "npm run lint && npm run lint:types",
+		"lint:all:fix": "npm run lint:fix && npm run lint:types:fix",
+		"lint:fix": "eslint --fix ./",
+		"lint:types": "tsc --noEmit",
+		"lint:types:fix": "tsc --noEmit --skipLibCheck",
+		"release": "semantic-release"
+	},
+	"config": {
+		"commitizen": {
+			"path": "@elsikora/commitizen-plugin-commitlint-ai"
+		}
+	},
+	"dependencies": {
+		"@commitlint/ensure": "^19.5.0",
+		"@commitlint/load": "^19.6.1",
+		"@commitlint/types": "^19.5.0",
+		"@rollup/plugin-typescript": "^12.1.2",
+		"chalk": "^5.4.1",
+		"lodash.isplainobject": "^4.0.6",
+		"rollup": "^4.34.9",
+		"word-wrap": "^1.2.5"
+	},
+	"devDependencies": {
+		"@elsikora/commitizen-plugin-commitlint-ai": "file:packages/czai",
+		"@elsikora/eslint-config": "^3.3.4",
+		"@saithodev/semantic-release-backmerge": "^4.0.1",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/commit-analyzer": "^13.0.1",
+		"@semantic-release/git": "^10.0.1",
+		"@semantic-release/github": "^11.0.1",
+		"@semantic-release/npm": "^12.0.1",
+		"@semantic-release/release-notes-generator": "^14.0.3",
+		"@types/inquirer": "^9.0.7",
+		"@types/lodash.isfunction": "^3.0.9",
+		"@types/lodash.isplainobject": "^4.0.9",
+		"commitizen": "^4.3.1",
+		"eslint": "^9.21.0",
+		"eslint-plugin-check-file": "^3.1.0",
+		"eslint-plugin-n": "^17.16.1",
+		"lodash.isfunction": "^3.0.9",
+		"prettier": "^3.5.2",
+		"semantic-release": "^24.2.3"
+	},
+	"peerDependencies": {
+		"commitizen": "^4.0.3",
+		"inquirer": "^9.0.0"
+	},
+	"engines": {
+		"node": ">=v18"
+	},
+	"engineStrict": true
+}
