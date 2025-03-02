@@ -1,24 +1,24 @@
-import type { CommitConfig, LLMConfig, LLMPromptContext } from "./types.js";
+/* eslint-disable @elsikora-typescript/no-unsafe-assignment,@elsikora-typescript/no-unsafe-call,@elsikora-typescript/no-unsafe-member-access,@elsikora-typescript/restrict-template-expressions */
+import type { CommitConfig, LLMConfig, LLMConfigStorage, LLMPromptContext, LLMProvider } from "./types.js";
 
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
-import Anthropic from "@anthropic-ai/sdk";
 import chalk from "chalk";
-import OpenAI from "openai";
 
 import { generateCommitWithAnthropic } from "./anthropic.js";
 import { getLLMConfig, setLLMConfig } from "./config.js";
-import { ANTHROPIC_MODEL_CHOICES, getAnthropicModels, getOpenAIModels, OPENAI_MODEL_CHOICES } from "./models.js";
+import { ANTHROPIC_MODEL_CHOICES, OPENAI_MODEL_CHOICES } from "./models.js";
 import { generateCommitWithOpenAI } from "./openai.js";
 
-const execAsync = promisify(exec);
+// @ts-ignore
+const execAsync: (argument1: string) => Promise<any> = promisify(exec);
 
 export { getLLMConfig, setLLMConfig } from "./config.js";
 export type * from "./types.js";
 
 export async function generateCommitMessage(context: LLMPromptContext): Promise<CommitConfig> {
-	const config = getLLMConfig();
+	const config: ({ apiKey: string } & LLMConfigStorage) | null = getLLMConfig();
 
 	if (!config) {
 		throw new Error("LLM not configured. Please run selectLLMProvider first.");
@@ -37,27 +37,28 @@ export async function generateCommitMessage(context: LLMPromptContext): Promise<
 	// Get git diff for better context
 	try {
 		// Get staged files for scope inference
-		const { stdout: stagedFiles } = await execAsync("git diff --name-only --cached");
+		const { stdout: stagedFiles }: any = await execAsync("git diff --name-only --cached");
 		context.files = stagedFiles;
 
 		// Get directory structure for better scope inference
 		if (stagedFiles.trim()) {
-			const directories = stagedFiles
+			const directories: any = stagedFiles
 				.split("\n")
 				.filter(Boolean)
-				.map((file) => {
-					const parts = file.split("/");
+				.map((file: string) => {
+					const parts: Array<string> = file.split("/");
 
 					return parts.length > 1 ? parts[0] : "root";
 				})
-				.filter((v, index, a) => a.indexOf(v) === index) // Remove duplicates
+				.filter((v: any, index: any, a: any) => a.indexOf(v) === index) // Remove duplicates
 				.join(", ");
 
+			// eslint-disable-next-line @elsikora-typescript/restrict-plus-operands
 			context.files += `\n\nModified directories: ${directories}`;
 		}
 
 		// Get the diff for content analysis
-		const { stdout: diff } = await execAsync("git diff --cached");
+		const { stdout: diff }: any = await execAsync("git diff --cached");
 		context.diff = diff;
 	} catch {
 		console.warn("Failed to get git diff information, continuing without it");
@@ -74,9 +75,10 @@ export async function generateCommitMessage(context: LLMPromptContext): Promise<
 	}
 }
 
+// eslint-disable-next-line @elsikora-typescript/explicit-module-boundary-types
 export async function selectLLMProvider(inquirer: any): Promise<void> {
 	// Check if we have a partial config
-	const existingConfig = getLLMConfig();
+	const existingConfig: ({ apiKey: string } & LLMConfigStorage) | null = getLLMConfig();
 
 	let provider: string;
 	let model: string;
@@ -86,15 +88,17 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 		// We have a saved config
 		provider = existingConfig.provider;
 		model = existingConfig.model;
-		mode = existingConfig.mode || "auto";
+		mode = existingConfig.mode ?? "auto";
 
-		const modelDisplay = model ? model : "[not set]";
-		const providerDisplay = provider ? (provider === "openai" ? "OpenAI" : "Anthropic") : "[not set]";
-		const modeDisplay = mode || "auto";
+		const modelDisplay: string = model ?? "[not set]";
+		// eslint-disable-next-line @elsikora-sonar/no-nested-conditional
+		const providerDisplay: string = provider ? (provider === "openai" ? "OpenAI" : "Anthropic") : "[not set]";
+		const modeDisplay: string = mode || "auto";
 
 		// First check if we want to use the existing config at all
-		const { useExisting } = await inquirer.prompt([
+		const { useExisting }: any = await inquirer.prompt([
 			{
+				// eslint-disable-next-line @elsikora-typescript/naming-convention
 				default: true,
 				message: `Use saved configuration? (Provider: ${providerDisplay}, Model: ${modelDisplay}, Mode: ${modeDisplay})`,
 				name: "useExisting",
@@ -117,7 +121,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 				console.log(chalk.yellow("No model saved in configuration. Please select a model."));
 
 				if (provider === "openai") {
-					const response = await inquirer.prompt([
+					const response: any = await inquirer.prompt([
 						{
 							choices: OPENAI_MODEL_CHOICES,
 							message: "Select an OpenAI model:",
@@ -127,11 +131,12 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 					]);
 
 					if (response.model === "custom") {
-						const customResponse = await inquirer.prompt([
+						const customResponse: any = await inquirer.prompt([
 							{
 								message: "Enter the OpenAI model name:",
 								name: "customModel",
 								type: "input",
+								// eslint-disable-next-line @elsikora-typescript/explicit-function-return-type
 								validate: (input: string) => {
 									if (!input) return "Model name is required";
 
@@ -144,7 +149,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 						model = response.model;
 					}
 				} else if (provider === "anthropic") {
-					const response = await inquirer.prompt([
+					const response: any = await inquirer.prompt([
 						{
 							choices: ANTHROPIC_MODEL_CHOICES,
 							message: "Select an Anthropic model:",
@@ -154,11 +159,12 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 					]);
 
 					if (response.model === "custom") {
-						const customResponse = await inquirer.prompt([
+						const customResponse: any = await inquirer.prompt([
 							{
 								message: "Enter the Anthropic model name:",
 								name: "customModel",
 								type: "input",
+								// eslint-disable-next-line @elsikora-typescript/explicit-function-return-type
 								validate: (input: string) => {
 									if (!input) return "Model name is required";
 
@@ -178,7 +184,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 				// Save the updated config to file with the selected model
 				setLLMConfig({
 					apiKey: existingConfig.apiKey || "",
-					mode: existingConfig.mode || "auto",
+					mode: existingConfig.mode ?? "auto",
 					model,
 					provider: existingConfig.provider,
 				});
@@ -191,7 +197,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 					apiKey: "",
 					mode: "manual",
 					model: model || "",
-					provider: provider || "",
+					provider: (provider as LLMProvider) || "",
 				});
 
 				console.log(chalk.green(`✅ Manual commit mode configured successfully!`));
@@ -207,35 +213,36 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 				return;
 			} else {
 				// Double-check environment variables again
-				const environmentVariableName_ = provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
-				let environmentApiKey_ = null;
+				const environmentVariableName: string = provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+				let environmentApiKey: string | undefined;
 
 				try {
-					if (typeof process !== "undefined" && process && process.env) {
-						environmentApiKey_ = provider === "openai" ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY;
+					if (typeof process !== "undefined" && process?.env) {
+						environmentApiKey = provider === "openai" ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY;
 					}
 				} catch {
 					// Ignore error
 				}
 
-				if (environmentApiKey_) {
+				if (environmentApiKey) {
 					// Found API key in environment variable
-					console.log(chalk.green(`✅ Found ${provider === "openai" ? "OpenAI" : "Anthropic"} API key in environment variable ${environmentVariableName_}`));
-					existingConfig.apiKey = environmentApiKey_;
+					console.log(chalk.green(`✅ Found ${provider === "openai" ? "OpenAI" : "Anthropic"} API key in environment variable ${environmentVariableName}`));
+					existingConfig.apiKey = environmentApiKey;
 					setLLMConfig(existingConfig);
 
 					return;
 				}
 
 				console.log(chalk.yellow(`No ${provider === "openai" ? "OpenAI" : "Anthropic"} API key found in environment.`));
-				console.log(chalk.blue(`Tip: Set the ${environmentVariableName_} environment variable to avoid entering your API key each time.`));
-				console.log(chalk.blue(`You can create a .env file in your project root with ${environmentVariableName_}=your-key-here`));
+				console.log(chalk.blue(`Tip: Set the ${environmentVariableName} environment variable to avoid entering your API key each time.`));
+				console.log(chalk.blue(`You can create a .env file in your project root with ${environmentVariableName}=your-key-here`));
 
-				const { apiKey } = await inquirer.prompt([
+				const { apiKey }: any = await inquirer.prompt([
 					{
 						message: `Enter your ${provider === "openai" ? "OpenAI" : "Anthropic"} API key:`,
 						name: "apiKey",
 						type: "password",
+						// eslint-disable-next-line @elsikora-typescript/explicit-function-return-type,@elsikora-sonar/function-return-type
 						validate: (input: string) => {
 							if (!input) return "API key is required";
 
@@ -249,6 +256,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 				]);
 
 				// Update the config with the API key for this session only
+				// @ts-ignore
 				const config: LLMConfig = { apiKey, mode, model, provider };
 				setLLMConfig(config);
 
@@ -264,7 +272,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 	// No config or user wants to change it, run the full setup
 
 	// First ask for commit mode preference
-	const modeResponse = await inquirer.prompt([
+	const modeResponse: any = await inquirer.prompt([
 		{
 			choices: [
 				{ name: "AI-powered (auto)", value: "auto" },
@@ -287,6 +295,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 			apiKey: "",
 			mode: "manual",
 			model: "none",
+			// @ts-ignore
 			provider: "none",
 		});
 
@@ -296,7 +305,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 	}
 
 	// Only proceed with provider/model selection if in auto mode
-	const providerResponse = await inquirer.prompt([
+	const providerResponse: any = await inquirer.prompt([
 		{
 			choices: [
 				{ name: "OpenAI", value: "openai" },
@@ -312,11 +321,11 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 
 	// Check if API key is in environment variables
 	let environmentApiKey: null | string = null;
-	const environmentVariableName = provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+	const environmentVariableName: string = provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
 
 	try {
-		if (typeof process !== "undefined" && process && process.env) {
-			environmentApiKey = provider === "openai" ? process.env.OPENAI_API_KEY || null : process.env.ANTHROPIC_API_KEY || null;
+		if (typeof process !== "undefined" && process?.env) {
+			environmentApiKey = provider === "openai" ? (process.env.OPENAI_API_KEY ?? null) : (process.env.ANTHROPIC_API_KEY ?? null);
 		}
 	} catch (error) {
 		console.warn("Error accessing environment variables:", error);
@@ -331,11 +340,12 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 		console.log(chalk.yellow(`No ${provider === "openai" ? "OpenAI" : "Anthropic"} API key found in environment.`));
 		console.log(chalk.blue(`Tip: Set the ${environmentVariableName} environment variable to avoid entering your API key each time.`));
 
-		const response = await inquirer.prompt([
+		const response: any = await inquirer.prompt([
 			{
 				message: `Enter your ${provider === "openai" ? "OpenAI" : "Anthropic"} API key:`,
 				name: "apiKey",
 				type: "password",
+				// eslint-disable-next-line @elsikora-typescript/explicit-function-return-type,@elsikora-sonar/function-return-type
 				validate: (input: string) => {
 					if (!input) return "API key is required";
 
@@ -354,7 +364,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 	// Now get models based on provider
 	if (provider === "openai") {
 		// Display model selection
-		const response = await inquirer.prompt([
+		const response: any = await inquirer.prompt([
 			{
 				choices: OPENAI_MODEL_CHOICES,
 				message: "Select an OpenAI model:",
@@ -365,11 +375,12 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 
 		// If user selected custom, ask for model name
 		if (response.model === "custom") {
-			const customResponse = await inquirer.prompt([
+			const customResponse: any = await inquirer.prompt([
 				{
 					message: "Enter the OpenAI model name:",
 					name: "customModel",
 					type: "input",
+					// eslint-disable-next-line @elsikora-typescript/explicit-function-return-type
 					validate: (input: string) => {
 						if (!input) return "Model name is required";
 
@@ -383,7 +394,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 		}
 	} else if (provider === "anthropic") {
 		// For Anthropic, use hardcoded list
-		const response = await inquirer.prompt([
+		const response: any = await inquirer.prompt([
 			{
 				choices: ANTHROPIC_MODEL_CHOICES,
 				message: "Select an Anthropic model:",
@@ -394,11 +405,12 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 
 		// If user selected custom, ask for model name
 		if (response.model === "custom") {
-			const customResponse = await inquirer.prompt([
+			const customResponse: any = await inquirer.prompt([
 				{
 					message: "Enter the Anthropic model name:",
 					name: "customModel",
 					type: "input",
+					// eslint-disable-next-line @elsikora-typescript/explicit-function-return-type
 					validate: (input: string) => {
 						if (!input) return "Model name is required";
 
@@ -415,6 +427,7 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 	}
 
 	// Save the complete config
+	// @ts-ignore
 	const config: LLMConfig = { apiKey, mode, model, provider };
 	setLLMConfig(config);
 

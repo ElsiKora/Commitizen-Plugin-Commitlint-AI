@@ -1,12 +1,11 @@
 {
 	"compilerOptions": {
-		"target": "ES2022",
-		"lib": ["es2022"],
+		"target": "ESNext",
 		"declaration": true,
 		"declarationMap": true,
 		"sourceMap": true,
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"allowSyntheticDefaultImports": true,
@@ -22,9 +21,8 @@
 		"downlevelIteration": true,
 		"composite": true,
 		"rootDir": "./src",
-		"outDir": "./lib"
+		"outDir": "./dist"
 	},
 	"include": ["./src"],
-	"exclude": ["./src/**/*.test.ts", "./src/**/*-test.ts", "./lib/**/*"],
-	"references": [{ "path": "../cli" }]
+	"exclude": ["node_modules", "./dist/**/*"]
 }

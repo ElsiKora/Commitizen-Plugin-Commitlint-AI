@@ -16,7 +16,7 @@ export default {
 		provider: "GitHub",
 	},
 	commitlint: {
-		isEnabled: false,
+		isEnabled: true,
 	},
 	eslint: {
 		features: ["prettier", "typescript", "javascript", "sonar", "unicorn", "perfectionist", "json", "yaml", "checkFile", "packageJson", "node", "regexp", "stylistic"],
@@ -36,7 +36,8 @@ export default {
 		year: 2025,
 	},
 	"lint-staged": {
-		isEnabled: false,
+		features: ["eslint", "prettier"],
+		isEnabled: true,
 	},
 	prettier: {
 		isEnabled: true,

@@ -1,24 +1,26 @@
+/* eslint-disable @elsikora-typescript/restrict-plus-operands */
 import type { CommitConfig, LLMPromptContext } from "./types.js";
 
 import OpenAI from "openai";
 
 export async function generateCommitWithOpenAI(apiKey: string, model: string, context: LLMPromptContext): Promise<CommitConfig> {
-	const openai = new OpenAI({
+	const openai: OpenAI = new OpenAI({
 		apiKey: apiKey,
 	});
 
-	const typeOptions =
+	const typeOptions: string =
 		context.typeEnum
-			?.map((type) => {
-				const description = context.typeDescriptions?.[type]?.description || "";
-				const emoji = context.typeDescriptions?.[type]?.emoji || "";
-				const title = context.typeDescriptions?.[type]?.title || "";
+			?.map((type: string) => {
+				const description: string = context.typeDescriptions?.[type]?.description ?? "";
+				const emoji: string = context.typeDescriptions?.[type]?.emoji ?? "";
+				const title: string = context.typeDescriptions?.[type]?.title ?? "";
 
+				// eslint-disable-next-line @elsikora-sonar/no-nested-template-literals
 				return `${type}${emoji ? ` (${emoji})` : ""}: ${description}${title ? ` (${title})` : ""}`;
 			})
-			.join("\n") || "";
+			.join("\n") ?? "";
 
-	const systemPrompt = `You are a commit message generator. Based on the git changes, generate a conventional commit message that follows the commit conventions.
+	const systemPrompt: string = `You are a commit message generator. Based on the git changes, generate a conventional commit message that follows the commit conventions.
   
 The commit should follow this format:
 <type>[(scope)]: <subject>
@@ -58,14 +60,14 @@ Return a JSON object with these fields:
   "references": ["list of other references"]
 }`;
 
-	const userPrompt = `Here are the changes to commit:
+	const userPrompt: string = `Here are the changes to commit:
 ${context.diff ? `Diff:\n${context.diff}\n` : ""}
 ${context.files ? `Files changed:\n${context.files}` : ""}
 
 Based on these changes, generate an appropriate commit message following the conventions.`;
 
 	try {
-		const response = await openai.chat.completions.create({
+		const response: any = await openai.chat.completions.create({
 			messages: [
 				{ content: systemPrompt, role: "system" },
 				{ content: userPrompt, role: "user" },
@@ -74,12 +76,14 @@ Based on these changes, generate an appropriate commit message following the con
 			response_format: { type: "json_object" },
 		});
 
-		const content = response.choices[0]?.message.content;
+		// eslint-disable-next-line @elsikora-typescript/no-unsafe-member-access,@elsikora-typescript/no-unsafe-assignment
+		const content: any = response.choices[0]?.message.content;
 
 		if (!content) {
 			throw new Error("Empty response from OpenAI");
 		}
 
+		// eslint-disable-next-line @elsikora-typescript/no-unsafe-argument
 		return JSON.parse(content) as CommitConfig;
 	} catch (error) {
 		console.error("Error generating commit with OpenAI:", error);

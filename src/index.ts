@@ -1,6 +1,7 @@
 import type { Answers, DistinctQuestion } from "inquirer";
 
 import { existsSync } from "node:fs";
+// eslint-disable-next-line @elsikora-unicorn/import-style
 import { join } from "node:path";
 
 import load from "@commitlint/load";
@@ -18,9 +19,10 @@ try {
 	// Silently continue if .env file is not found or cannot be loaded
 }
 
+// eslint-disable-next-line @elsikora-typescript/naming-convention
 type Commit = (message: string) => void;
 
-import type { CommitMode } from "./services/llm/types.js";
+import type { CommitMode, LLMConfigStorage } from "./services/llm/types.js";
 
 import { getLLMConfig } from "./services/llm/index.js";
 
@@ -28,19 +30,6 @@ import { getLLMConfig } from "./services/llm/index.js";
 const getCommitMode = (): CommitMode => {
 	try {
 		// First check environment variable (highest priority)
-		if (process?.env) {
-			if (process.env.COMMITIZEN_AI_MANUAL === "true") {
-				return "manual";
-			}
-
-			if (process.env.COMMITIZEN_AI_MODE === "manual") {
-				return "manual";
-			}
-
-			if (process.env.COMMITIZEN_AI_MODE === "auto") {
-				return "auto";
-			}
-		}
 
 		// Next check for manual flag file
 		if (existsSync(join("./.elsikora", "manual"))) {
@@ -48,11 +37,10 @@ const getCommitMode = (): CommitMode => {
 		}
 
 		// Finally check config file
-		const config = getLLMConfig();
+		const config: ({ apiKey: string } & LLMConfigStorage) | null = getLLMConfig();
 
 		if (
-			config &&
-			config.mode && // Validation is now done in config.ts to avoid duplicate messages
+			config?.mode && // Validation is now done in config.ts to avoid duplicate messages
 			(config.mode === "auto" || config.mode === "manual")
 		) {
 			return config.mode;
@@ -72,25 +60,27 @@ const getCommitMode = (): CommitMode => {
  * @param commit callback to execute with complete commit message
  * @return {void}
  */
-export function prompter(
+export async function prompter(
 	inquirerIns: {
 		prompt(questions: Array<DistinctQuestion>): Promise<Answers>;
 	},
 	commit: Commit,
-): void {
-	load().then(({ prompt = {}, rules }) => {
+): Promise<void> {
+	// eslint-disable-next-line @elsikora-typescript/typedef
+	await load().then(async ({ prompt = {}, rules }) => {
 		// Use process (AI mode) unless manual mode is enabled
-		const commitMode = getCommitMode();
+		const commitMode: "auto" | "manual" = getCommitMode();
 
 		if (commitMode === "manual") {
 			console.log(chalk.blue("Using manual commit mode..."));
 			// Import manualProcess dynamically to avoid loading AI deps when not needed
-			import("./ManualProcess.js").then(({ default: manualProcess }) => {
-				manualProcess(rules, prompt, inquirerIns).then(commit);
+			// eslint-disable-next-line @elsikora-typescript/typedef
+			await import("./ManualProcess.js").then(async ({ default: manualProcess }) => {
+				await manualProcess(rules, prompt, inquirerIns).then(commit);
 			});
 		} else {
 			console.log(chalk.blue("Using AI-powered commit mode..."));
-			process(rules, prompt, inquirerIns).then(commit);
+			await process(rules, prompt, inquirerIns).then(commit);
 		}
 	});
 }

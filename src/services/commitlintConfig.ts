@@ -1,6 +1,10 @@
-import type { QualifiedRules, UserPromptConfig } from "@commitlint/types";
+/* eslint-disable @elsikora-typescript/no-magic-numbers,@elsikora-typescript/no-unsafe-member-access */
+import type { QualifiedRules, TargetCaseType, UserPromptConfig } from "@commitlint/types";
 
 import type { LLMPromptContext } from "./llm/types.js";
+
+// eslint-disable-next-line no-duplicate-imports
+import { RuleConfigSeverity } from "@commitlint/types";
 
 export function extractLLMPromptContext(rules: QualifiedRules, prompt: UserPromptConfig): LLMPromptContext {
 	const context: LLMPromptContext = {
@@ -8,8 +12,8 @@ export function extractLLMPromptContext(rules: QualifiedRules, prompt: UserPromp
 	};
 
 	// Extract type enum
-	if (rules["type-enum"] && rules["type-enum"][0] !== 0) {
-		const typeEnumRule = rules["type-enum"];
+	if (rules["type-enum"] && rules["type-enum"][0] !== RuleConfigSeverity.Disabled) {
+		const typeEnumRule: readonly [RuleConfigSeverity, "always" | "never", Array<string>] | readonly [RuleConfigSeverity.Disabled] | undefined = rules["type-enum"];
 
 		if (typeEnumRule && typeEnumRule.length >= 3 && Array.isArray(typeEnumRule[2])) {
 			context.typeEnum = typeEnumRule[2];
@@ -25,13 +29,29 @@ export function extractLLMPromptContext(rules: QualifiedRules, prompt: UserPromp
 
 		// Get the enum descriptions
 		if (prompt.questions.type.enum) {
+			// @ts-ignore
 			context.typeDescriptions = prompt.questions.type.enum;
 		}
 	}
 
 	// Extract case function options for subject
-	if (rules["subject-case"] && rules["subject-case"][0] !== 0) {
-		const subjectCaseRule = rules["subject-case"];
+	if (rules["subject-case"] && rules["subject-case"][0] !== RuleConfigSeverity.Disabled) {
+		const subjectCaseRule:
+			| readonly [RuleConfigSeverity, "always" | "never", "camel-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "kebab-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "lower-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "lowercase"]
+			| readonly [RuleConfigSeverity, "always" | "never", "lowerCase"]
+			| readonly [RuleConfigSeverity, "always" | "never", "pascal-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "sentence-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "sentencecase"]
+			| readonly [RuleConfigSeverity, "always" | "never", "snake-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "start-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "upper-case"]
+			| readonly [RuleConfigSeverity, "always" | "never", "uppercase"]
+			| readonly [RuleConfigSeverity, "always" | "never", Array<TargetCaseType>]
+			| readonly [RuleConfigSeverity.Disabled]
+			| undefined = rules["subject-case"];
 
 		if (subjectCaseRule && subjectCaseRule.length >= 3 && Array.isArray(subjectCaseRule[2])) {
 			context.subject.case = subjectCaseRule[2] as Array<string>;
@@ -48,8 +68,8 @@ export function extractLLMPromptContext(rules: QualifiedRules, prompt: UserPromp
 	}
 
 	// Extract header max length
-	if (rules.header && rules.header[0] !== 0) {
-		const headerRule = rules.header;
+	if (rules.header && rules.header[0] !== RuleConfigSeverity.Disabled) {
+		const headerRule: any = rules.header;
 
 		if (headerRule && headerRule.length >= 3) {
 			if (typeof headerRule[2] === "object" && headerRule[2] !== null) {
@@ -71,8 +91,8 @@ export function extractLLMPromptContext(rules: QualifiedRules, prompt: UserPromp
 	}
 
 	// Extract subject max/min length
-	if (rules.subject && rules.subject[0] !== 0) {
-		const subjectRule = rules.subject;
+	if (rules.subject && rules.subject[0] !== RuleConfigSeverity.Disabled) {
+		const subjectRule: any = rules.subject;
 
 		if (subjectRule && subjectRule.length >= 3) {
 			if (typeof subjectRule[2] === "object" && subjectRule[2] !== null) {
@@ -97,8 +117,8 @@ export function extractLLMPromptContext(rules: QualifiedRules, prompt: UserPromp
 	context.body = {};
 
 	// Body max/min length
-	if (rules.body && rules.body[0] !== 0) {
-		const bodyRule = rules.body;
+	if (rules.body && rules.body[0] !== RuleConfigSeverity.Disabled) {
+		const bodyRule: any = rules.body;
 
 		if (bodyRule && bodyRule.length >= 3) {
 			if (typeof bodyRule[2] === "object" && bodyRule[2] !== null) {
@@ -120,8 +140,8 @@ export function extractLLMPromptContext(rules: QualifiedRules, prompt: UserPromp
 	}
 
 	// Body-leading-blank
-	if (rules["body-leading-blank"] && rules["body-leading-blank"][0] !== 0) {
-		const bodyLeadingBlankRule = rules["body-leading-blank"];
+	if (rules["body-leading-blank"] && rules["body-leading-blank"][0] !== RuleConfigSeverity.Disabled) {
+		const bodyLeadingBlankRule: readonly [RuleConfigSeverity, "always" | "never"] | readonly [RuleConfigSeverity.Disabled] | undefined = rules["body-leading-blank"];
 
 		if (bodyLeadingBlankRule && bodyLeadingBlankRule.length >= 2) {
 			context.body.leadingBlank = bodyLeadingBlankRule[1] === "always";

@@ -1,5 +1,4 @@
-export type AnthropicModel = string;
-
+/* eslint-disable @elsikora-typescript/naming-convention */
 export type CommitConfig = {
 	body?: string;
 	breakingBody?: string;
@@ -22,6 +21,7 @@ export type LLMConfigStorage = {
 	provider: LLMProvider;
 };
 
+// eslint-disable-next-line @elsikora-sonar/redundant-type-aliases
 export type LLMModel = string; // Any model name
 
 export type LLMPromptContext = {
@@ -49,6 +49,3 @@ export type LLMPromptContext = {
 };
 
 export type LLMProvider = "anthropic" | "openai";
-
-// These are just for type definitions - the actual model lists are defined in models.ts
-export type OpenAIModel = string;

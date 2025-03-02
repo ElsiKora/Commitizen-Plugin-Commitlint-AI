@@ -12,8 +12,9 @@ export default function getLeadingBlankFunction(rule?: Rule): (input: string) =>
 		return (input: string): string => input;
 	}
 
+	// eslint-disable-next-line @elsikora-unicorn/consistent-function-scoping
 	const remove = (input: string): string => {
-		const fragments = input.split("\n");
+		const fragments: Array<string> = input.split("\n");
 
 		while (fragments.length > 0 && fragments[0] === "") {
 			fragments.shift();
@@ -22,8 +23,9 @@ export default function getLeadingBlankFunction(rule?: Rule): (input: string) =>
 		return fragments.join("\n");
 	};
 
+	// eslint-disable-next-line @elsikora-unicorn/consistent-function-scoping
 	const lead = (input: string): string => {
-		const fragments = input.split("\n");
+		const fragments: Array<string> = input.split("\n");
 
 		return fragments[0] === "" ? input : ["", ...fragments].join("\n");
 	};

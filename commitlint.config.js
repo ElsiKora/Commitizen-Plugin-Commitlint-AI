@@ -13,7 +13,7 @@ const Configuration = {
 		},
 		questions: {
 			type: {
-				description: "Select t 2he type of change that you're committing:",
+				description: "Select the type of change that you're committing:",
 				enum: {
 					build: {
 						description: "🛠 Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)",

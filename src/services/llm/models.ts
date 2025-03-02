@@ -3,7 +3,17 @@
  */
 
 // OpenAI Models
-export const OPENAI_MODELS = {
+export const OPENAI_MODELS: {
+	GPT35_TURBO: string;
+	GPT4: string;
+	GPT4_TURBO: string;
+	GPT45_PREVIEW: string;
+	GPT4O: string;
+	GPT4O_MINI: string;
+	O1: string;
+	O1_MINI: string;
+	O3_MINI: string;
+} = {
 	// GPT-3.5 models
 	GPT35_TURBO: "gpt-3.5-turbo",
 	// Legacy GPT-4 models
@@ -25,7 +35,15 @@ export const OPENAI_MODELS = {
 };
 
 // Anthropic Models
-export const ANTHROPIC_MODELS = {
+export const ANTHROPIC_MODELS: {
+	CLAUDE_3_HAIKU: string;
+	CLAUDE_3_OPUS: string;
+	CLAUDE_3_SONNET: string;
+	CLAUDE_35_HAIKU: string;
+	CLAUDE_35_SONNET: string;
+	CLAUDE_35_SONNET_V2: string;
+	CLAUDE_37_SONNET: string;
+} = {
 	CLAUDE_3_HAIKU: "claude-3-haiku-20240307",
 
 	// Claude 3 Family
@@ -41,7 +59,10 @@ export const ANTHROPIC_MODELS = {
 };
 
 // Model choices for OpenAI UI
-export const OPENAI_MODEL_CHOICES = [
+export const OPENAI_MODEL_CHOICES: Array<{
+	name: string;
+	value: string;
+}> = [
 	{ name: "GPT-4o", value: OPENAI_MODELS.GPT4O },
 	{ name: "GPT-4o Mini", value: OPENAI_MODELS.GPT4O_MINI },
 	{ name: "O1", value: OPENAI_MODELS.O1 },
@@ -55,7 +76,10 @@ export const OPENAI_MODEL_CHOICES = [
 ];
 
 // Model choices for Anthropic UI
-export const ANTHROPIC_MODEL_CHOICES = [
+export const ANTHROPIC_MODEL_CHOICES: Array<{
+	name: string;
+	value: string;
+}> = [
 	{ name: "Claude 3.7 Sonnet", value: ANTHROPIC_MODELS.CLAUDE_37_SONNET },
 	{ name: "Claude 3.5 Sonnet v2", value: ANTHROPIC_MODELS.CLAUDE_35_SONNET_V2 },
 	{ name: "Claude 3.5 Sonnet", value: ANTHROPIC_MODELS.CLAUDE_35_SONNET },

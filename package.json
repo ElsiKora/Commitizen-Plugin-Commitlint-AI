@@ -1,7 +1,7 @@
 {
 	"name": "@elsikora/commitizen-plugin-commitlint-ai",
-	"version": "19.6.1",
-	"description": "AI-powered Commitizen adapter using the commitlint.config.js",
+	"version": "1.0.0",
+	"description": "AI-powered Commitizen adapter with Commitlint integration",
 	"keywords": [
 		"conventional-changelog",
 		"commitlint",
@@ -16,14 +16,9 @@
 		"artificial-intelligence",
 		"commit-message"
 	],
-	"homepage": "https://commitlint.js.org/",
-	"bugs": {
-		"url": "https://github.com/conventional-changelog/commitlint/issues"
-	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/conventional-changelog/commitlint.git",
-		"directory": "@commitlint/cz-commitlint"
+		"url": "https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI"
 	},
 	"license": "MIT",
 	"author": "ElsiKora",
@@ -32,14 +27,12 @@
 		"import": "./dist/esm/index.js",
 		"require": "./index.cjs"
 	},
-	"main": "./lib/index.js",
 	"files": [
 		"index.cjs",
-		"lib",
 		"dist"
 	],
 	"scripts": {
-		"commit": "git-cz",
+		"commit": "cz",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
 		"lint": "eslint ./",
@@ -48,28 +41,31 @@
 		"lint:fix": "eslint --fix ./",
 		"lint:types": "tsc --noEmit",
 		"lint:types:fix": "tsc --noEmit --skipLibCheck",
+		"prepare": "husky",
 		"release": "semantic-release"
 	},
 	"config": {
 		"commitizen": {
-			"path": "./dist/cjs/index.cjs"
+			"path": "@commitlint/cz-commitlint"
 		}
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^0.19.0",
+		"@anthropic-ai/sdk": "^0.39.0",
 		"@commitlint/ensure": "^19.5.0",
 		"@commitlint/load": "^19.6.1",
 		"@commitlint/types": "^19.5.0",
 		"@rollup/plugin-typescript": "^12.1.2",
 		"chalk": "^5.4.1",
-		"dotenv": "^16.4.5",
+		"dotenv": "^16.4.7",
 		"lodash.isplainobject": "^4.0.6",
-		"openai": "^4.43.1",
+		"openai": "^4.86.1",
 		"rollup": "^4.34.9",
 		"word-wrap": "^1.2.5"
 	},
 	"devDependencies": {
-		"@elsikora/commitizen-plugin-commitlint-ai": "file:packages/czai",
+		"@commitlint/cli": "^19.7.1",
+		"@commitlint/config-conventional": "^19.7.1",
+		"@commitlint/cz-commitlint": "^19.6.1",
 		"@elsikora/eslint-config": "^3.3.4",
 		"@saithodev/semantic-release-backmerge": "^4.0.1",
 		"@semantic-release/changelog": "^6.0.3",
@@ -82,12 +78,16 @@
 		"@types/lodash.isfunction": "^3.0.9",
 		"@types/lodash.isplainobject": "^4.0.9",
 		"commitizen": "^4.3.1",
+		"conventional-changelog-conventionalcommits": "^8.0.0",
 		"eslint": "^9.21.0",
 		"eslint-plugin-check-file": "^3.1.0",
 		"eslint-plugin-n": "^17.16.1",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.4.3",
 		"lodash.isfunction": "^3.0.9",
 		"prettier": "^3.5.2",
-		"semantic-release": "^24.2.3"
+		"semantic-release": "^24.2.3",
+		"typescript": "^5.7.3"
 	},
 	"peerDependencies": {
 		"commitizen": "^4.0.3",

@@ -1,26 +1,30 @@
+/* eslint-disable @elsikora-typescript/restrict-plus-operands */
+
 import type { CommitConfig, LLMPromptContext } from "./types.js";
 
 import Anthropic from "@anthropic-ai/sdk";
 
 export async function generateCommitWithAnthropic(apiKey: string, model: string, context: LLMPromptContext): Promise<CommitConfig> {
-	const anthropic = new Anthropic({
+	const anthropic: Anthropic = new Anthropic({
 		apiKey: apiKey,
 	});
 
+	// eslint-disable-next-line @elsikora-typescript/typedef
 	const typeOptions =
 		context.typeEnum
-			?.map((type) => {
-				const description = context.typeDescriptions?.[type]?.description || "";
-				const emoji = context.typeDescriptions?.[type]?.emoji || "";
-				const title = context.typeDescriptions?.[type]?.title || "";
+			?.map((type: string) => {
+				const description: string = context.typeDescriptions?.[type]?.description ?? "";
+				const emoji: string = context.typeDescriptions?.[type]?.emoji ?? "";
+				const title: string = context.typeDescriptions?.[type]?.title ?? "";
 
+				// eslint-disable-next-line @elsikora-sonar/no-nested-template-literals
 				return `${type}${emoji ? ` (${emoji})` : ""}: ${description}${title ? ` (${title})` : ""}`;
 			})
-			.join("\n") || "";
+			.join("\n") ?? "";
 
-	const systemPrompt = `You are a commit message generator. Your task is to create a conventional commit message based on the git changes provided.`;
+	const systemPrompt: string = `You are a commit message generator. Your task is to create a conventional commit message based on the git changes provided.`;
 
-	const userPrompt = `I need you to generate a commit message for these changes:
+	const userPrompt: string = `I need you to generate a commit message for these changes:
 ${context.diff ? `Diff:\n${context.diff}\n` : ""}
 ${context.files ? `Files changed:\n${context.files}` : ""}
 
@@ -65,26 +69,30 @@ Return a JSON object with these fields:
 The JSON object should be parseable and follow the structure outlined above.`;
 
 	try {
-		const response = await anthropic.messages.create({
+		const response: any = await anthropic.messages.create({
+			// eslint-disable-next-line @elsikora-typescript/no-magic-numbers
 			max_tokens: 1000,
 			messages: [{ content: userPrompt, role: "user" }],
 			model: model,
 			system: systemPrompt,
 		});
 
-		const content = response.content[0]?.text;
+		// eslint-disable-next-line @elsikora-typescript/no-unsafe-member-access,@elsikora-typescript/no-unsafe-assignment
+		const content: any = response.content[0]?.text;
 
 		if (!content) {
 			throw new Error("Empty response from Anthropic");
 		}
 
 		// Extract JSON from response
-		const jsonMatch = content.match(/\{[\s\S]*\}/);
+		// eslint-disable-next-line @elsikora-typescript/no-unsafe-assignment,@elsikora-typescript/no-unsafe-call,@elsikora-typescript/no-unsafe-member-access,@elsikora-sonar/slow-regex
+		const jsonMatch: any = content.match(/\{[\s\S]*\}/);
 
 		if (!jsonMatch) {
 			throw new Error("No JSON found in Anthropic response");
 		}
 
+		// eslint-disable-next-line @elsikora-typescript/no-unsafe-argument,@elsikora-typescript/no-unsafe-member-access
 		return JSON.parse(jsonMatch[0]) as CommitConfig;
 	} catch (error) {
 		console.error("Error generating commit with Anthropic:", error);

@@ -1,46 +1,66 @@
-import type { RuleField } from "@commitlint/types";
+import type { RuleConfigSeverity, RuleField } from "@commitlint/types";
 
 import type { QuestionConfig } from "../Question.js";
 
 import { getPromptMessages, getPromptQuestions } from "../store/prompts.js";
 import { getRule } from "../store/rules.js";
-import getCaseFunction from "../utils/case-fn.js";
-import getFullStopFunction from "../utils/full-stop-fn.js";
+import getCaseFunction from "../utils/case-function.js";
+import getFullStopFunction from "../utils/full-stop-function.js";
 import { enumRuleIsActive, getEnumList, getMaxLength, getMinLength, ruleIsActive, ruleIsApplicable, ruleIsDisabled } from "../utils/rules.js";
 
-export default function (rulePrefix: RuleField): null | QuestionConfig {
-	const questions = getPromptQuestions();
-	const questionSettings = questions[rulePrefix];
-	const emptyRule = getRule(rulePrefix, "empty");
+export default function getRuleQuestionConfig(rulePrefix: RuleField): null | QuestionConfig {
+	const questions: Readonly<
+		Partial<
+			Record<
+				"body" | "breaking" | "breakingBody" | "footer" | "header" | "isBreaking" | "isIssueAffected" | "issues" | "issuesBody" | "scope" | "subject" | "type",
+				{
+					description?: string;
+					enum?: Record<string, { description?: string; emoji?: string; title?: string }>;
+					messages?: Record<string, string>;
+				}
+			>
+		>
+	> = getPromptQuestions();
 
-	const mustBeEmpty = emptyRule && ruleIsActive(emptyRule) && ruleIsApplicable(emptyRule);
+	const questionSettings:
+		| {
+				description?: string;
+				enum?: Record<string, { description?: string; emoji?: string; title?: string }>;
+				messages?: Record<string, string>;
+		  }
+		| undefined = questions[rulePrefix];
+	const emptyRule: readonly [RuleConfigSeverity, "always" | "never", unknown] | readonly [RuleConfigSeverity, "always" | "never"] | readonly [RuleConfigSeverity.Disabled] | undefined = getRule(rulePrefix, "empty");
+
+	const mustBeEmpty: any = emptyRule && ruleIsActive(emptyRule) && ruleIsApplicable(emptyRule);
 
 	if (mustBeEmpty) {
 		return null;
 	}
 
-	const canBeSkip = !emptyRule || ruleIsDisabled(emptyRule);
+	const canBeSkip: boolean = !emptyRule || ruleIsDisabled(emptyRule);
 
-	const enumRule = getRule(rulePrefix, "enum");
+	const enumRule: readonly [RuleConfigSeverity, "always" | "never", unknown] | readonly [RuleConfigSeverity, "always" | "never"] | readonly [RuleConfigSeverity.Disabled] | undefined = getRule(rulePrefix, "enum");
 
-	const enumRuleList = enumRule && enumRuleIsActive(enumRule) ? getEnumList(enumRule) : null;
-	let enumList;
+	const enumRuleList: Array<string> | null = enumRule && enumRuleIsActive(enumRule) ? getEnumList(enumRule) : null;
+	let enumList: Array<{ name: string; short: string; value: string } | string>;
 
 	if (enumRuleList) {
-		const enumDescriptions = questionSettings?.enum;
+		const enumDescriptions: Record<string, { description?: string; emoji?: string; title?: string }> | undefined = questionSettings?.enum;
 
 		if (enumDescriptions) {
-			const enumNames = Object.keys(enumDescriptions);
+			const enumNames: Array<string> = Object.keys(enumDescriptions);
 
-			const longest = Math.max(...enumRuleList.map((enumName) => enumName.length));
-			// TODO emoji + title
+			const longest: number = Math.max(...enumRuleList.map((enumName: string) => enumName.length));
+			// eslint-disable-next-line @elsikora-sonar/no-misleading-array-reverse
 			enumList = enumRuleList
-				.sort((a, b) => enumNames.indexOf(a) - enumNames.indexOf(b))
-				.map((enumName) => {
-					const enumDescription = enumDescriptions[enumName]?.description;
+				.sort((a: string, b: string) => enumNames.indexOf(a) - enumNames.indexOf(b))
+				// eslint-disable-next-line @elsikora-sonar/function-return-type
+				.map((enumName: string) => {
+					const enumDescription: string | undefined = enumDescriptions[enumName]?.description;
 
 					return enumDescription
 						? {
+								// eslint-disable-next-line @elsikora-typescript/no-magic-numbers
 								name: `${enumName}:`.padEnd(longest + 4) + enumDescription,
 								short: enumName,
 								value: enumName,
@@ -54,11 +74,13 @@ export default function (rulePrefix: RuleField): null | QuestionConfig {
 
 	return {
 		caseFn: getCaseFunction(getRule(rulePrefix, "case")),
+		// @ts-ignore
 		enumList,
 		fullStopFn: getFullStopFunction(getRule(rulePrefix, "full-stop")),
 		maxLength: getMaxLength(getRule(rulePrefix, "max-length")),
 		messages: getPromptMessages(),
 		minLength: getMinLength(getRule(rulePrefix, "min-length")),
+		// eslint-disable-next-line @elsikora-typescript/naming-convention
 		skip: canBeSkip,
 		title: questionSettings?.description ?? `${rulePrefix}:`,
 	};

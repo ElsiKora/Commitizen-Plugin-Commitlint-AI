@@ -1,3 +1,4 @@
+/* eslint-disable @elsikora-typescript/no-magic-numbers */
 import type { Rule } from "../types.js";
 
 import { RuleConfigSeverity } from "@commitlint/types";
@@ -7,6 +8,7 @@ export function enumRuleIsActive(rule: Rule): rule is Readonly<[RuleConfigSeveri
 }
 
 export function getEnumList(rule: Rule): Array<string> {
+	// eslint-disable-next-line @elsikora-typescript/no-unsafe-return
 	return Array.isArray(rule[2]) ? rule[2] : [];
 }
 
@@ -53,11 +55,7 @@ export function ruleIsApplicable(rule: Rule): rule is Readonly<[RuleConfigSeveri
 }
 
 export function ruleIsDisabled(rule: Rule): rule is Readonly<[RuleConfigSeverity.Disabled]> {
-	if (rule && Array.isArray(rule) && rule[0] === RuleConfigSeverity.Disabled) {
-		return true;
-	}
-
-	return false;
+	return rule && Array.isArray(rule) && rule[0] === RuleConfigSeverity.Disabled;
 }
 
 /**

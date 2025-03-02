@@ -1,10 +1,15 @@
+/* eslint-disable @elsikora-typescript/naming-convention,@elsikora-typescript/explicit-function-return-type,@elsikora-typescript/restrict-plus-operands */
 import type { PromptMessages, PromptName } from "@commitlint/types";
+// eslint-disable-next-line @elsikora-unicorn/import-style
+import type { ChalkInstance } from "chalk";
 import type { Answers, ChoiceCollection, DistinctQuestion } from "inquirer";
 
-import type { CaseFn as CaseFunction } from "./utils/case-fn.js";
-import type { FullStopFn as FullStopFunction } from "./utils/full-stop-fn.js";
+import type { CaseFunction as CaseFunction } from "./utils/case-function.js";
+import type { FullStopFunction as FullStopFunction } from "./utils/full-stop-function.js";
 
+// eslint-disable-next-line no-duplicate-imports
 import chalk from "chalk";
+// eslint-disable-next-line no-duplicate-imports
 import inquirer from "inquirer";
 
 export type QuestionConfig = {
@@ -75,6 +80,7 @@ export default class Question {
 		this.title = title ?? "";
 		this.skip = skip ?? false;
 		this.fullStopFn = fullStopFn ?? ((_: string) => _);
+		// eslint-disable-next-line @elsikora-sonar/argument-type
 		this.caseFn = caseFn ?? ((input: Array<string> | string, delimiter?: string) => (Array.isArray(input) ? input.join(delimiter) : input));
 		this.multipleValueDelimiters = multipleValueDelimiters;
 		this.multipleSelectDefaultDelimiter = multipleSelectDefaultDelimiter;
@@ -128,8 +134,8 @@ export default class Question {
 		}
 
 		if (this.question.type === "input") {
-			const countLimitMessage = (() => {
-				const messages = [];
+			const countLimitMessage: string = (() => {
+				const messages: Array<any> = [];
 
 				if (this.minLength > 0 && this.getMessage("min")) {
 					messages.push(this.getMessage("min").replaceAll("%d", this.minLength + ""));
@@ -142,7 +148,7 @@ export default class Question {
 				return messages.join(", ");
 			})();
 
-			const skipMessage = this.skip && this.getMessage("skip");
+			const skipMessage: false | string = this.skip && this.getMessage("skip");
 
 			return this.title + (skipMessage ? ` ${skipMessage}` : "") + ":" + (countLimitMessage ? ` ${countLimitMessage}` : "") + "\n";
 		} else {
@@ -151,15 +157,16 @@ export default class Question {
 	}
 
 	protected filter(input: Array<string> | string): string {
+		// eslint-disable-next-line @elsikora-typescript/typedef
 		let toCased;
 
 		if (Array.isArray(input)) {
 			toCased = this.caseFn(input, this.multipleSelectDefaultDelimiter);
 		} else if (this.multipleValueDelimiters) {
-			const segments = input.split(this.multipleValueDelimiters);
-			const casedString = this.caseFn(segments, ",");
-			const casedSegments = casedString.split(",");
-			toCased = input.replaceAll(new RegExp(`[^${this.multipleValueDelimiters.source}]+`, "g"), (segment) => {
+			const segments: Array<string> = input.split(this.multipleValueDelimiters);
+			const casedString: string = this.caseFn(segments, ",");
+			const casedSegments: Array<string> = casedString.split(",");
+			toCased = input.replaceAll(new RegExp(`[^${this.multipleValueDelimiters.source}]+`, "g"), (segment: string) => {
 				return casedSegments[segments.indexOf(segment)];
 			});
 		} else {
@@ -170,35 +177,42 @@ export default class Question {
 	}
 
 	protected transformer(input: string, _answers: Answers): string {
-		const output = this.filter(input);
+		const output: string = this.filter(input);
 
 		if (this.maxLength === Infinity && this.minLength === 0) {
 			return output;
 		}
 
-		const color = output.length <= this.maxLength && output.length >= this.minLength ? chalk.green : chalk.red;
+		const color: ChalkInstance = output.length <= this.maxLength && output.length >= this.minLength ? chalk.green : chalk.red;
 
 		return color("(" + output.length + ") " + output);
 	}
 
+	// eslint-disable-next-line @elsikora-sonar/function-return-type
 	protected validate(input: string): boolean | string {
-		const output = this.filter(input);
-		const questionName = this.question.name ?? "";
+		const output: string = this.filter(input);
+		const questionName: string = this.question.name ?? "";
 
 		if (!this.skip && output.length === 0) {
 			return this.getMessage("emptyWarning").replaceAll("%s", questionName);
 		}
 
 		if (output.length > this.maxLength) {
-			return this.getMessage("upperLimitWarning")
-				.replaceAll("%s", questionName)
-				.replaceAll("%d", `${output.length - this.maxLength}`);
+			return (
+				this.getMessage("upperLimitWarning")
+					.replaceAll("%s", questionName)
+					// eslint-disable-next-line @elsikora-typescript/restrict-template-expressions
+					.replaceAll("%d", `${output.length - this.maxLength}`)
+			);
 		}
 
 		if (output.length < this.minLength) {
-			return this.getMessage("lowerLimitWarning")
-				.replaceAll("%s", questionName)
-				.replaceAll("%d", `${this.minLength - output.length}`);
+			return (
+				this.getMessage("lowerLimitWarning")
+					.replaceAll("%s", questionName)
+					// eslint-disable-next-line @elsikora-typescript/restrict-template-expressions
+					.replaceAll("%d", `${this.minLength - output.length}`)
+			);
 		}
 
 		return true;
