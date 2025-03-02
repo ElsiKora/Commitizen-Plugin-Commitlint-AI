@@ -3,6 +3,8 @@ import type { Answers, DistinctQuestion } from "inquirer";
 import load from "@commitlint/load";
 
 import process from "./Process.js";
+export { setLLMConfig, getLLMConfig } from "./services/llm/index.js";
+export type { LLMConfig, LLMProvider, LLMModel } from "./services/llm/types.js";
 
 type Commit = (message: string) => void;
 

@@ -1,5 +1,10 @@
 [x] jest Test
 [x] insert prompt settings to commitlint.config.js
-[] support multi line
-[] support emoji and title
-[] recognize "signed-off-by" and "references-empty" rules
+[x] support multi line
+[x] support emoji and title
+[x] recognize "signed-off-by" and "references-empty" rules
+[x] Add AI-powered commit message generation
+[x] Support for OpenAI API
+[x] Support for Anthropic API
+[x] Extract commit conventions from commitlint config
+[x] Fallback to manual commit process if AI fails

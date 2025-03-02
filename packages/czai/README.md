@@ -1,21 +1,23 @@
-> Commitizen adapter using the commitlint.config.js
+# @elsikora/commitizen-plugin-commitlint-ai
 
-# @commitlint/cz-commitlint
+A Commitizen adapter that uses AI (OpenAI or Anthropic) to generate commit messages based on your commitlint.config.js file.
 
-This is a commitizen adapter, using this adapter, commitizen works based on commitlint.config.js.
+## Features
 
-Submit by commitizen, lint by commitlint, just need maintain one configuration file, Consistent and Scalable.
-
-The interactive process is inspired by [cz-conventional-changelog](https://github.com/commitizen/cz-conventional-changelog).
+- AI-powered commit message generation
+- Support for both OpenAI and Anthropic models
+- Fully compatible with existing commitlint configurations
+- Fallback to manual commit entry if AI fails
+- Uses git diff information to generate better commit messages
 
 ## Getting started
 
 ### Configure commitizen adapter
 
 ```bash
-npm install --save-dev @commitlint/cz-commitlint commitizen inquirer@9  # inquirer is required as peer dependency
+npm install --save-dev @elsikora/commitizen-plugin-commitlint-ai commitizen inquirer@9  # inquirer is required as peer dependency
 # or yarn
-yarn add -D @commitlint/cz-commitlint commitizen inquirer@9             # inquirer is required as peer dependency
+yarn add -D @elsikora/commitizen-plugin-commitlint-ai commitizen inquirer@9             # inquirer is required as peer dependency
 ```
 
 In package.json
@@ -27,7 +29,7 @@ In package.json
   },
   "config": {
     "commitizen": {
-      "path": "@commitlint/cz-commitlint"
+      "path": "@elsikora/commitizen-plugin-commitlint-ai"
     }
   }
 }
@@ -55,6 +57,47 @@ npm run commit
 # or yarn
 yarn commit
 ```
+
+## Usage
+
+When you run the commit command, you'll be prompted to:
+
+1. Select an AI provider (OpenAI or Anthropic)
+2. Select a model for your chosen provider
+3. Enter your API key for the selected provider
+
+The tool will then analyze your staged changes and generate a commit message that adheres to your commitlint rules.
+
+If AI generation fails for any reason, it falls back to the standard commit format questionnaire.
+
+## Requirements
+
+- Node.js v18 or higher
+- Git
+- OpenAI API key (if you want to use OpenAI)
+- Anthropic API key (if you want to use Anthropic)
+
+## How it works
+
+The plugin reads your commitlint.config.js file and extracts the rules and conventions. It then:
+
+1. Gets the git diff of your staged changes
+2. Sends the diff along with your commit conventions to the selected AI provider
+3. Formats the AI response according to the conventional commit format
+4. Returns the generated commit message
+
+## Supported AI Models
+
+### OpenAI
+- GPT-4o
+- GPT-4 Turbo
+- GPT-4
+- GPT-3.5 Turbo
+
+### Anthropic
+- Claude 3 Opus
+- Claude 3 Sonnet
+- Claude 3 Haiku
 
 ## Related
 
