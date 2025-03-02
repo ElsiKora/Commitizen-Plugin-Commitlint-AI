@@ -53,6 +53,7 @@
 		"@commitlint/types": "^19.5.0",
 		"@rollup/plugin-typescript": "^12.1.2",
 		"chalk": "^5.4.1",
+		"dotenv": "^16.4.7",
 		"lodash.isplainobject": "^4.0.6",
 		"rollup": "^4.34.9",
 		"word-wrap": "^1.2.5"

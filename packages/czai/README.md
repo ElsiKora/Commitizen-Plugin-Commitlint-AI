@@ -60,19 +60,74 @@ yarn commit
 
 ## Usage
 
+### AI-Powered Mode (Default)
+
 When you run the commit command for the first time, you'll be prompted to:
 
 1. Select an AI provider (OpenAI or Anthropic)
 2. Select a model for your chosen provider
 3. Enter your API key for the selected provider
 
-Your configuration will be saved in `~/.commitizen-ai/config.json` for future use. In subsequent runs, you'll be asked if you want to use the existing configuration or set up a new one.
+Your configuration (excluding API keys) will be saved in `./.elsikora/commitlint-ai.json` in your project directory. The API key is never stored on disk - you'll need to either:
+
+- Enter it each time you run the command
+- Set it as an environment variable (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`)
 
 The tool will then analyze your staged changes and generate a commit message that adheres to your commitlint rules.
 
-After generating the commit message, you'll see a preview and be asked to confirm if you want to use this message. If you approve, the message will be used for your commit. If you reject it, you'll be guided through the manual commit message creation process.
+After generating the commit message, you'll see a preview and be asked to confirm if you want to use this message. If you approve, the message will be used for your commit. If you reject it, you'll be guided through the manual commit entry process.
 
 If AI generation fails for any reason, it automatically falls back to the standard commit format questionnaire.
+
+### Manual Mode
+
+If you prefer to skip the AI generation and create the commit message manually, you can use manual mode in two ways:
+
+1. **Using an environment variable**:
+   ```bash
+   COMMITIZEN_AI_MANUAL=true git cz
+   ```
+
+2. **Creating a manual mode file**:
+   ```bash
+   mkdir -p .elsikora
+   touch .elsikora/manual
+   ```
+   This will permanently enable manual mode for this project.
+
+Manual mode bypasses all AI functionality and directly presents you with the standard commit questionnaire based on your commitlint configuration.
+
+## API Keys
+
+To avoid entering your API key each time, you can set it as an environment variable in two ways:
+
+### 1. Using environment variables
+
+- For OpenAI: `OPENAI_API_KEY`
+- For Anthropic: `ANTHROPIC_API_KEY`
+
+Example:
+```bash
+# For bash/zsh
+export OPENAI_API_KEY="your-api-key-here"
+git cz
+
+# Single use
+OPENAI_API_KEY="your-api-key-here" git cz
+```
+
+### 2. Using a .env file
+
+Create a `.env` file in your project root with the API key:
+
+```
+# .env file
+OPENAI_API_KEY=your-openai-key-here
+# or
+ANTHROPIC_API_KEY=your-anthropic-key-here
+```
+
+The plugin will automatically detect and use the API key from the .env file.
 
 ## Requirements
 

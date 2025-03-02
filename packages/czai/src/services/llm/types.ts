@@ -5,9 +5,12 @@ export type AnthropicModel = 'claude-3-opus-20240229' | 'claude-3-sonnet-2024022
 
 export type LLMModel = OpenAIModel | AnthropicModel;
 
-export type LLMConfig = {
+export type LLMConfigStorage = {
   provider: LLMProvider;
   model: LLMModel;
+};
+
+export type LLMConfig = LLMConfigStorage & {
   apiKey: string;
 };
 
