@@ -1,5 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { CommitConfig, LLMPromptContext } from "./types.js";
+
+import Anthropic from "@anthropic-ai/sdk";
 
 export async function generateCommitWithAnthropic(apiKey: string, model: string, context: LLMPromptContext): Promise<CommitConfig> {
 	const anthropic = new Anthropic({
@@ -12,6 +13,7 @@ export async function generateCommitWithAnthropic(apiKey: string, model: string,
 				const description = context.typeDescriptions?.[type]?.description || "";
 				const emoji = context.typeDescriptions?.[type]?.emoji || "";
 				const title = context.typeDescriptions?.[type]?.title || "";
+
 				return `${type}${emoji ? ` (${emoji})` : ""}: ${description}${title ? ` (${title})` : ""}`;
 			})
 			.join("\n") || "";
@@ -64,19 +66,21 @@ The JSON object should be parseable and follow the structure outlined above.`;
 
 	try {
 		const response = await anthropic.messages.create({
+			max_tokens: 1000,
+			messages: [{ content: userPrompt, role: "user" }],
 			model: model,
 			system: systemPrompt,
-			max_tokens: 1000,
-			messages: [{ role: "user", content: userPrompt }],
 		});
 
 		const content = response.content[0]?.text;
+
 		if (!content) {
 			throw new Error("Empty response from Anthropic");
 		}
 
 		// Extract JSON from response
 		const jsonMatch = content.match(/\{[\s\S]*\}/);
+
 		if (!jsonMatch) {
 			throw new Error("No JSON found in Anthropic response");
 		}
@@ -84,6 +88,7 @@ The JSON object should be parseable and follow the structure outlined above.`;
 		return JSON.parse(jsonMatch[0]) as CommitConfig;
 	} catch (error) {
 		console.error("Error generating commit with Anthropic:", error);
+
 		throw error;
 	}
 }

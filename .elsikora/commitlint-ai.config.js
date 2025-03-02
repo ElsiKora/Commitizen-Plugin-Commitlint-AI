@@ -1,4 +1,5 @@
 export default {
+	mode: "auto",
+	model: "none",
 	provider: "anthropic",
-	model: "claude-3-7-sonnet-20250219",
 };

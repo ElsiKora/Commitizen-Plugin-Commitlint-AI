@@ -3,11 +3,7 @@ import type { Answers, DistinctQuestion } from "inquirer";
 
 import chalk from "chalk";
 
-import { combineCommitMessage as combineBody } from "./SectionBody.js";
-import { combineCommitMessage as combineFooter } from "./SectionFooter.js";
-import { combineCommitMessage as combineHeader } from "./SectionHeader.js";
 import { extractLLMPromptContext } from "./services/commitlintConfig.js";
-import { generateCommitMessage, getLLMConfig, selectLLMProvider } from "./services/llm/index.js";
 import { setPromptConfig } from "./store/prompts.js";
 import { setRules } from "./store/rules.js";
 
@@ -21,93 +17,12 @@ export default async function (
 	setRules(rules);
 	setPromptConfig(prompts);
 
-	// First, ask for LLM provider and API key
-	await selectLLMProvider(inquirer);
-
 	// Extract context from commitlint config
 	const promptContext = extractLLMPromptContext(rules, prompts);
 
-	// Check if manual mode is enabled in config
-	const config = getLLMConfig();
+	// Message removed as it's now handled in the index.ts file
 
-	// If manual mode is enabled, skip AI generation and go straight to manual entry
-	if (config && config.mode === "manual") {
-		console.log(chalk.blue("Using manual commit entry mode..."));
-	} else {
-		try {
-			console.log(chalk.blue("Generating commit message with AI..."));
-
-			// Generate commit message using LLM
-			const commitConfig = await generateCommitMessage(promptContext);
-
-			// Construct the commit message based on AI response
-			let commitMessage = "";
-
-			// Construct header (type, scope, subject)
-			const type = commitConfig.type;
-			const scope = commitConfig.scope ? `(${commitConfig.scope})` : "";
-			const subject = commitConfig.subject;
-			const header = `${type}${scope}: ${subject}`;
-
-			// Body with optional breaking change
-			let body = "";
-
-			if (commitConfig.isBreaking) {
-				body = `BREAKING CHANGE: ${commitConfig.breakingBody || "This commit introduces breaking changes."}\n\n`;
-			}
-
-			if (commitConfig.body) {
-				body += commitConfig.body;
-			}
-
-			// Footer with issue references
-			let footer = "";
-
-			if (commitConfig.issues && commitConfig.issues.length > 0) {
-				footer = `Issues: ${commitConfig.issues.join(", ")}`;
-			}
-
-			if (commitConfig.references && commitConfig.references.length > 0) {
-				if (footer) footer += "\n";
-				footer += `References: ${commitConfig.references.join(", ")}`;
-			}
-
-			// Combine all parts
-			commitMessage = [header, body, footer].filter(Boolean).join("\n\n");
-			console.log(chalk.green("AI generated commit message successfully!"));
-
-			// Show the generated message to the user
-			console.log("\n" + chalk.yellow("Generated commit message:"));
-			console.log(chalk.white("-----------------------------------"));
-			console.log(chalk.white(commitMessage));
-			console.log(chalk.white("-----------------------------------\n"));
-
-			// Ask for confirmation
-			const { confirmCommit } = await inquirer.prompt([
-				{
-					default: true,
-					message: "Do you want to proceed with this commit message?",
-					name: "confirmCommit",
-					type: "confirm",
-				},
-			]);
-
-			if (confirmCommit) {
-				return commitMessage;
-			} else {
-				// If user rejects the generated message, fall through to the manual entry option
-				console.log(chalk.yellow("AI-generated message rejected. Switching to manual commit entry."));
-			}
-		} catch (error) {
-			// Only show error for AI mode errors, not when manual mode is intentionally used
-			if (config?.mode !== "manual") {
-				console.error(chalk.red("Error generating commit with AI:"), error);
-				console.log(chalk.yellow("Falling back to manual commit entry..."));
-			}
-		}
-	}
-
-	// Fallback to regular prompts if LLM fails or in manual mode
+	// Manual entry prompts
 	const commitQuestions = [
 		{
 			choices:
