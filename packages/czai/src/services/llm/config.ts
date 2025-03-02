@@ -4,7 +4,7 @@ import type { LLMConfig, LLMConfigStorage } from './types.js';
 
 // Store config in project directory
 const CONFIG_DIR = './.elsikora';
-const CONFIG_FILE = join(CONFIG_DIR, 'commitlint-ai.json');
+const CONFIG_FILE = join(CONFIG_DIR, 'commitlint-ai.config.js');
 
 // In-memory cache
 let llmConfig: LLMConfig | null = null;
@@ -31,8 +31,41 @@ const getApiKeyFromEnv = (provider: string): string | null => {
 const loadConfigFromFile = (): LLMConfigStorage | null => {
   try {
     if (existsSync(CONFIG_FILE)) {
-      const configStr = readFileSync(CONFIG_FILE, 'utf-8');
-      return JSON.parse(configStr) as LLMConfigStorage;
+      // Check if there's an old JSON file and migrate it
+      const oldJsonFile = join(CONFIG_DIR, 'commitlint-ai.json');
+      if (existsSync(oldJsonFile)) {
+        try {
+          const oldConfigStr = readFileSync(oldJsonFile, 'utf-8');
+          const oldConfig = JSON.parse(oldConfigStr) as LLMConfigStorage;
+          
+          // Save to the new JS format
+          saveConfigToFile({
+            ...oldConfig,
+            apiKey: ''
+          });
+          
+          return oldConfig;
+        } catch (e) {
+          // Ignore errors with old file
+        }
+      }
+      
+      // Parse the ESM module format
+      const configContent = readFileSync(CONFIG_FILE, 'utf-8');
+      
+      // Extract the JSON object from the ESM export
+      const jsonMatch = configContent.match(/export\s+default\s+({[\s\S]*?});/);
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          return JSON.parse(jsonMatch[1]) as LLMConfigStorage;
+        } catch (parseError) {
+          console.warn('Error parsing config JSON:', parseError);
+          return null;
+        }
+      }
+      
+      // If we can't parse it properly, return null and let the user reconfigure
+      return null;
     }
   } catch (error) {
     console.warn('Error loading LLM config from file:', error);
@@ -53,7 +86,25 @@ const saveConfigToFile = (config: LLMConfig): void => {
       model: config.model
     };
     
-    writeFileSync(CONFIG_FILE, JSON.stringify(storageConfig, null, 2), 'utf-8');
+    // Format as an ESM module with proper JS object format (no quotes around keys)
+    const jsContent = `export default {
+  provider: ${JSON.stringify(storageConfig.provider)},
+  model: ${JSON.stringify(storageConfig.model)}
+};`;
+    
+    writeFileSync(CONFIG_FILE, jsContent, 'utf-8');
+    
+    // Remove old JSON file if it exists
+    const oldJsonFile = join(CONFIG_DIR, 'commitlint-ai.json');
+    if (existsSync(oldJsonFile)) {
+      try {
+        // Use fs.unlink to delete the file - but we'll use writeFileSync with empty content instead
+        // to avoid needing to import fs.unlink
+        writeFileSync(oldJsonFile, '', 'utf-8');
+      } catch (e) {
+        // Ignore errors with old file deletion
+      }
+    }
   } catch (error) {
     console.warn('Error saving LLM config to file:', error);
   }
