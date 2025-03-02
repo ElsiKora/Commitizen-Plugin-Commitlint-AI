@@ -46,7 +46,7 @@
 	},
 	"config": {
 		"commitizen": {
-			"path": "@commitlint/cz-commitlint"
+			"path": "./index.cjs"
 		}
 	},
 	"dependencies": {
