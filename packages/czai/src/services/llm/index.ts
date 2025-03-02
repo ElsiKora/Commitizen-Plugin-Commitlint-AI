@@ -1,41 +1,25 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import chalk from 'chalk';
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { generateCommitWithAnthropic } from './anthropic.js';
 import { getLLMConfig, setLLMConfig } from './config.js';
 import { generateCommitWithOpenAI } from './openai.js';
 import type { CommitConfig, LLMConfig, LLMPromptContext } from './types.js';
+import { 
+  OPENAI_MODEL_CHOICES, 
+  ANTHROPIC_MODEL_CHOICES,
+  getOpenAIModels,
+  getAnthropicModels
+} from './models.js';
 
 const execAsync = promisify(exec);
 
 export * from './types.js';
 export { getLLMConfig, setLLMConfig } from './config.js';
 
-// Valid models for each provider
-const VALID_OPENAI_MODELS = [
-  'gpt-4o',
-  'gpt-4-turbo',
-  'gpt-4',
-  'gpt-3.5-turbo'
-];
-
-const VALID_ANTHROPIC_MODELS = [
-  'claude-3-opus-20240229',
-  'claude-3-sonnet-20240229',
-  'claude-3-haiku-20240307'
-];
-
-// Validate model based on provider
-function isValidModel(provider: string, model: string): boolean {
-  if (provider === 'openai') {
-    return VALID_OPENAI_MODELS.includes(model);
-  } else if (provider === 'anthropic') {
-    return VALID_ANTHROPIC_MODELS.includes(model);
-  }
-  return false;
-}
-
-// Validate provider
+// We'll only validate provider, not model
 function isValidProvider(provider: string): boolean {
   return provider === 'openai' || provider === 'anthropic';
 }
@@ -48,25 +32,26 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
   let model: string;
   
   if (existingConfig) {
-    // We have a saved config, check if it's valid
+    // We have a saved config, check if the provider is valid
     provider = existingConfig.provider;
     model = existingConfig.model;
     
-    // Validate provider and model
-    if (!isValidProvider(provider)) {
-      console.log(chalk.red(`Invalid provider "${provider}" in saved configuration. Using default setup...`));
+    // Only validate provider, not model
+    if (!provider) {
+      console.log(chalk.yellow(`No AI provider specified in configuration. Please select a provider below.`));
       // Fall through to setup
-    } else if (!isValidModel(provider, model)) {
-      console.log(chalk.yellow(`Warning: Invalid model "${model}" for ${provider} in saved configuration.`));
-      console.log(chalk.blue(`Using default setup to select a valid model...`));
+    } else if (!isValidProvider(provider)) {
+      console.log(chalk.red(`Provider "${provider}" is not supported. Please select a valid provider below.`));
       // Fall through to setup
     } else {
+      const modelDisplay = model ? model : '[not set]';
+      
       // First check if we want to use the existing config at all
       const { useExisting } = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'useExisting',
-          message: `Use saved ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} (${model}) configuration?`,
+          message: `Use saved ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} (${modelDisplay}) configuration?`,
           default: true
         }
       ]);
@@ -74,7 +59,76 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
       if (!useExisting) {
         // User wants to change the config, fall through to the setup section
       } else {
-        // User wants to use existing config, check if we need an API key
+        // Check if we need to select a model first
+        if (!model) {
+          console.log(chalk.yellow('No model saved in configuration. Please select a model.'));
+          
+          if (provider === 'openai') {
+            const response = await inquirer.prompt([
+              {
+                type: 'list',
+                name: 'model',
+                message: 'Select an OpenAI model:',
+                choices: OPENAI_MODEL_CHOICES
+              }
+            ]);
+            
+            if (response.model === 'custom') {
+              const customResponse = await inquirer.prompt([
+                {
+                  type: 'input',
+                  name: 'customModel',
+                  message: 'Enter the OpenAI model name:',
+                  validate: (input: string) => {
+                    if (!input) return 'Model name is required';
+                    return true;
+                  }
+                }
+              ]);
+              model = customResponse.customModel;
+            } else {
+              model = response.model;
+            }
+          } else if (provider === 'anthropic') {
+            const response = await inquirer.prompt([
+              {
+                type: 'list',
+                name: 'model',
+                message: 'Select an Anthropic model:',
+                choices: ANTHROPIC_MODEL_CHOICES
+              }
+            ]);
+            
+            if (response.model === 'custom') {
+              const customResponse = await inquirer.prompt([
+                {
+                  type: 'input',
+                  name: 'customModel',
+                  message: 'Enter the Anthropic model name:',
+                  validate: (input: string) => {
+                    if (!input) return 'Model name is required';
+                    return true;
+                  }
+                }
+              ]);
+              model = customResponse.customModel;
+            } else {
+              model = response.model;
+            }
+          }
+          
+          // Update the existing config with the selected model
+          existingConfig.model = model;
+          
+          // Save the updated config to file
+          setLLMConfig({
+            provider: existingConfig.provider,
+            model,
+            apiKey: existingConfig.apiKey || ''
+          });
+        }
+        
+        // Now check if we need an API key
         if (!existingConfig.apiKey) {
           // Double-check environment variables again
           const envVarName = provider === 'openai' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY';
@@ -143,39 +197,6 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
   
   provider = providerResponse.provider;
   
-  if (provider === 'openai') {
-    const response = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'model',
-        message: 'Select an OpenAI model:',
-        choices: [
-          { name: 'GPT-4o', value: VALID_OPENAI_MODELS[0] },
-          { name: 'GPT-4 Turbo', value: VALID_OPENAI_MODELS[1] },
-          { name: 'GPT-4', value: VALID_OPENAI_MODELS[2] },
-          { name: 'GPT-3.5 Turbo', value: VALID_OPENAI_MODELS[3] }
-        ]
-      }
-    ]);
-    model = response.model;
-  } else if (provider === 'anthropic') {
-    const response = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'model',
-        message: 'Select an Anthropic model:',
-        choices: [
-          { name: 'Claude 3 Opus', value: VALID_ANTHROPIC_MODELS[0] },
-          { name: 'Claude 3 Sonnet', value: VALID_ANTHROPIC_MODELS[1] },
-          { name: 'Claude 3 Haiku', value: VALID_ANTHROPIC_MODELS[2] }
-        ]
-      }
-    ]);
-    model = response.model;
-  } else {
-    throw new Error(`Invalid provider: ${provider}`);
-  }
-  
   // Check if API key is in environment variables
   let envApiKey: string | null = null;
   const envVarName = provider === 'openai' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY';
@@ -214,6 +235,70 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
     
     apiKey = response.apiKey;
   }
+
+  // Now get models based on provider and API key
+  if (provider === 'openai') {
+    // Get available OpenAI models from our hardcoded list
+    const models = getOpenAIModels();
+    
+    // Display model selection
+    const response = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'model',
+        message: 'Select an OpenAI model:',
+        choices: OPENAI_MODEL_CHOICES
+      }
+    ]);
+    
+    // If user selected custom, ask for model name
+    if (response.model === 'custom') {
+      const customResponse = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'customModel',
+          message: 'Enter the OpenAI model name:',
+          validate: (input: string) => {
+            if (!input) return 'Model name is required';
+            return true;
+          }
+        }
+      ]);
+      model = customResponse.customModel;
+    } else {
+      model = response.model;
+    }
+  } else if (provider === 'anthropic') {
+    // For Anthropic, use hardcoded list
+    const response = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'model',
+        message: 'Select an Anthropic model:',
+        choices: ANTHROPIC_MODEL_CHOICES
+      }
+    ]);
+    
+    // If user selected custom, ask for model name
+    if (response.model === 'custom') {
+      const customResponse = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'customModel',
+          message: 'Enter the Anthropic model name:',
+          validate: (input: string) => {
+            if (!input) return 'Model name is required';
+            return true;
+          }
+        }
+      ]);
+      model = customResponse.customModel;
+    } else {
+      model = response.model;
+    }
+  } else {
+    throw new Error(`Invalid provider: ${provider}`);
+  }
   
   // Save the config (API key won't be saved to file)
   const config: LLMConfig = { provider, model, apiKey };
@@ -228,13 +313,9 @@ export async function generateCommitMessage(context: LLMPromptContext): Promise<
     throw new Error('LLM not configured. Please run selectLLMProvider first.');
   }
   
-  // Validate provider and model
+  // Validate provider only, not model
   if (!isValidProvider(config.provider)) {
     throw new Error(`Invalid LLM provider: ${config.provider}. Please reconfigure with a valid provider.`);
-  }
-  
-  if (!isValidModel(config.provider, config.model)) {
-    throw new Error(`Invalid model ${config.model} for provider ${config.provider}. Please reconfigure with a valid model.`);
   }
   
   // Get git diff for better context

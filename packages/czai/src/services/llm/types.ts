@@ -1,9 +1,10 @@
 export type LLMProvider = 'openai' | 'anthropic';
 
-export type OpenAIModel = 'gpt-3.5-turbo' | 'gpt-4o' | 'gpt-4' | 'gpt-4-turbo';
-export type AnthropicModel = 'claude-3-opus-20240229' | 'claude-3-sonnet-20240229' | 'claude-3-haiku-20240307';
+// These are just for type definitions - the actual model lists are defined in models.ts
+export type OpenAIModel = string;
+export type AnthropicModel = string;
 
-export type LLMModel = OpenAIModel | AnthropicModel;
+export type LLMModel = string; // Any model name
 
 export type LLMConfigStorage = {
   provider: LLMProvider;

@@ -1,27 +1,26 @@
-import Anthropic from '@anthropic-ai/sdk';
-import type { CommitConfig, LLMPromptContext } from './types.js';
+import Anthropic from "@anthropic-ai/sdk";
+import type { CommitConfig, LLMPromptContext } from "./types.js";
 
-export async function generateCommitWithAnthropic(
-  apiKey: string,
-  model: string,
-  context: LLMPromptContext
-): Promise<CommitConfig> {
-  const anthropic = new Anthropic({
-    apiKey: apiKey,
-  });
+export async function generateCommitWithAnthropic(apiKey: string, model: string, context: LLMPromptContext): Promise<CommitConfig> {
+	const anthropic = new Anthropic({
+		apiKey: apiKey,
+	});
 
-  const typeOptions = context.typeEnum?.map(type => {
-    const description = context.typeDescriptions?.[type]?.description || '';
-    const emoji = context.typeDescriptions?.[type]?.emoji || '';
-    const title = context.typeDescriptions?.[type]?.title || '';
-    return `${type}${emoji ? ` (${emoji})` : ''}: ${description}${title ? ` (${title})` : ''}`;
-  }).join('\n') || '';
+	const typeOptions =
+		context.typeEnum
+			?.map((type) => {
+				const description = context.typeDescriptions?.[type]?.description || "";
+				const emoji = context.typeDescriptions?.[type]?.emoji || "";
+				const title = context.typeDescriptions?.[type]?.title || "";
+				return `${type}${emoji ? ` (${emoji})` : ""}: ${description}${title ? ` (${title})` : ""}`;
+			})
+			.join("\n") || "";
 
-  const systemPrompt = `You are a commit message generator. Your task is to create a conventional commit message based on the git changes provided.`;
+	const systemPrompt = `You are a commit message generator. Your task is to create a conventional commit message based on the git changes provided.`;
 
-  const userPrompt = `I need you to generate a commit message for these changes:
-${context.diff ? `Diff:\n${context.diff}\n` : ''}
-${context.files ? `Files changed:\n${context.files}` : ''}
+	const userPrompt = `I need you to generate a commit message for these changes:
+${context.diff ? `Diff:\n${context.diff}\n` : ""}
+${context.files ? `Files changed:\n${context.files}` : ""}
 
 The commit should follow this format:
 <type>[(scope)]: <subject>
@@ -42,12 +41,12 @@ Scope guidelines:
 - Scopes are usually short (one or two words) and lowercase
 
 Subject constraints:
-${context.subject.case ? '- Case style: ' + context.subject.case.join(', ') : ''}
-${context.subject.maxLength ? '- Max length: ' + context.subject.maxLength + ' characters' : ''}
-${context.subject.minLength ? '- Min length: ' + context.subject.minLength + ' characters' : ''}
+${context.subject.case ? "- Case style: " + context.subject.case.join(", ") : ""}
+${context.subject.maxLength ? "- Max length: " + context.subject.maxLength + " characters" : ""}
+${context.subject.minLength ? "- Min length: " + context.subject.minLength + " characters" : ""}
 
-${context.headerMaxLength ? 'Header max length (type + scope + subject): ' + context.headerMaxLength + ' characters' : ''}
-${context.headerMinLength ? 'Header min length (type + scope + subject): ' + context.headerMinLength + ' characters' : ''}
+${context.headerMaxLength ? "Header max length (type + scope + subject): " + context.headerMaxLength + " characters" : ""}
+${context.headerMinLength ? "Header min length (type + scope + subject): " + context.headerMinLength + " characters" : ""}
 
 Return a JSON object with these fields:
 {
@@ -63,28 +62,28 @@ Return a JSON object with these fields:
 
 The JSON object should be parseable and follow the structure outlined above.`;
 
-  try {
-    const response = await anthropic.messages.create({
-      model: model,
-      system: systemPrompt,
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: userPrompt }],
-    });
+	try {
+		const response = await anthropic.messages.create({
+			model: model,
+			system: systemPrompt,
+			max_tokens: 1000,
+			messages: [{ role: "user", content: userPrompt }],
+		});
 
-    const content = response.content[0]?.text;
-    if (!content) {
-      throw new Error('Empty response from Anthropic');
-    }
+		const content = response.content[0]?.text;
+		if (!content) {
+			throw new Error("Empty response from Anthropic");
+		}
 
-    // Extract JSON from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in Anthropic response');
-    }
+		// Extract JSON from response
+		const jsonMatch = content.match(/\{[\s\S]*\}/);
+		if (!jsonMatch) {
+			throw new Error("No JSON found in Anthropic response");
+		}
 
-    return JSON.parse(jsonMatch[0]) as CommitConfig;
-  } catch (error) {
-    console.error('Error generating commit with Anthropic:', error);
-    throw error;
-  }
+		return JSON.parse(jsonMatch[0]) as CommitConfig;
+	} catch (error) {
+		console.error("Error generating commit with Anthropic:", error);
+		throw error;
+	}
 }
