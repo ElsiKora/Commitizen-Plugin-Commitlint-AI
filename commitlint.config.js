@@ -1,4 +1,4 @@
-const Configuration = {
+export default {
 	extends: ["@commitlint/config-conventional"],
 	formatter: "@commitlint/format",
 	parserPreset: "conventional-changelog-conventionalcommits",
@@ -84,10 +84,26 @@ const Configuration = {
 		},
 	},
 	rules: {
+		"body-full-stop": [2, "always", "."],
+		"body-leading-blank": [2, "always"],
+		"body-max-length": [0, "always", 1000],
+		"body-max-line-length": [2, "always", 100],
+		"footer-leading-blank": [2, "always"],
+		"footer-max-line-length": [2, "always", 100],
+		"header-case": [2, "always", "lower-case"],
+		"header-full-stop": [2, "never", "."],
+		"header-max-length": [2, "always", 100],
+		"header-min-length": [1, "always", 10],
 		"scope-case": [2, "always", "lower-case"],
-		"subject-case": [0, "always", ["lower-case", "upper-case", "camel-case", "kebab-case", "pascal-case", "sentence-case", "snake-case", "start-case"]],
+		"scope-empty": [2, "never"],
+		"scope-max-length": [1, "always", 30],
+		"subject-case": [2, "always", ["lower-case"]],
+		"subject-empty": [2, "never"],
+		"subject-full-stop": [2, "never", "."],
+		"subject-max-length": [2, "always", 80],
+		"subject-min-length": [2, "always", 3],
+		"type-case": [2, "always", "lower-case"],
+		"type-empty": [2, "never"],
 		"type-enum": [2, "always", ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert", "wip"]],
 	},
 };
-
-export default Configuration;

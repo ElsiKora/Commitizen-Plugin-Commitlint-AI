@@ -1,172 +1,150 @@
-# @elsikora/commitizen-plugin-commitlint-ai
+<p align="center">
+  <img src="https://6jft62zmy9nx2oea.public.blob.vercel-storage.com/commitizen-plugin-commitlint-ai-NDrywOvLY7r3a2w5qeC1bzTAaBoAtI.png" width="500" alt="project-logo">
+</p>
 
-A Commitizen adapter that uses AI (OpenAI or Anthropic) to generate commit messages based on your commitlint.config.js file.
+<h1 align="center">Commitizen Plugin Commitlint AI 🤖</h1>
+<p align="center"><em>AI-powered Commitizen adapter that generates conventional commits with Commitlint integration</em></p>
 
-## Features
+<p align="center">
+    <a aria-label="ElsiKora logo" href="https://elsikora.com">
+  <img src="https://img.shields.io/badge/MADE%20BY%20ElsiKora-333333.svg?style=for-the-badge" alt="ElsiKora">
+</a> <img src="https://img.shields.io/badge/version-blue.svg?style=for-the-badge&logo=npm&logoColor=white" alt="version"> <img src="https://img.shields.io/badge/typescript-blue.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="typescript"> <img src="https://img.shields.io/badge/license-green.svg?style=for-the-badge&logo=license&logoColor=white" alt="license"> <img src="https://img.shields.io/badge/commitizen-green.svg?style=for-the-badge&logo=commitizen&logoColor=white" alt="commitizen"> <img src="https://img.shields.io/badge/commitlint-red.svg?style=for-the-badge&logo=commitlint&logoColor=white" alt="commitlint">
+</p>
 
-- AI-powered commit message generation
-- Support for both OpenAI and Anthropic models
-- Fully compatible with existing commitlint configurations
-- Fallback to manual commit entry if AI fails
-- Uses git diff information to generate better commit messages
+## 📚 Table of Contents
 
-## Getting started
+- [Description](#-description)
+- [Features](#-features)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Roadmap](#-roadmap)
+- [FAQ](#-faq)
+- [License](#-license)
 
-### Configure commitizen adapter
+## 📖 Description
+
+This plugin enhances your Git workflow by combining the power of AI with conventional commit standards. It intelligently analyzes your code changes and generates meaningful commit messages that follow your project's commitlint rules. Whether you're working solo or in a team, this tool helps maintain consistent, high-quality commit history while reducing the cognitive load of writing commit messages.
+
+## 🚀 Features
+
+- ✨ **AI-powered commit message generation using OpenAI or Anthropic models**
+- ✨ **Full integration with Commitlint rules and configuration**
+- ✨ **Support for both manual and automatic commit modes**
+- ✨ **Smart scope detection based on changed files**
+- ✨ **Breaking change detection and documentation**
+- ✨ **Customizable commit message format**
+- ✨ **Interactive commit message confirmation**
+- ✨ **Supports multiple AI models including GPT-4, Claude 3, and more**
+- ✨ **Environment variable support for API keys**
+- ✨ **Fallback to manual mode if AI generation fails**
+
+## 🛠 Installation
 
 ```bash
-npm install --save-dev @elsikora/commitizen-plugin-commitlint-ai commitizen inquirer@9  # inquirer is required as peer dependency
-# or yarn
-yarn add -D @elsikora/commitizen-plugin-commitlint-ai commitizen inquirer@9             # inquirer is required as peer dependency
+# Using npm
+npm install --save-dev @elsikora/commitizen-plugin-commitlint-ai
+
+# Using yarn
+yarn add -D @elsikora/commitizen-plugin-commitlint-ai
+
+# Using pnpm
+pnpm add -D @elsikora/commitizen-plugin-commitlint-ai
+
+# Configure commitizen to use the adapter
+npx commitizen init @elsikora/commitizen-plugin-commitlint-ai --save-dev --save-exact
 ```
 
-In package.json
+## 💡 Usage
 
-```json
-{
-  "scripts": {
-    "commit": "git-cz"
-  },
-  "config": {
-    "commitizen": {
-      "path": "@elsikora/commitizen-plugin-commitlint-ai"
-    }
+### Basic Usage
+
+```bash
+# Commit changes using the AI-powered adapter
+git add .
+git cz
+```
+
+### Configuration
+
+```javascript
+// commitlint.config.js
+module export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [2, 'always', ['feat', 'fix', 'docs', 'style', 'refactor']],
+    'scope-case': [2, 'always', 'lower-case']
   }
 }
 ```
 
-### Configure commitlint
-
-**⚠️ Important: The required version of commitlint and shared configuration is above 12.1.2, update them if already existed in project**
+### Environment Variables
 
 ```bash
-# Install commitlint cli and conventional config
-npm install --save-dev @commitlint/config-conventional @commitlint/cli
-# or yarn
-yarn add @commitlint/config-conventional @commitlint/cli -D
-
-# Simple: config with conventional
-echo "module.exports = {extends: ['@commitlint/config-conventional']};" > commitlint.config.js
+# .env
+OPENAI_API_KEY=your-api-key
+# or
+ANTHROPIC_API_KEY=your-api-key
 ```
-
-### Try it out
-
-```bash
-git add .
-npm run commit
-# or yarn
-yarn commit
-```
-
-## Usage
-
-### AI-Powered Mode (Default)
-
-When you run the commit command for the first time, you'll be prompted to:
-
-1. Select an AI provider (OpenAI or Anthropic)
-2. Select a model for your chosen provider
-3. Enter your API key for the selected provider
-
-Your configuration (excluding API keys) will be saved in `./.elsikora/commitlint-ai.json` in your project directory. The API key is never stored on disk - you'll need to either:
-
-- Enter it each time you run the command
-- Set it as an environment variable (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`)
-
-The tool will then analyze your staged changes and generate a commit message that adheres to your commitlint rules.
-
-After generating the commit message, you'll see a preview and be asked to confirm if you want to use this message. If you approve, the message will be used for your commit. If you reject it, you'll be guided through the manual commit entry process.
-
-If AI generation fails for any reason, it automatically falls back to the standard commit format questionnaire.
 
 ### Manual Mode
 
-If you prefer to skip the AI generation and create the commit message manually, you can use manual mode in two ways:
-
-1. **Using an environment variable**:
-   ```bash
-   COMMITIZEN_AI_MANUAL=true git cz
-   ```
-
-2. **Creating a manual mode file**:
-   ```bash
-   mkdir -p .elsikora
-   touch .elsikora/manual
-   ```
-   This will permanently enable manual mode for this project.
-
-Manual mode bypasses all AI functionality and directly presents you with the standard commit questionnaire based on your commitlint configuration.
-
-## API Keys
-
-To avoid entering your API key each time, you can set it as an environment variable in two ways:
-
-### 1. Using environment variables
-
-- For OpenAI: `OPENAI_API_KEY`
-- For Anthropic: `ANTHROPIC_API_KEY`
-
-Example:
 ```bash
-# For bash/zsh
-export OPENAI_API_KEY="your-api-key-here"
-git cz
-
-# Single use
-OPENAI_API_KEY="your-api-key-here" git cz
+# Create .elsikora/manual file to enable manual mode
+mkdir -p .elsikora
+touch .elsikora/manual
 ```
 
-### 2. Using a .env file
+### Advanced Usage with TypeScript
 
-Create a `.env` file in your project root with the API key:
+```typescript
+import { getLLMConfig, setLLMConfig } from "@elsikora/commitizen-plugin-commitlint-ai";
 
+// Configure AI provider
+setLLMConfig({
+	provider: "openai",
+	model: "gpt-4",
+	mode: "auto",
+	apiKey: process.env.OPENAI_API_KEY,
+});
 ```
-# .env file
-OPENAI_API_KEY=your-openai-key-here
-# or
-ANTHROPIC_API_KEY=your-anthropic-key-here
+
+### Custom Prompt Configuration
+
+```javascript
+// .elsikora/commitlint-ai.config.js
+export default {
+	provider: "anthropic",
+	model: "claude-3-opus-20240229",
+	mode: "auto",
+};
 ```
 
-The plugin will automatically detect and use the API key from the .env file.
+## 🛣 Roadmap
 
-## Requirements
+| Task / Feature                                                               | Status         |
+| ---------------------------------------------------------------------------- | -------------- |
+| Future development plans include:                                            | 🚧 In Progress |
+| - Support for more AI providers                                              | 🚧 In Progress |
+| - Enhanced diff analysis for better commit suggestions                       | 🚧 In Progress |
+| - Custom prompt templates                                                    | 🚧 In Progress |
+| - Integration with more Git hosting platforms                                | 🚧 In Progress |
+| - Performance optimizations for large codebases                              | 🚧 In Progress |
+| - Multi-language support for commit messages                                 | 🚧 In Progress |
+| - Team collaboration features                                                | 🚧 In Progress |
+| (done) AI-powered commit message generation using OpenAI or Anthropic models | 🚧 In Progress |
+| (done) Full integration with Commitlint rules and configuration              | 🚧 In Progress |
+| (done) Support for both manual and automatic commit modes                    | 🚧 In Progress |
 
-- Node.js v18 or higher
-- Git
-- OpenAI API key (if you want to use OpenAI)
-- Anthropic API key (if you want to use Anthropic)
+## ❓ FAQ
 
-## How it works
+**Q: How does the AI generate commit messages?** A: The plugin analyzes your git diff and changed files, then uses AI to understand the changes and generate appropriate conventional commit messages that comply with your commitlint rules.
 
-The plugin reads your commitlint.config.js file and extracts the rules and conventions. It then:
+**Q: What happens if the AI service is unavailable?** A: The plugin automatically falls back to manual mode, allowing you to enter commit messages traditionally.
 
-1. Gets the git diff and file list of your staged changes
-2. Analyzes the directory structure to help determine the appropriate scope
-3. Sends the diff along with your commit conventions to the selected AI provider
-4. The AI determines the type, scope, subject, and body based on the changes
-5. Formats the AI response according to the conventional commit format
-6. Returns the generated commit message for your confirmation
+**Q: Can I use custom commit message formats?** A: Yes, the plugin respects your commitlint configuration and generates messages accordingly.
 
-The scope detection is particularly intelligent:
-- It analyzes which directories and files were modified
-- It identifies the primary area of the codebase being changed
-- It can use multiple scopes for changes that span different areas
-- It uses "global" for changes that affect the entire project
-- It omits the scope when it's not relevant to the changes
+**Q: Is my code sent to the AI service?** A: Only the git diff and file names are sent to generate accurate commit messages. No full source code is transmitted.
 
-## Supported AI Models
+## 🔒 License
 
-### OpenAI
-- GPT-4o
-- GPT-4 Turbo
-- GPT-4
-- GPT-3.5 Turbo
-
-### Anthropic
-- Claude 3 Opus
-- Claude 3 Sonnet
-- Claude 3 Haiku
-
-## Related
-
-- [Commitlint Reference Prompt](https://commitlint.js.org/reference/prompt) - How to customize prompt information by setting commitlint.config.js
+This project is licensed under **MIT License**.
