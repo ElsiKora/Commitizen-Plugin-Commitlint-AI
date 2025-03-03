@@ -6,6 +6,7 @@ import type { CommitConfig, LLMConfigStorage, LLMPromptContext } from "./service
 import chalk from "chalk";
 
 import { extractLLMPromptContext } from "./services/commitlintConfig.js";
+import { validateAndFixCommitMessage } from "./services/commitlintValidator.js";
 // eslint-disable-next-line no-duplicate-imports
 import { generateCommitMessage, getLLMConfig, selectLLMProvider } from "./services/llm/index.js";
 import { setPromptConfig } from "./store/prompts.js";
@@ -40,61 +41,38 @@ export default async function Process(
 			// Generate commit message using LLM
 			const commitConfig: CommitConfig = await generateCommitMessage(promptContext);
 
-			// Construct header (type, scope, subject)
-			const type: string = commitConfig.type;
-			const scope: string = commitConfig.scope ? `(${commitConfig.scope})` : "";
-			const subject: string = commitConfig.subject;
-			const header: string = `${type}${scope}: ${subject}`;
+			// Validate the commit message with commitlint and fix if needed
+			const validatedCommitMessage: null | string = await validateAndFixCommitMessage(commitConfig, promptContext);
 
-			// Body with optional breaking change
-			let body: string = "";
-
-			if (commitConfig.isBreaking) {
-				body = `BREAKING CHANGE: ${commitConfig.breakingBody ?? "This commit introduces breaking changes."}\n\n`;
-			}
-
-			if (commitConfig.body) {
-				body += commitConfig.body;
-			}
-
-			// Footer with issue references
-			let footer: string = "";
-
-			if (commitConfig.issues && commitConfig.issues.length > 0) {
-				footer = `Issues: ${commitConfig.issues.join(", ")}`;
-			}
-
-			if (commitConfig.references && commitConfig.references.length > 0) {
-				if (footer) footer += "\n";
-				footer += `References: ${commitConfig.references.join(", ")}`;
-			}
-
-			// Combine all parts
-			const commitMessage: string = [header, body, footer].filter(Boolean).join("\n\n");
-			console.log(chalk.green("AI generated commit message successfully!"));
-
-			// Show the generated message to the user
-			console.log("\n" + chalk.yellow("Generated commit message:"));
-			console.log(chalk.white("-----------------------------------"));
-			console.log(chalk.white(commitMessage));
-			console.log(chalk.white("-----------------------------------\n"));
-
-			// Ask for confirmation
-			const { confirmCommit }: Answers = await inquirer.prompt([
-				{
-					// eslint-disable-next-line @elsikora-typescript/naming-convention
-					default: true,
-					message: "Do you want to proceed with this commit message?",
-					name: "confirmCommit",
-					type: "confirm",
-				},
-			]);
-
-			if (confirmCommit) {
-				return commitMessage;
+			// If validation returned null, it means we should switch to manual mode
+			if (validatedCommitMessage === null) {
+				console.log(chalk.yellow("Switching to manual commit entry after failed validation attempts."));
 			} else {
-				// If user rejects the generated message, fall through to the manual entry option
-				console.log(chalk.yellow("AI-generated message rejected. Switching to manual commit entry."));
+				console.log(chalk.green("AI generated commit message successfully!"));
+
+				// Show the generated message to the user
+				console.log("\n" + chalk.yellow("Generated commit message:"));
+				console.log(chalk.white("-----------------------------------"));
+				console.log(chalk.white(validatedCommitMessage));
+				console.log(chalk.white("-----------------------------------\n"));
+
+				// Ask for confirmation
+				const { confirmCommit }: Answers = await inquirer.prompt([
+					{
+						// eslint-disable-next-line @elsikora-typescript/naming-convention
+						default: true,
+						message: "Do you want to proceed with this commit message?",
+						name: "confirmCommit",
+						type: "confirm",
+					},
+				]);
+
+				if (confirmCommit) {
+					return validatedCommitMessage;
+				} else {
+					// If user rejects the generated message, fall through to the manual entry option
+					console.log(chalk.yellow("AI-generated message rejected. Switching to manual commit entry."));
+				}
 			}
 		} catch (error) {
 			// Only show error for AI mode errors, not when manual mode is intentionally used
