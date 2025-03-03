@@ -1,4 +1,4 @@
-/* eslint-disable @elsikora-typescript/restrict-plus-operands */
+/* eslint-disable @elsikora-typescript/restrict-plus-operands,@elsikora-sonar/no-nested-conditional */
 
 import type { CommitConfig, LLMPromptContext } from "./types.js";
 
@@ -35,8 +35,18 @@ The commit should follow this format:
 [BLANK LINE]
 [footer]
 
+Type constraints:
+${context.typeEnum ? "- Allowed types: " + context.typeEnum.join(", ") : ""}
+${context.typeCase ? "- Case style: " + context.typeCase.join(", ") : ""}
+${context.typeEmpty === undefined ? "" : "- Can be empty: " + (context.typeEmpty ? "yes" : "no")}
+
 Available types:
 ${typeOptions}
+
+Scope constraints:
+${context.scopeCase ? "- Case style: " + context.scopeCase.join(", ") : ""}
+${context.scopeEmpty === undefined ? "" : "- Can be empty: " + (context.scopeEmpty ? "yes" : "no")}
+${context.scopeMaxLength ? "- Max length: " + context.scopeMaxLength + " characters" : ""}
 
 Scope guidelines:
 - The scope should represent the area of the codebase being modified
@@ -48,11 +58,26 @@ Scope guidelines:
 
 Subject constraints:
 ${context.subject.case ? "- Case style: " + context.subject.case.join(", ") : ""}
+${context.subject.empty === undefined ? "" : "- Can be empty: " + (context.subject.empty ? "yes" : "no")}
 ${context.subject.maxLength ? "- Max length: " + context.subject.maxLength + " characters" : ""}
 ${context.subject.minLength ? "- Min length: " + context.subject.minLength + " characters" : ""}
+${context.subject.fullStop ? "- End with '" + context.subject.fullStop.value + "': " + (context.subject.fullStop.required ? "yes" : "no") : ""}
 
-${context.headerMaxLength ? "Header max length (type + scope + subject): " + context.headerMaxLength + " characters" : ""}
-${context.headerMinLength ? "Header min length (type + scope + subject): " + context.headerMinLength + " characters" : ""}
+Header constraints:
+${context.headerCase ? "- Case style: " + context.headerCase.join(", ") : ""}
+${context.headerMaxLength ? "- Max length: " + context.headerMaxLength + " characters" : ""}
+${context.headerMinLength ? "- Min length: " + context.headerMinLength + " characters" : ""}
+${context.headerFullStop ? "- End with '" + context.headerFullStop.value + "': " + (context.headerFullStop.required ? "yes" : "no") : ""}
+
+Body constraints:
+${context.body?.maxLength ? "- Max length: " + context.body.maxLength + " characters" : ""}
+${context.body?.maxLineLength ? "- Max line length: " + context.body.maxLineLength + " characters" : ""}
+${context.body?.leadingBlank === undefined ? "" : "- Leading blank line: " + (context.body.leadingBlank ? "required" : "not required")}
+${context.body?.fullStop ? "- End with '" + context.body.fullStop.value + "': " + (context.body.fullStop.required ? "yes" : "no") : ""}
+
+Footer constraints:
+${context.footerLeadingBlank === undefined ? "" : "- Leading blank line: " + (context.footerLeadingBlank ? "required" : "not required")}
+${context.footerMaxLineLength ? "- Max line length: " + context.footerMaxLineLength + " characters" : ""}
 
 Return a JSON object with these fields:
 {
@@ -71,7 +96,7 @@ The JSON object should be parseable and follow the structure outlined above.`;
 	try {
 		const response: any = await anthropic.messages.create({
 			// eslint-disable-next-line @elsikora-typescript/no-magic-numbers
-			max_tokens: 1000,
+			max_tokens: 2048,
 			messages: [{ content: userPrompt, role: "user" }],
 			model: model,
 			system: systemPrompt,

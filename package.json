@@ -32,6 +32,8 @@
 		"dist"
 	],
 	"scripts": {
+		"prebuild": "rimraf dist",
+		"build": "npm run prebuild && rollup -c",
 		"commit": "cz",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
@@ -86,6 +88,7 @@
 		"lint-staged": "^15.4.3",
 		"lodash.isfunction": "^3.0.9",
 		"prettier": "^3.5.2",
+		"rimraf": "^6.0.1",
 		"semantic-release": "^24.2.3",
 		"typescript": "^5.7.3"
 	},
