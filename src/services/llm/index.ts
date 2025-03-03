@@ -59,7 +59,8 @@ export async function generateCommitMessage(context: LLMPromptContext): Promise<
 
 		// Get the diff for content analysis
 		const { stdout: diff }: any = await execAsync("git diff --cached");
-		context.diff = diff;
+
+		if (!context.diff) context.diff = diff;
 	} catch {
 		console.warn("Failed to get git diff information, continuing without it");
 	}

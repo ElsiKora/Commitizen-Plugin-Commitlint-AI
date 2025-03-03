@@ -1,6 +1,6 @@
 {
 	"name": "@elsikora/commitizen-plugin-commitlint-ai",
-	"version": "1.0.0",
+	"version": "1.0.0-dev.1",
 	"description": "AI-powered Commitizen adapter with Commitlint integration",
 	"keywords": [
 		"conventional-changelog",
@@ -32,6 +32,8 @@
 		"dist"
 	],
 	"scripts": {
+		"prebuild": "rimraf dist",
+		"build": "npm run prebuild && rollup -c",
 		"commit": "cz",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
@@ -46,7 +48,7 @@
 	},
 	"config": {
 		"commitizen": {
-			"path": "@commitlint/cz-commitlint"
+			"path": "./index.cjs"
 		}
 	},
 	"dependencies": {
@@ -80,12 +82,12 @@
 		"commitizen": "^4.3.1",
 		"conventional-changelog-conventionalcommits": "^8.0.0",
 		"eslint": "^9.21.0",
-		"eslint-plugin-check-file": "^3.1.0",
 		"eslint-plugin-n": "^17.16.1",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.4.3",
 		"lodash.isfunction": "^3.0.9",
 		"prettier": "^3.5.2",
+		"rimraf": "^6.0.1",
 		"semantic-release": "^24.2.3",
 		"typescript": "^5.7.3"
 	},
@@ -93,8 +95,7 @@
 		"commitizen": "^4.0.3",
 		"inquirer": "^9.0.0"
 	},
-	"engines": {
-		"node": ">=v18"
-	},
-	"engineStrict": true
+	"publishConfig": {
+		"access": "public"
+	}
 }
