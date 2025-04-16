@@ -1,6 +1,6 @@
 import typescript from "@rollup/plugin-typescript";
 
-const external = ["node:fs", "node:path", "node:child_process", "node:util", "@commitlint/load", "@commitlint/types", "chalk", "dotenv", "lodash.isplainobject", "@anthropic-ai/sdk", "openai"];
+const external = ["node:fs", "node:path", "node:child_process", "node:util", "@commitlint/load", "@commitlint/types", "chalk", "dotenv", "lodash.isplainobject", "@anthropic-ai/sdk", "openai", "inquirer"];
 
 export default [
 	{
