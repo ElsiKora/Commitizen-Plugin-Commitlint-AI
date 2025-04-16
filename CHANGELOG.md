@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.0.0...v1.1.0) (2025-04-16)
+
+
+### Features
+
+* **commit-flow:** add option to switch between manual and ai commit modes ([fd8d653](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/fd8d653f9f8933dcddcb9305b43759519067c70d))
+
 # 1.0.0 (2025-03-03)
 
 
