@@ -1,5 +1,5 @@
 /* eslint-disable @elsikora-typescript/no-unsafe-assignment,@elsikora-typescript/no-unsafe-call,@elsikora-typescript/no-unsafe-member-access,@elsikora-typescript/restrict-template-expressions */
-import type { CommitConfig, LLMConfig, LLMConfigStorage, LLMPromptContext, LLMProvider } from "./types.js";
+import type { CommitConfig, LLMConfig, LLMConfigStorage, LLMPromptContext } from "./types.js";
 
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
@@ -85,7 +85,10 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 	let model: string;
 	let mode: string = "auto"; // Default mode
 
-	if (existingConfig) {
+	const isProviderExist: boolean = Boolean(existingConfig?.provider);
+	const isModelExist: boolean = Boolean(existingConfig?.model) && existingConfig?.model !== "undefined";
+
+	if (existingConfig && isProviderExist && isModelExist) {
 		// We have a saved config
 		provider = existingConfig.provider;
 		model = existingConfig.model;
@@ -194,11 +197,11 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 			// In manual mode, we don't need a model or provider, so skip forward
 			if (mode === "manual") {
 				// Even in manual mode, save the config to remember the mode choice
+				// eslint-disable-next-line @elsikora/typescript/no-non-null-assertion
+				const oldConfig: LLMConfig = getLLMConfig()!;
 				setLLMConfig({
-					apiKey: "",
+					...oldConfig,
 					mode: "manual",
-					model: model || "",
-					provider: (provider as LLMProvider) || "",
 				});
 
 				console.log(chalk.green(`✅ Manual commit mode configured successfully!`));
@@ -276,10 +279,10 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 	const modeResponse: any = await inquirer.prompt([
 		{
 			choices: [
-				{ name: "AI-powered (auto)", value: "auto" },
 				{ name: "Manual (traditional commitizen)", value: "manual" },
+				{ name: "AI-powered (auto)", value: "auto" },
 			],
-			default: "auto",
+			default: "manual",
 			message: "Select your preferred commit mode:",
 			name: "mode",
 			type: "list",
@@ -292,12 +295,12 @@ export async function selectLLMProvider(inquirer: any): Promise<void> {
 	if (mode === "manual") {
 		// Save minimal config with just the mode
 		// Note: explicit provider/model values to make debugging easier
+
+		// eslint-disable-next-line @elsikora/typescript/no-non-null-assertion
+		const oldConfig: LLMConfig = getLLMConfig()!;
 		setLLMConfig({
-			apiKey: "",
+			...oldConfig,
 			mode: "manual",
-			model: "none",
-			// @ts-ignore
-			provider: "none",
 		});
 
 		console.log(chalk.green(`✅ Manual commit mode configured successfully!`));
