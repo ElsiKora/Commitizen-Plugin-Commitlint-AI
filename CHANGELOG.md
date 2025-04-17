@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.1.0...v1.2.0) (2025-04-17)
+
+
+### Features
+
+* **commit:** add interactive commit message editor for rejected ai suggestions ([67c7fab](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/67c7fabb2eb99d305ab29c7dba60d7abb741300f))
+
 # [1.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.0.0...v1.1.0) (2025-04-16)
 
 
