@@ -1,3 +1,4 @@
+/* eslint-disable @elsikora/typescript/prefer-nullish-coalescing */
 /* eslint-disable @elsikora-typescript/restrict-template-expressions */
 import type { CommitConfig, LLMPromptContext } from "./llm";
 
@@ -6,7 +7,6 @@ import { promisify } from "node:util";
 
 import chalk from "chalk";
 
-// eslint-disable-next-line no-duplicate-imports
 import { generateCommitMessage } from "./llm";
 
 const execAsync: ReturnType<typeof promisify> = promisify(exec);
@@ -15,6 +15,44 @@ const execAsync: ReturnType<typeof promisify> = promisify(exec);
 interface ValidationResult {
 	errors?: string;
 	isValid: boolean;
+}
+
+/**
+ * Constructs a commit message from a CommitConfig object
+ * @param commitConfig The commit configuration
+ * @returns The formatted commit message
+ */
+export function constructCommitMessage(commitConfig: CommitConfig): string {
+	const type: string = commitConfig.type;
+	const scope: string = commitConfig.scope ? `(${commitConfig.scope})` : "";
+	const subject: string = commitConfig.subject;
+	const header: string = `${type}${scope}: ${subject}`;
+
+	// Body with optional breaking change
+	let body: string = "";
+
+	if (commitConfig.isBreaking) {
+		body = `BREAKING CHANGE: ${commitConfig.breakingBody || "This commit introduces breaking changes."}\n\n`;
+	}
+
+	if (commitConfig.body) {
+		body += commitConfig.body;
+	}
+
+	// Footer with issue references
+	let footer: string = "";
+
+	if (commitConfig.issues && commitConfig.issues.length > 0) {
+		footer = `Issues: ${commitConfig.issues.join(", ")}`;
+	}
+
+	if (commitConfig.references && commitConfig.references.length > 0) {
+		if (footer) footer += "\n";
+		footer += `References: ${commitConfig.references.join(", ")}`;
+	}
+
+	// Combine all parts
+	return [header, body, footer].filter(Boolean).join("\n\n");
 }
 
 /**
@@ -116,44 +154,6 @@ export async function validateWithCommitlint(commitMessage: string): Promise<Val
 			isValid: false,
 		};
 	}
-}
-
-/**
- * Constructs a commit message from a CommitConfig object
- * @param commitConfig The commit configuration
- * @returns The formatted commit message
- */
-function constructCommitMessage(commitConfig: CommitConfig): string {
-	const type: string = commitConfig.type;
-	const scope: string = commitConfig.scope ? `(${commitConfig.scope})` : "";
-	const subject: string = commitConfig.subject;
-	const header: string = `${type}${scope}: ${subject}`;
-
-	// Body with optional breaking change
-	let body: string = "";
-
-	if (commitConfig.isBreaking) {
-		body = `BREAKING CHANGE: ${commitConfig.breakingBody ?? "This commit introduces breaking changes."}\n\n`;
-	}
-
-	if (commitConfig.body) {
-		body += commitConfig.body;
-	}
-
-	// Footer with issue references
-	let footer: string = "";
-
-	if (commitConfig.issues && commitConfig.issues.length > 0) {
-		footer = `Issues: ${commitConfig.issues.join(", ")}`;
-	}
-
-	if (commitConfig.references && commitConfig.references.length > 0) {
-		if (footer) footer += "\n";
-		footer += `References: ${commitConfig.references.join(", ")}`;
-	}
-
-	// Combine all parts
-	return [header, body, footer].filter(Boolean).join("\n\n");
 }
 
 /**

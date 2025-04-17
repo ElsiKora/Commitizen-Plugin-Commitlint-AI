@@ -5,9 +5,9 @@ import type { CommitConfig, LLMConfigStorage, LLMPromptContext } from "./service
 
 import chalk from "chalk";
 
+import { commitConfirmation } from "./services/commitConfirmation.js";
 import { extractLLMPromptContext } from "./services/commitlintConfig.js";
 import { validateAndFixCommitMessage } from "./services/commitlintValidator.js";
-// eslint-disable-next-line no-duplicate-imports
 import { generateCommitMessage, getLLMConfig, selectLLMProvider } from "./services/llm/index.js";
 import { setPromptConfig } from "./store/prompts.js";
 import { setRules } from "./store/rules.js";
@@ -70,8 +70,11 @@ export default async function Process(
 				if (confirmCommit) {
 					return validatedCommitMessage;
 				} else {
+					console.log(chalk.yellow("AI generated message rejected. Switching to commit edit mode."));
+					const confirmedCommitMessage: string = await commitConfirmation(promptContext, { ...commitConfig, scope: extractCommitScope(validatedCommitMessage) });
+
+					return confirmedCommitMessage;
 					// If user rejects the generated message, fall through to the manual entry option
-					console.log(chalk.yellow("AI-generated message rejected. Switching to manual commit entry."));
 				}
 			}
 		} catch (error) {
@@ -213,4 +216,15 @@ export default async function Process(
 	}
 
 	return commitMessage;
+}
+
+function extractCommitScope(commitMessage: string): string {
+	const scopeRegex: RegExp = /^[^(\n]+(\([^)\n]+\))?:/;
+	const match: null | RegExpExecArray = scopeRegex.exec(commitMessage);
+
+	if (match?.[1]) {
+		return match[1].slice(1, -1);
+	}
+
+	return "";
 }
