@@ -52,7 +52,7 @@
 		}
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^0.39.0",
+		"@anthropic-ai/sdk": "^0.40.1",
 		"@commitlint/ensure": "^19.5.0",
 		"@commitlint/load": "^19.6.1",
 		"@commitlint/types": "^19.5.0",
