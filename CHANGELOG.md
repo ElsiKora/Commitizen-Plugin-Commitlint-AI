@@ -1,3 +1,92 @@
+# [2.0.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.2.0...v2.0.0) (2025-05-25)
+
+
+### Code Refactoring
+
+* **architecture:** migrate to clean architecture with domain-driven design ([ee754c9](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/ee754c9244334bba1b8d4aab5eba0d6314cd21c4))
+* **core:** migrate to esm modules and update dependencies ([ed2c8df](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/ed2c8df93615c2af67d3a93c55962c561c3295e7))
+* **prompts:** replace inquirer with custom prompts interface ([aaa49e8](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/aaa49e8c9b08bd34f1719671f79593986062a6d5))
+
+
+### Features
+
+* **llm:** add support for multiple llm providers ([14aa53e](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/14aa53e3b446002313b8dab0ce8063dab608f8e2))
+
+
+### BREAKING CHANGES
+
+* **llm:** Configuration format has changed. Users must update their
+commitlint-ai.config.js to specify the provider and model explicitly.
+The old format is no longer supported.
+
+Implemented comprehensive LLM provider support with clean architecture principles.
+Added four new LLM service implementations:
+- AWS Bedrock with Claude models support
+- Azure OpenAI with GPT-4 and GPT-3.5 models
+- Google AI with Gemini models
+- Ollama for local model execution
+
+Each provider includes:
+- Proper error handling and retry logic
+- Model-specific configurations and constraints
+- Token counting and validation
+- Streaming response support where applicable
+
+Updated configuration system to support provider-specific settings.
+Enhanced documentation with detailed setup instructions for each provider.
+* **core:** This package now requires Node.js with ESM support.
+Consumers must update their import statements to use ESM syntax.
+
+This commit refactors the entire codebase to use ESM modules instead of CommonJS.
+Key changes include:
+- Updated all import/export statements to use ESM syntax
+- Converted require() calls to import statements
+- Updated package.json to use "type": "module"
+- Refactored rollup configuration for ESM compatibility
+- Updated all file extensions in imports to include .js
+- Reorganized exports to use named exports consistently
+
+Additionally, this commit includes dependency updates and improvements to the overall
+code structure for better maintainability.
+* **architecture:** Internal architecture completely changed. External API remains compatible.
+
+Restructured the entire codebase to follow clean architecture principles and domain-driven
+design patterns. This major refactoring improves code organization, testability, and
+maintainability.
+
+Key changes:
+- Separated code into domain, application, infrastructure, and presentation layers
+- Introduced use cases for core business logic (configure LLM, generate commit, manual commit,
+validate commit)
+- Created domain entities and value objects for type safety and business rule enforcement
+- Implemented repository pattern for git operations
+- Added dependency injection container for better decoupling
+- Migrated from class-based to functional approach in use cases
+- Removed old monolithic classes (Process, ManualProcess, Question, etc.)
+- Reorganized LLM services with proper interfaces and implementations
+- Enhanced configuration management with dedicated service
+
+This refactoring maintains all existing functionality while providing a more scalable and
+maintainable foundation for future development.
+* **prompts:** The public API has changed. The prompter function no
+longer requires an inquirer instance as the first parameter.
+The parameter is kept for backward compatibility but is ignored.
+Applications using this library will need to update their integration code.
+
+Replaced the inquirer dependency with a custom prompts interface
+built on top of the prompts library.
+This change provides a more consistent and maintainable API for
+handling user prompts throughout the application.
+
+Key changes:
+- Created new PromptsInterface abstraction in src/services/promptsInterface.ts
+- Replaced all inquirer.prompt calls with promptsInterface.prompt
+- Updated question types to match the new interface
+- Removed inquirer from dependencies
+- Added prompts library as a dependency
+- Updated AI model configurations (Anthropic and OpenAI models)
+- Fixed various linting issues and improved type safety.
+
 # [1.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.1.0...v1.2.0) (2025-04-17)
 
 ### Features
