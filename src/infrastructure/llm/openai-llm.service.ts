@@ -18,9 +18,9 @@ import { CommitHeader } from "../../domain/value-object/commit-header.value-obje
 export class OpenAILlmService implements ILlmService {
 	/**
 	 * Generate a commit message using OpenAI
-	 * @param context - The context for generating the commit message
-	 * @param configuration - The LLM configuration
-	 * @returns Promise resolving to the generated commit message
+	 * @param {ILlmPromptContext} context - The context for generating the commit message
+	 * @param {LLMConfiguration} configuration - The LLM configuration
+	 * @returns {Promise<CommitMessage>} Promise resolving to the generated commit message
 	 */
 	async generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage> {
 		const openai: OpenAI = new OpenAI({
@@ -51,8 +51,8 @@ export class OpenAILlmService implements ILlmService {
 
 	/**
 	 * Check if the service supports the given configuration
-	 * @param configuration - The LLM configuration to check
-	 * @returns True if the service supports the configuration
+	 * @param {LLMConfiguration} configuration - The LLM configuration to check
+	 * @returns {boolean} True if the service supports the configuration
 	 */
 	supports(configuration: LLMConfiguration): boolean {
 		return configuration.getProvider() === ("openai" as ELLMProvider);
@@ -60,8 +60,8 @@ export class OpenAILlmService implements ILlmService {
 
 	/**
 	 * Build the system prompt for OpenAI
-	 * @param context - The prompt context
-	 * @returns The system prompt
+	 * @param {ILlmPromptContext} context - The prompt context
+	 * @returns {string} The system prompt
 	 */
 	private buildSystemPrompt(context: ILlmPromptContext): string {
 		let prompt: string = "";
@@ -163,8 +163,8 @@ export class OpenAILlmService implements ILlmService {
 
 	/**
 	 * Build the user prompt for OpenAI
-	 * @param context - The prompt context
-	 * @returns The user prompt
+	 * @param {ILlmPromptContext} context - The prompt context
+	 * @returns {string} The user prompt
 	 */
 	private buildUserPrompt(context: ILlmPromptContext): string {
 		let prompt: string = "";
@@ -211,8 +211,8 @@ export class OpenAILlmService implements ILlmService {
 
 	/**
 	 * Format commitlint rules into human-readable instructions
-	 * @param rules - The commitlint rules object
-	 * @returns Formatted rules as string
+	 * @param {Record<string, unknown>} rules - The commitlint rules object
+	 * @returns {string} Formatted rules as string
 	 */
 	private formatCommitlintRules(rules: Record<string, unknown>): string {
 		const formattedRules: Array<string> = [];
@@ -335,8 +335,8 @@ export class OpenAILlmService implements ILlmService {
 
 	/**
 	 * Parse the commit message from the LLM response
-	 * @param content - The response content
-	 * @returns The parsed commit message
+	 * @param {string} content - The response content
+	 * @returns {CommitMessage} The parsed commit message
 	 */
 	private parseCommitMessage(content: string): CommitMessage {
 		try {
@@ -384,6 +384,11 @@ export class OpenAILlmService implements ILlmService {
 		} catch {
 			// Fallback: try to parse as plain text
 			const lines: Array<string> = content.trim().split("\n");
+
+			if (lines.length === 0 || !lines[0]) {
+				throw new Error("No content to parse");
+			}
+
 			const headerLine: string = lines[0];
 
 			// Parse header: type(scope): subject
@@ -393,7 +398,18 @@ export class OpenAILlmService implements ILlmService {
 				throw new Error(`Invalid commit message format. Could not parse: "${headerLine}"`);
 			}
 
-			const [, type, scope, subject]: Array<string> = headerMatch;
+			const HEADER_TYPE_INDEX: number = 1;
+			const HEADER_SCOPE_INDEX: number = 2;
+			const HEADER_SUBJECT_INDEX: number = 3;
+
+			const type: string | undefined = headerMatch[HEADER_TYPE_INDEX];
+			const scope: string | undefined = headerMatch[HEADER_SCOPE_INDEX];
+			const subject: string | undefined = headerMatch[HEADER_SUBJECT_INDEX];
+
+			if (!type || !subject) {
+				throw new Error("Missing required fields: type and subject");
+			}
+
 			const header: CommitHeader = new CommitHeader(type, subject, scope);
 
 			// Parse body and breaking changes
@@ -401,7 +417,9 @@ export class OpenAILlmService implements ILlmService {
 			let breakingChange: string | undefined;
 
 			for (let index: number = 1; index < lines.length; index++) {
-				const line: string = lines[index];
+				const line: string | undefined = lines[index];
+
+				if (!line) continue;
 
 				if (line.startsWith("BREAKING CHANGE:")) {
 					breakingChange = line.slice("BREAKING CHANGE:".length).trim();

@@ -51,15 +51,18 @@ The plugin is built using clean architecture principles with clear separation of
 ### Layers
 
 - **Domain Layer**: Core business logic, entities, and value objects
+
   - Entities: `CommitMessage`, `LLMConfiguration`
   - Value Objects: `ApiKey`, `CommitBody`, `CommitHeader`
   - Enums: `ECommitMode`, `ELLMProvider`, `ELogLevel`
 
 - **Application Layer**: Use cases and interfaces
+
   - Use Cases: `GenerateCommitMessageUseCase`, `ValidateCommitMessageUseCase`, `ConfigureLLMUseCase`
   - Interfaces: `ILLMService`, `ICommitValidator`, `IConfigService`, etc.
 
 - **Infrastructure Layer**: External services and implementations
+
   - LLM Services: `OpenAILLMService`, `AnthropicLLMService`, `GoogleLLMService`, `AzureOpenAILLMService`, `AWSBedrockLLMService`, `OllamaLLMService`
   - Services: `CommitlintValidatorService`, `CosmicConfigService`, `PromptsCliInterface`
   - Repositories: `GitCommitRepository`
@@ -98,6 +101,7 @@ git cz
 ```
 
 The plugin will:
+
 1. Ask for your commit mode preference (auto/manual)
 2. If auto mode and no API key is configured, guide you through configuration
 3. Generate or help you write a commit message
@@ -130,6 +134,7 @@ The plugin supports multiple configuration methods using [Cosmiconfig](https://g
 ### Configuration File Locations
 
 Create a configuration file in any of these locations:
+
 - `.commitlintairc`
 - `.commitlintairc.json`
 - `.commitlintairc.yaml`
@@ -145,29 +150,29 @@ Create a configuration file in any of these locations:
 ```javascript
 // commitlintai.config.js
 module.exports = {
-  // AI provider: 'openai', 'anthropic', 'google', 'azure-openai', 'aws-bedrock', or 'ollama'
-  provider: 'openai',
-  
-  // Model to use (auto-migrates deprecated models)
-  model: 'gpt-4o',
-  
-  // Mode: 'auto' or 'manual'
-  mode: 'auto',
-  
-  // API key (optional - env vars recommended)
-  // Format varies by provider:
-  // - OpenAI/Anthropic/Google: 'your-api-key'
-  // - Azure OpenAI: 'endpoint|api-key|deployment-name'
-  // - AWS Bedrock: 'region|access-key-id|secret-access-key'
-  // - Ollama: 'host:port' or 'host:port|custom-model-name'
-  apiKey: 'your-api-key',
-  
-  // Retry configuration
-  maxGenerationRetries: 3,
-  maxValidationRetries: 3,
-  
-  // Custom instructions for AI
-  instructions: 'Focus on user-facing changes'
+	// AI provider: 'openai', 'anthropic', 'google', 'azure-openai', 'aws-bedrock', or 'ollama'
+	provider: "openai",
+
+	// Model to use (auto-migrates deprecated models)
+	model: "gpt-4o",
+
+	// Mode: 'auto' or 'manual'
+	mode: "auto",
+
+	// API key (optional - env vars recommended)
+	// Format varies by provider:
+	// - OpenAI/Anthropic/Google: 'your-api-key'
+	// - Azure OpenAI: 'endpoint|api-key|deployment-name'
+	// - AWS Bedrock: 'region|access-key-id|secret-access-key'
+	// - Ollama: 'host:port' or 'host:port|custom-model-name'
+	apiKey: "your-api-key",
+
+	// Retry configuration
+	maxGenerationRetries: 3,
+	maxValidationRetries: 3,
+
+	// Custom instructions for AI
+	instructions: "Focus on user-facing changes",
 };
 ```
 
@@ -176,19 +181,21 @@ module.exports = {
 ## Supported LLM Providers
 
 ### OpenAI
+
 - `gpt-4.1` (Latest 2025, most capable)
 - `gpt-4.1-nano` (Fastest 4.1 model)
 - `gpt-4.1-mini` (Balanced performance)
 - `gpt-4o` (Enhanced creative writing)
 - `gpt-4o-mini` (Faster, cost-effective)
-- `gpt-4-turbo` 
+- `gpt-4-turbo`
 - `gpt-4` (Original)
 - `gpt-3.5-turbo` (Fastest, most economical)
 - `o1` (Enhanced reasoning)
 - `o1-mini` (Fast reasoning)
 
 ### Anthropic
-- `claude-opus-4-20250514` (Latest 2025, most capable) 
+
+- `claude-opus-4-20250514` (Latest 2025, most capable)
 - `claude-sonnet-4-20250514` (Latest 2025, high-performance)
 - `claude-3-7-sonnet-latest` (Extended thinking capabilities)
 - `claude-3-5-sonnet-latest` (Previous flagship)
@@ -196,6 +203,7 @@ module.exports = {
 - `claude-3-opus-latest` (Complex tasks)
 
 ### Google (Gemini)
+
 - `gemini-2.5-pro` (Latest 2025, most capable)
 - `gemini-2.5-flash` (Latest 2025, fast)
 - `gemini-2.0-flash-exp` (Experimental)
@@ -205,12 +213,14 @@ module.exports = {
 - `gemini-1.0-pro`
 
 ### Google (Gemma - Open Models for Vertex AI)
+
 - `gemma-3-27b` (Most capable open model)
 - `gemma-3-12b` (Strong language capabilities)
 - `gemma-3-4b` (Balanced, multimodal support)
 - `gemma-3-1b` (Lightweight for edge deployment)
 
 ### Azure OpenAI
+
 - `gpt-4.1-turbo-2024-12-17` (Latest 2025, most capable)
 - `gpt-4.1-preview-2024-12-17` (Latest preview)
 - `gpt-4.1-mini-2024-12-17` (Fast 4.1 model)
@@ -222,6 +232,7 @@ module.exports = {
 - `o4-mini-2024-12-17` (Fast reasoning)
 
 ### AWS Bedrock
+
 - `anthropic.claude-opus-4-20250514-v1:0` (Claude Opus 4 - Latest 2025, most capable)
 - `anthropic.claude-sonnet-4-20250514-v1:0` (Claude Sonnet 4 - Latest 2025, balanced)
 - `anthropic.claude-3-5-sonnet-20241022-v2:0` (Claude 3.5 Sonnet v2)
@@ -233,6 +244,7 @@ module.exports = {
 - `mistral.mistral-large-2411-v1:0` (Latest Mistral)
 
 ### Ollama (Local Models)
+
 - `llama3.2` (Latest Llama)
 - `llama3.1`
 - `llama3`
@@ -246,14 +258,14 @@ module.exports = {
 ```javascript
 // commitlint.config.js
 export default {
-  extends: ['@commitlint/config-conventional'],
-  rules: {
-    'type-enum': [2, 'always', ['feat', 'fix', 'docs', 'style', 'refactor']],
-    'scope-case': [2, 'always', 'lower-case'],
-    'subject-max-length': [2, 'always', 72],
-    'body-max-line-length': [2, 'always', 100]
-  }
-}
+	extends: ["@commitlint/config-conventional"],
+	rules: {
+		"type-enum": [2, "always", ["feat", "fix", "docs", "style", "refactor"]],
+		"scope-case": [2, "always", "lower-case"],
+		"subject-max-length": [2, "always", 72],
+		"body-max-line-length": [2, "always", 100],
+	},
+};
 ```
 
 ### Manual Mode
@@ -270,36 +282,36 @@ touch .elsikora/manual
 
 ```json
 {
-  "commitlintai": {
-    "provider": "anthropic",
-    "model": "claude-3-5-sonnet-20241022",
-    "mode": "auto",
-    "maxGenerationRetries": 5
-  }
+	"commitlintai": {
+		"provider": "anthropic",
+		"model": "claude-3-5-sonnet-20241022",
+		"mode": "auto",
+		"maxGenerationRetries": 5
+	}
 }
 ```
 
 ## 🛣 Roadmap
 
-| Task / Feature                                                            | Status      |
-| ------------------------------------------------------------------------- | ----------- |
-| AI-powered commit message generation using OpenAI or Anthropic models     | ✅ Complete |
-| Full integration with Commitlint rules and configuration                  | ✅ Complete |
-| Support for both manual and automatic commit modes                        | ✅ Complete |
-| Clean architecture implementation                                         | ✅ Complete |
-| Cosmiconfig support for flexible configuration                           | ✅ Complete |
-| Environment variable support with priority over config                    | ✅ Complete |
-| Automatic model migration for deprecated models                          | ✅ Complete |
-| Configurable retry mechanism with UI feedback                           | ✅ Complete |
-| Dependency injection with @elsikora/cladi                               | ✅ Complete |
-| Support for more AI providers (Google, Azure, AWS, Ollama)              | ✅ Complete |
-| Enhanced diff analysis for better commit suggestions                     | 🚧 Planned  |
-| Custom prompt templates per project                                      | 🚧 Planned  |
-| Integration with more Git hosting platforms                              | 🚧 Planned  |
-| Performance optimizations for large codebases                            | 🚧 Planned  |
-| Multi-language support for commit messages                               | 🚧 Planned  |
-| Team collaboration features                                              | 🚧 Planned  |
-| Web UI for configuration management                                      | 🚧 Planned  |
+| Task / Feature                                                        | Status      |
+| --------------------------------------------------------------------- | ----------- |
+| AI-powered commit message generation using OpenAI or Anthropic models | ✅ Complete |
+| Full integration with Commitlint rules and configuration              | ✅ Complete |
+| Support for both manual and automatic commit modes                    | ✅ Complete |
+| Clean architecture implementation                                     | ✅ Complete |
+| Cosmiconfig support for flexible configuration                        | ✅ Complete |
+| Environment variable support with priority over config                | ✅ Complete |
+| Automatic model migration for deprecated models                       | ✅ Complete |
+| Configurable retry mechanism with UI feedback                         | ✅ Complete |
+| Dependency injection with @elsikora/cladi                             | ✅ Complete |
+| Support for more AI providers (Google, Azure, AWS, Ollama)            | ✅ Complete |
+| Enhanced diff analysis for better commit suggestions                  | 🚧 Planned  |
+| Custom prompt templates per project                                   | 🚧 Planned  |
+| Integration with more Git hosting platforms                           | 🚧 Planned  |
+| Performance optimizations for large codebases                         | 🚧 Planned  |
+| Multi-language support for commit messages                            | 🚧 Planned  |
+| Team collaboration features                                           | 🚧 Planned  |
+| Web UI for configuration management                                   | 🚧 Planned  |
 
 ## ❓ FAQ
 
@@ -323,6 +335,7 @@ A: Set the model to `custom` and include the model name in your API key: `localh
 
 **Q: What's the difference between provider API key formats?**  
 A: Each provider has specific requirements:
+
 - OpenAI/Anthropic/Google: Simple API key string
 - Azure OpenAI: `endpoint|api-key|deployment-name`
 - AWS Bedrock: `region|access-key-id|secret-access-key`

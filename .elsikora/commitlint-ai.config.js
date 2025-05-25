@@ -1,7 +1,7 @@
 export default {
 	maxRetries: 3,
 	mode: "auto",
-	model: "custom",
-	provider: "ollama",
+	model: "claude-opus-4-20250514",
+	provider: "anthropic",
 	validationMaxRetries: 3,
 };

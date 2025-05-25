@@ -1,4 +1,3 @@
-import type { ECommitMode } from "../../domain/enum/commit-mode.enum.js";
 import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
 import type { IConfigService } from "../interface/config-service.interface.js";
 import type { IConfig } from "../interface/config.interface.js";
@@ -8,6 +7,7 @@ import { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.j
 import { EAnthropicModel } from "../../domain/enum/anthropic-model.enum.js";
 import { EAWSBedrockModel } from "../../domain/enum/aws-bedrock-model.enum.js";
 import { EAzureOpenAIModel } from "../../domain/enum/azure-openai-model.enum.js";
+import { ECommitMode } from "../../domain/enum/commit-mode.enum.js";
 import { EGoogleModel } from "../../domain/enum/google-model.enum.js";
 import { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
 import { EOllamaModel } from "../../domain/enum/ollama-model.enum.js";
@@ -29,21 +29,21 @@ export class ConfigureLLMUseCase {
 
 	/**
 	 * Configure LLM settings interactively
-	 * @returns Promise resolving to the new configuration
+	 * @returns {Promise<LLMConfiguration>} Promise resolving to the new configuration
 	 */
 	async configureInteractively(): Promise<LLMConfiguration> {
 		// First, select mode
 		const mode: ECommitMode = await this.CLI_INTERFACE.select<ECommitMode>(
 			"Select commit mode:",
 			[
-				{ label: "Auto (AI-powered)", value: "auto" as ECommitMode },
-				{ label: "Manual", value: "manual" as ECommitMode },
+				{ label: "Auto (AI-powered)", value: ECommitMode.AUTO },
+				{ label: "Manual", value: ECommitMode.MANUAL },
 			],
-			"auto",
+			ECommitMode.AUTO,
 		);
 
 		// If manual mode, create a minimal configuration
-		if (mode === ("manual" as ECommitMode)) {
+		if (mode === ECommitMode.MANUAL) {
 			// Create configuration with dummy values for manual mode
 			const configuration: LLMConfiguration = new LLMConfiguration(
 				"openai" as ELLMProvider, // Default provider (won't be used)
@@ -204,7 +204,7 @@ export class ConfigureLLMUseCase {
 		}
 
 		// Get API key
-		let apiKeyValue: string;
+		let credentialValue: string;
 
 		// Check environment variables first
 		const environmentVariableNames: Record<string, string> = {
@@ -216,12 +216,12 @@ export class ConfigureLLMUseCase {
 			openai: "OPENAI_API_KEY",
 		};
 
-		const environmentVariableName: string = environmentVariableNames[provider] || "";
+		const environmentVariableName: string = environmentVariableNames[provider] ?? "";
 		const environmentApiKey: string | undefined = process.env[environmentVariableName];
 
 		if (environmentApiKey && environmentApiKey.trim().length > 0) {
 			this.CLI_INTERFACE.success(`Found API key in environment variable: ${environmentVariableName}`);
-			apiKeyValue = environmentApiKey;
+			credentialValue = environmentApiKey;
 		} else {
 			// Inform user about environment variable and format requirements
 			let keyFormatInfo: string = "";
@@ -273,7 +273,7 @@ export class ConfigureLLMUseCase {
 
 			this.CLI_INTERFACE.info(`API key will be read from ${environmentVariableName} environment variable${keyFormatInfo} or prompted each time.`);
 			// Use dummy value for configuration
-			apiKeyValue = "will-prompt-on-use";
+			credentialValue = "will-prompt-on-use";
 		}
 
 		// Ask for retry configuration (advanced settings)
@@ -289,6 +289,9 @@ export class ConfigureLLMUseCase {
 				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
 					return "Please enter a number between 1 and 10";
 				}
+
+				// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
+				return;
 			});
 			maxRetries = Number.parseInt(retriesString, 10);
 
@@ -298,13 +301,16 @@ export class ConfigureLLMUseCase {
 				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
 					return "Please enter a number between 1 and 10";
 				}
+
+				// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
+				return;
 			});
 			validationMaxRetries = Number.parseInt(validationRetriesString, 10);
 		}
 
 		// Create configuration
 		// Create configuration - will save without API key
-		const configuration: LLMConfiguration = new LLMConfiguration(provider, new ApiKey(apiKeyValue), mode, model, maxRetries, validationMaxRetries);
+		const configuration: LLMConfiguration = new LLMConfiguration(provider, new ApiKey(credentialValue), mode, model, maxRetries, validationMaxRetries);
 
 		// Save configuration (without API key)
 		await this.saveConfiguration(configuration);
@@ -318,7 +324,7 @@ export class ConfigureLLMUseCase {
 
 	/**
 	 * Get the current LLM configuration
-	 * @returns Promise resolving to the current configuration or null if not configured
+	 * @returns {Promise<LLMConfiguration | null>} Promise resolving to the current configuration or null if not configured
 	 */
 	async getCurrentConfiguration(): Promise<LLMConfiguration | null> {
 		const config: IConfig = await this.CONFIG_SERVICE.get();
@@ -384,7 +390,7 @@ export class ConfigureLLMUseCase {
 		}
 
 		// For manual mode, return configuration with dummy API key
-		if (config.mode === ("manual" as ECommitMode)) {
+		if (config.mode === ECommitMode.MANUAL) {
 			return new LLMConfiguration(config.provider, new ApiKey("manual-mode"), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES);
 		}
 
@@ -398,7 +404,7 @@ export class ConfigureLLMUseCase {
 			openai: "OPENAI_API_KEY",
 		};
 
-		const environmentVariableName: string = environmentVariableNames[config.provider] || "";
+		const environmentVariableName: string = environmentVariableNames[config.provider] ?? "";
 		const environmentApiKey: string | undefined = process.env[environmentVariableName];
 
 		// If no API key in environment, return null (will prompt later)
@@ -411,12 +417,12 @@ export class ConfigureLLMUseCase {
 
 	/**
 	 * Check if the current configuration needs LLM details
-	 * @returns Promise resolving to true if LLM details are needed
+	 * @returns {Promise<boolean>} Promise resolving to true if LLM details are needed
 	 */
 	async needsLLMDetails(): Promise<boolean> {
 		const config: IConfig = await this.CONFIG_SERVICE.get();
 
-		if (!config.mode || config.mode === ("manual" as ECommitMode)) {
+		if (!config.mode || config.mode === ECommitMode.MANUAL) {
 			return false;
 		}
 
@@ -430,7 +436,7 @@ export class ConfigureLLMUseCase {
 			openai: "OPENAI_API_KEY",
 		};
 
-		const environmentVariableName: string = environmentVariableNames[config.provider] || "";
+		const environmentVariableName: string = environmentVariableNames[config.provider] ?? "";
 		const environmentApiKey: string | undefined = process.env[environmentVariableName];
 
 		// Need details if no API key in environment
@@ -439,7 +445,8 @@ export class ConfigureLLMUseCase {
 
 	/**
 	 * Save LLM configuration
-	 * @param configuration - The configuration to save
+	 * @param {LLMConfiguration} configuration - The configuration to save
+	 * @returns {Promise<void>} Promise that resolves when configuration is saved
 	 */
 	async saveConfiguration(configuration: LLMConfiguration): Promise<void> {
 		const config: IConfig = {
@@ -455,8 +462,8 @@ export class ConfigureLLMUseCase {
 
 	/**
 	 * Update the commit mode
-	 * @param mode - The new commit mode
-	 * @returns Promise resolving to the updated configuration
+	 * @param {ECommitMode} mode - The new commit mode
+	 * @returns {Promise<LLMConfiguration | null>} Promise resolving to the updated configuration
 	 */
 	async updateMode(mode: ECommitMode): Promise<LLMConfiguration | null> {
 		const current: LLMConfiguration | null = await this.getCurrentConfiguration();

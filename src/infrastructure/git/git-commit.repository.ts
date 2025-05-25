@@ -14,8 +14,8 @@ export class GitCommitRepository implements ICommitRepository {
 
 	/**
 	 * Create a commit with the given message
-	 * @param message - The commit message
-	 * @returns Promise that resolves when the commit is created
+	 * @param {CommitMessage} message - The commit message
+	 * @returns {Promise<void>} Promise that resolves when the commit is created
 	 */
 	async commit(message: CommitMessage): Promise<void> {
 		// Escape the commit message for shell
@@ -27,7 +27,7 @@ export class GitCommitRepository implements ICommitRepository {
 
 	/**
 	 * Get the current branch name
-	 * @returns Promise resolving to the current branch name
+	 * @returns {Promise<string>} Promise resolving to the current branch name
 	 */
 	async getCurrentBranch(): Promise<string> {
 		const branch: string = await this.COMMAND_SERVICE.executeWithOutput("git rev-parse --abbrev-ref HEAD");
@@ -37,7 +37,7 @@ export class GitCommitRepository implements ICommitRepository {
 
 	/**
 	 * Get the staged diff
-	 * @returns Promise resolving to the staged diff
+	 * @returns {Promise<string>} Promise resolving to the staged diff
 	 */
 	async getStagedDiff(): Promise<string> {
 		try {
@@ -58,7 +58,7 @@ export class GitCommitRepository implements ICommitRepository {
 
 	/**
 	 * Get the list of staged files
-	 * @returns Promise resolving to the list of staged files
+	 * @returns {Promise<Array<string>>} Promise resolving to array of staged file paths
 	 */
 	async getStagedFiles(): Promise<Array<string>> {
 		try {
@@ -72,7 +72,7 @@ export class GitCommitRepository implements ICommitRepository {
 
 	/**
 	 * Check if there are staged changes
-	 * @returns Promise resolving to true if there are staged changes
+	 * @returns {Promise<boolean>} Promise resolving to true if there are staged changes
 	 */
 	async hasStagedChanges(): Promise<boolean> {
 		try {

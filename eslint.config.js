@@ -9,8 +9,11 @@ export default [
 	...(await createConfig({
 		withCheckFile: true,
 		withJavascript: true,
+		withJsDoc: true,
 		withJson: true,
+		withMarkdown: true,
 		withNode: true,
+		withNoSecrets: true,
 		withPackageJson: true,
 		withPerfectionist: true,
 		withPrettier: true,

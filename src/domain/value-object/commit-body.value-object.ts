@@ -13,6 +13,8 @@ export class CommitBody {
 
 	/**
 	 * Check if two bodies are equal
+	 * @param {CommitBody} other - The other commit body to compare with
+	 * @returns {boolean} True if the bodies are equal
 	 */
 	equals(other: CommitBody): boolean {
 		return this.CONTENT === other.CONTENT && this.BREAKING_CHANGE === other.BREAKING_CHANGE;
@@ -20,6 +22,7 @@ export class CommitBody {
 
 	/**
 	 * Get the breaking change description
+	 * @returns {string | undefined} The breaking change description or undefined
 	 */
 	getBreakingChange(): string | undefined {
 		return this.BREAKING_CHANGE;
@@ -27,6 +30,7 @@ export class CommitBody {
 
 	/**
 	 * Get the body content
+	 * @returns {string | undefined} The body content or undefined
 	 */
 	getContent(): string | undefined {
 		return this.CONTENT;
@@ -34,6 +38,7 @@ export class CommitBody {
 
 	/**
 	 * Check if there is a breaking change
+	 * @returns {boolean} True if there is a breaking change
 	 */
 	hasBreakingChange(): boolean {
 		return !!this.BREAKING_CHANGE;
@@ -41,6 +46,7 @@ export class CommitBody {
 
 	/**
 	 * Check if the body is empty
+	 * @returns {boolean} True if the body is empty
 	 */
 	isEmpty(): boolean {
 		return !this.CONTENT && !this.BREAKING_CHANGE;
@@ -48,6 +54,7 @@ export class CommitBody {
 
 	/**
 	 * Format the body as a string
+	 * @returns {string} The formatted body text
 	 */
 	toString(): string {
 		const parts: Array<string> = [];

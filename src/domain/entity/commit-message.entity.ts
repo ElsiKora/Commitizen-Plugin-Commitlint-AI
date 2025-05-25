@@ -16,27 +16,39 @@ export class CommitMessage {
 
 	/**
 	 * Get the commit body
+	 * @returns {CommitBody} The commit body
 	 */
 	getBody(): CommitBody {
 		return this.BODY;
 	}
 
 	/**
+	 * Get breaking change text if present
+	 * @returns {string | undefined} The breaking change text or undefined
+	 */
+	getBreakingChange(): string | undefined {
+		return this.BODY.getBreakingChange();
+	}
+
+	/**
 	 * Get the commit header
+	 * @returns {CommitHeader} The commit header
 	 */
 	getHeader(): CommitHeader {
 		return this.HEADER;
 	}
 
 	/**
-	 * Check if the commit has a breaking change
+	 * Check if this is a breaking change
+	 * @returns {boolean} True if breaking change
 	 */
-	hasBreakingChange(): boolean {
+	isBreakingChange(): boolean {
 		return this.BODY.hasBreakingChange();
 	}
 
 	/**
 	 * Format the complete commit message
+	 * @returns {string} The formatted commit message
 	 */
 	toString(): string {
 		const parts: Array<string> = [this.HEADER.toString()];
@@ -49,14 +61,18 @@ export class CommitMessage {
 	}
 
 	/**
-	 * Create a new commit message with updated body
+	 * Create a new CommitMessage with a different body
+	 * @param {CommitBody} body - The new body
+	 * @returns {CommitMessage} A new CommitMessage instance with the updated body
 	 */
 	withBody(body: CommitBody): CommitMessage {
 		return new CommitMessage(this.HEADER, body);
 	}
 
 	/**
-	 * Create a new commit message with updated header
+	 * Create a new CommitMessage with a different header
+	 * @param {CommitHeader} header - The new header
+	 * @returns {CommitMessage} A new CommitMessage instance with the updated header
 	 */
 	withHeader(header: CommitHeader): CommitMessage {
 		return new CommitMessage(header, this.BODY);

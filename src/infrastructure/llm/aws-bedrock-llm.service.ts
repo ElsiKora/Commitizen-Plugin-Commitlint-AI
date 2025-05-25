@@ -6,16 +6,12 @@ import type { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
 
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 
+import { MIN_RULE_LENGTH, RULE_CONFIG_LENGTH, RULE_VALUE_INDEX, VALIDATION_LEVEL_DISABLED, VALIDATION_LEVEL_ERROR } from "../../domain/constant/numeric.constant.js";
 import { CommitMessage } from "../../domain/entity/commit-message.entity.js";
 import { EAWSBedrockModel } from "../../domain/enum/aws-bedrock-model.enum.js";
 import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
 import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
 
-const MIN_RULE_LENGTH: number = 3;
-const RULE_CONFIG_LENGTH: number = 3;
-const RULE_VALUE_INDEX: number = 2;
-const VALIDATION_LEVEL_DISABLED: number = 0;
-const VALIDATION_LEVEL_ERROR: number = 2;
 // Constants for model parameters
 const DEFAULT_MAX_TOKENS: number = 4096;
 const DEFAULT_TEMPERATURE: number = 0.7;
@@ -27,17 +23,17 @@ const DEFAULT_MAX_GEN_LEN: number = 2048;
 export class AWSBedrockLlmService implements ILlmService {
 	/**
 	 * Generate a commit message using AWS Bedrock
-	 * @param context - The context for generating the commit message
-	 * @param configuration - The LLM configuration
-	 * @returns Promise resolving to the generated commit message
+	 * @param {ILlmPromptContext} context - The context for generating the commit message
+	 * @param {LLMConfiguration} configuration - The LLM configuration
+	 * @returns {Promise<CommitMessage>} Promise resolving to the generated commit message
 	 */
 	async generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage> {
 		// Extract AWS configuration
-		const apiKey: string = configuration.getApiKey().getValue();
+		const credential: string = configuration.getApiKey().getValue();
 		const modelId: string = configuration.getModel() ?? EAWSBedrockModel.CLAUDE_3_5_SONNET_V2;
 
 		// The API key should be in format: "region|access-key-id|secret-access-key"
-		const [region, accessKeyId, secretAccessKey]: Array<string> = apiKey.split("|");
+		const [region, accessKeyId, secretAccessKey]: Array<string> = credential.split("|");
 
 		if (!region || !accessKeyId || !secretAccessKey) {
 			throw new Error("AWS Bedrock requires API key in format: 'region|access-key-id|secret-access-key'");
@@ -82,8 +78,8 @@ export class AWSBedrockLlmService implements ILlmService {
 
 	/**
 	 * Check if the service supports the given configuration
-	 * @param configuration - The LLM configuration to check
-	 * @returns True if the service supports the configuration
+	 * @param {LLMConfiguration} configuration - The LLM configuration to check
+	 * @returns {boolean} True if the service supports the configuration
 	 */
 	supports(configuration: LLMConfiguration): boolean {
 		return configuration.getProvider() === ("aws-bedrock" as ELLMProvider);
@@ -91,10 +87,10 @@ export class AWSBedrockLlmService implements ILlmService {
 
 	/**
 	 * Build the request body based on the model type
-	 * @param modelId - The model ID
-	 * @param systemPrompt - The system prompt
-	 * @param userPrompt - The user prompt
-	 * @returns The request body
+	 * @param {string} modelId - The model ID
+	 * @param {string} systemPrompt - The system prompt
+	 * @param {string} userPrompt - The user prompt
+	 * @returns {Record<string, unknown>} The request body
 	 */
 	private buildRequestBody(modelId: string, systemPrompt: string, userPrompt: string): Record<string, unknown> {
 		// Anthropic Claude models
@@ -207,8 +203,8 @@ export class AWSBedrockLlmService implements ILlmService {
 
 	/**
 	 * Build the system prompt for AWS Bedrock
-	 * @param context - The prompt context
-	 * @returns The system prompt
+	 * @param {ILlmPromptContext} context - The prompt context
+	 * @returns {string} The system prompt
 	 */
 	private buildSystemPrompt(context: ILlmPromptContext): string {
 		let prompt: string = "";
@@ -310,8 +306,8 @@ export class AWSBedrockLlmService implements ILlmService {
 
 	/**
 	 * Build the user prompt for AWS Bedrock
-	 * @param context - The prompt context
-	 * @returns The user prompt
+	 * @param {ILlmPromptContext} context - The prompt context
+	 * @returns {string} The user prompt
 	 */
 	private buildUserPrompt(context: ILlmPromptContext): string {
 		let prompt: string = "";
@@ -358,9 +354,9 @@ export class AWSBedrockLlmService implements ILlmService {
 
 	/**
 	 * Extract the response content based on the model type
-	 * @param modelId - The model ID
-	 * @param responseBody - The response body
-	 * @returns The extracted content
+	 * @param {string} modelId - The model ID
+	 * @param {any} responseBody - The response body
+	 * @returns {null | string} The extracted content
 	 */
 	// eslint-disable-next-line @elsikora/typescript/no-explicit-any
 	private extractResponseContent(modelId: string, responseBody: any): null | string {
@@ -413,8 +409,8 @@ export class AWSBedrockLlmService implements ILlmService {
 
 	/**
 	 * Format commitlint rules into human-readable instructions
-	 * @param rules - The commitlint rules object
-	 * @returns Formatted rules as string
+	 * @param {Record<string, unknown>} rules - The commitlint rules object
+	 * @returns {string} Formatted rules as string
 	 */
 	private formatCommitlintRules(rules: Record<string, unknown>): string {
 		const formattedRules: Array<string> = [];
@@ -537,8 +533,8 @@ export class AWSBedrockLlmService implements ILlmService {
 
 	/**
 	 * Parse the commit message from the LLM response
-	 * @param content - The response content
-	 * @returns The parsed commit message
+	 * @param {string} content - The response content
+	 * @returns {CommitMessage} The parsed commit message
 	 */
 	private parseCommitMessage(content: string): CommitMessage {
 		try {
@@ -586,6 +582,11 @@ export class AWSBedrockLlmService implements ILlmService {
 		} catch {
 			// Fallback: try to parse as plain text
 			const lines: Array<string> = content.trim().split("\n");
+
+			if (lines.length === 0 || !lines[0]) {
+				throw new Error("No content to parse");
+			}
+
 			const headerLine: string = lines[0];
 
 			// Parse header: type(scope): subject
@@ -595,7 +596,18 @@ export class AWSBedrockLlmService implements ILlmService {
 				throw new Error(`Invalid commit message format. Could not parse: "${headerLine}"`);
 			}
 
-			const [, type, scope, subject]: Array<string> = headerMatch;
+			const HEADER_TYPE_INDEX: number = 1;
+			const HEADER_SCOPE_INDEX: number = 2;
+			const HEADER_SUBJECT_INDEX: number = 3;
+
+			const type: string | undefined = headerMatch[HEADER_TYPE_INDEX];
+			const scope: string | undefined = headerMatch[HEADER_SCOPE_INDEX];
+			const subject: string | undefined = headerMatch[HEADER_SUBJECT_INDEX];
+
+			if (!type || !subject) {
+				throw new Error("Missing required fields: type and subject");
+			}
+
 			const header: CommitHeader = new CommitHeader(type, subject, scope);
 
 			// Parse body and breaking changes
@@ -603,7 +615,9 @@ export class AWSBedrockLlmService implements ILlmService {
 			let breakingChange: string | undefined;
 
 			for (let index: number = 1; index < lines.length; index++) {
-				const line: string = lines[index];
+				const line: string | undefined = lines[index];
+
+				if (!line) continue;
 
 				if (line.startsWith("BREAKING CHANGE:")) {
 					breakingChange = line.slice("BREAKING CHANGE:".length).trim();

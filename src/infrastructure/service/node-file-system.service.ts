@@ -10,10 +10,10 @@ import path from "node:path";
 export class NodeFileSystemService implements IFileSystemService {
 	/**
 	 * Creates a directory at the specified path.
-	 * @param directoryPath - The path to the directory to create
-	 * @param options - Optional configuration for directory creation
-	 * @param options.isRecursive - Whether to create parent directories if they don't exist
-	 * @returns Promise that resolves when the directory is created
+	 * @param {string} directoryPath - The path to the directory to create
+	 * @param {{ isRecursive: boolean }} options - Optional configuration for directory creation
+	 * @param {boolean} options.isRecursive - Whether to create parent directories if they don't exist
+	 * @returns {Promise<void>} Promise that resolves when the directory is created
 	 */
 	async createDirectory(directoryPath: string, options?: { isRecursive: boolean }): Promise<void> {
 		directoryPath = path.dirname(directoryPath);
@@ -23,8 +23,8 @@ export class NodeFileSystemService implements IFileSystemService {
 
 	/**
 	 * Deletes a file at the specified path.
-	 * @param filePath - The path to the file to delete
-	 * @returns Promise that resolves when the file is deleted
+	 * @param {string} filePath - The path to the file to delete
+	 * @returns {Promise<void>} Promise that resolves when the file is deleted
 	 */
 	async deleteFile(filePath: string): Promise<void> {
 		await fs.unlink(filePath);
@@ -32,8 +32,8 @@ export class NodeFileSystemService implements IFileSystemService {
 
 	/**
 	 * Gets the directory name from a file path.
-	 * @param filePath
-	 * @returns The directory name
+	 * @param {string} filePath - The file path to extract the directory from
+	 * @returns {string} The directory name
 	 */
 	getDirectoryNameFromFilePath(filePath: string): string {
 		return path.dirname(filePath);
@@ -41,8 +41,8 @@ export class NodeFileSystemService implements IFileSystemService {
 
 	/**
 	 * Gets the extension from a file path.
-	 * @param filePath
-	 * @returns The file extension
+	 * @param {string} filePath - The file path to extract the extension from
+	 * @returns {string} The file extension
 	 */
 	getExtensionFromFilePath(filePath: string): string {
 		return path.extname(filePath);
@@ -50,8 +50,8 @@ export class NodeFileSystemService implements IFileSystemService {
 
 	/**
 	 * Checks if any of the provided paths exist and returns the first existing path.
-	 * @param paths - Array of paths to check
-	 * @returns Promise that resolves to the first existing path or undefined if none exist
+	 * @param {Array<string>} paths - Array of paths to check
+	 * @returns {Promise<string | undefined>} Promise that resolves to the first existing path or undefined if none exist
 	 */
 	async isOneOfPathsExists(paths: Array<string>): Promise<string | undefined> {
 		let existingFilePath: string | undefined = undefined;
@@ -69,8 +69,8 @@ export class NodeFileSystemService implements IFileSystemService {
 
 	/**
 	 * Checks if a file or directory exists at the specified path.
-	 * @param filePath - The path to check
-	 * @returns Promise that resolves to true if the path exists, false otherwise
+	 * @param {string} filePath - The path to check
+	 * @returns {Promise<boolean>} Promise that resolves to true if the path exists, false otherwise
 	 */
 	async isPathExists(filePath: string): Promise<boolean> {
 		try {
@@ -84,9 +84,9 @@ export class NodeFileSystemService implements IFileSystemService {
 
 	/**
 	 * Reads the contents of a file.
-	 * @param filePath - The path to the file to read
-	 * @param encoding - The encoding to use when reading the file, defaults to "utf8"
-	 * @returns Promise that resolves to the file contents as a string
+	 * @param {string} filePath - The path to the file to read
+	 * @param {string} encoding - The encoding to use when reading the file, defaults to "utf8"
+	 * @returns {Promise<string>} Promise that resolves to the file contents as a string
 	 */
 	// eslint-disable-next-line @elsikora/javascript/no-undef
 	async readFile(filePath: string, encoding: BufferEncoding = "utf8"): Promise<string> {
@@ -95,10 +95,10 @@ export class NodeFileSystemService implements IFileSystemService {
 
 	/**
 	 * Writes content to a file, creating the file and parent directories if they don't exist.
-	 * @param filePath - The path to the file to write
-	 * @param content - The content to write to the file
-	 * @param encoding - The encoding to use when writing the file, defaults to "utf8"
-	 * @returns Promise that resolves when the file is written
+	 * @param {string} filePath - The path to the file to write
+	 * @param {string} content - The content to write to the file
+	 * @param {string} encoding - The encoding to use when writing the file, defaults to "utf8"
+	 * @returns {Promise<void>} Promise that resolves when the file is written
 	 */
 	// eslint-disable-next-line @elsikora/javascript/no-undef
 	async writeFile(filePath: string, content: string, encoding: BufferEncoding = "utf8"): Promise<void> {

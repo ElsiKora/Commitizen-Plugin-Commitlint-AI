@@ -24,6 +24,8 @@ export class CommitHeader {
 
 	/**
 	 * Check if two headers are equal
+	 * @param {CommitHeader} other - The other commit header to compare with
+	 * @returns {boolean} True if the headers are equal
 	 */
 	equals(other: CommitHeader): boolean {
 		return this.TYPE === other.getType() && this.SCOPE === other.getScope() && this.SUBJECT === other.getSubject();
@@ -31,6 +33,7 @@ export class CommitHeader {
 
 	/**
 	 * Get the commit scope
+	 * @returns {string | undefined} The commit scope or undefined
 	 */
 	getScope(): string | undefined {
 		return this.SCOPE;
@@ -38,6 +41,7 @@ export class CommitHeader {
 
 	/**
 	 * Get the commit subject
+	 * @returns {string} The commit subject
 	 */
 	getSubject(): string {
 		return this.SUBJECT;
@@ -45,6 +49,7 @@ export class CommitHeader {
 
 	/**
 	 * Get the commit type
+	 * @returns {string} The commit type
 	 */
 	getType(): string {
 		return this.TYPE;
@@ -52,6 +57,7 @@ export class CommitHeader {
 
 	/**
 	 * Format the header as a string
+	 * @returns {string} The formatted header
 	 */
 	toString(): string {
 		if (this.SCOPE) {

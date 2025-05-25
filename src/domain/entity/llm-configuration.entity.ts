@@ -1,8 +1,8 @@
-import type { ECommitMode } from "../enum/commit-mode.enum.js";
 import type { ELLMProvider } from "../enum/llm-provider.enum.js";
 import type { ApiKey } from "../value-object/api-key.value-object.js";
 
 import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES } from "../constant/numeric.constant.js";
+import { ECommitMode } from "../enum/commit-mode.enum.js";
 
 /**
  * Entity representing LLM configuration
@@ -31,15 +31,15 @@ export class LLMConfiguration {
 
 	/**
 	 * Get the API key
-	 * @returns The API key
+	 * @returns {ApiKey} The API key
 	 */
 	getApiKey(): ApiKey {
 		return this.API_KEY;
 	}
 
 	/**
-	 * Get the maximum number of retries for LLM calls
-	 * @returns The maximum number of retries
+	 * Get the maximum retries
+	 * @returns {number} The maximum retries
 	 */
 	getMaxRetries(): number {
 		return this.MAX_RETRIES;
@@ -47,7 +47,7 @@ export class LLMConfiguration {
 
 	/**
 	 * Get the commit mode
-	 * @returns The commit mode
+	 * @returns {ECommitMode} The commit mode
 	 */
 	getMode(): ECommitMode {
 		return this.MODE;
@@ -55,7 +55,7 @@ export class LLMConfiguration {
 
 	/**
 	 * Get the model name
-	 * @returns The model name
+	 * @returns {string | undefined} The model name or undefined
 	 */
 	getModel(): string | undefined {
 		return this.MODEL;
@@ -63,40 +63,49 @@ export class LLMConfiguration {
 
 	/**
 	 * Get the LLM provider
-	 * @returns The LLM provider
+	 * @returns {ELLMProvider} The LLM provider
 	 */
 	getProvider(): ELLMProvider {
 		return this.PROVIDER;
 	}
 
 	/**
-	 * Get the maximum number of retries for validation fixes
-	 * @returns The maximum number of retries for validation
+	 * Get the validation max retries
+	 * @returns {number} The validation max retries
 	 */
 	getValidationMaxRetries(): number {
 		return this.VALIDATION_MAX_RETRIES;
 	}
 
 	/**
-	 * Check if configuration is in auto mode
-	 * @returns True if in auto mode
+	 * Check if mode is auto
+	 * @returns {boolean} True if mode is auto
 	 */
 	isAutoMode(): boolean {
-		return this.MODE === ("auto" as ECommitMode);
+		return this.MODE === ECommitMode.AUTO;
 	}
 
 	/**
-	 * Check if configuration is in manual mode
-	 * @returns True if in manual mode
+	 * Check if mode is manual
+	 * @returns {boolean} True if mode is manual
 	 */
 	isManualMode(): boolean {
-		return this.MODE === ("manual" as ECommitMode);
+		return this.MODE === ECommitMode.MANUAL;
+	}
+
+	/**
+	 * Create a new configuration with a different API key
+	 * @param {ApiKey} apiKey - The new API key
+	 * @returns {LLMConfiguration} A new configuration with the updated API key
+	 */
+	withApiKey(apiKey: ApiKey): LLMConfiguration {
+		return new LLMConfiguration(this.PROVIDER, apiKey, this.MODE, this.MODEL, this.MAX_RETRIES, this.VALIDATION_MAX_RETRIES);
 	}
 
 	/**
 	 * Create a new configuration with a different mode
-	 * @param mode - The new mode
-	 * @returns New configuration with the updated mode
+	 * @param {ECommitMode} mode - The new mode
+	 * @returns {LLMConfiguration} A new configuration with the updated mode
 	 */
 	withMode(mode: ECommitMode): LLMConfiguration {
 		return new LLMConfiguration(this.PROVIDER, this.API_KEY, mode, this.MODEL, this.MAX_RETRIES, this.VALIDATION_MAX_RETRIES);
@@ -104,6 +113,8 @@ export class LLMConfiguration {
 
 	/**
 	 * Create a new configuration with updated model
+	 * @param {string} model - The new model name
+	 * @returns {LLMConfiguration} A new configuration with the updated model
 	 */
 	withModel(model: string): LLMConfiguration {
 		return new LLMConfiguration(this.PROVIDER, this.API_KEY, this.MODE, model, this.MAX_RETRIES, this.VALIDATION_MAX_RETRIES);

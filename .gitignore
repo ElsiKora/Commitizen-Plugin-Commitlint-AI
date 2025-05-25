@@ -51,6 +51,7 @@ junit.xml
 /test-results/
 /playwright-report/
 /e2e-results/
+.tmp-test-repo-*/
 
 # IDEs and editors
 /.idea/
