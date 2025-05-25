@@ -4,4 +4,4 @@
 export enum ECommitMode {
 	AUTO = "auto",
 	MANUAL = "manual",
-} 
+}

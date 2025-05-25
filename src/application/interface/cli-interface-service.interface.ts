@@ -86,12 +86,6 @@ export interface ICliInterfaceService {
 	startSpinner(message: string): void;
 
 	/**
-	 * Updates the spinner message.
-	 * @param message - The new message to display
-	 */
-	updateSpinner(message: string): void;
-
-	/**
 	 * Stops the current spinner with an optional completion message.
 	 * @param message - Optional message to display when the spinner stops
 	 */
@@ -114,8 +108,14 @@ export interface ICliInterfaceService {
 	text(message: string, placeholder?: string, initialValue?: string, validate?: (value: string) => Error | string | undefined): Promise<string>;
 
 	/**
+	 * Updates the spinner message.
+	 * @param message - The new message to display
+	 */
+	updateSpinner(message: string): void;
+
+	/**
 	 * Displays a warning message to the user.
 	 * @param message - The warning message to display
 	 */
 	warn(message: string): void;
-} 
+}

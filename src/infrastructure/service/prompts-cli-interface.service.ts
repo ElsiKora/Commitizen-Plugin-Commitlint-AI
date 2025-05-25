@@ -1,11 +1,18 @@
 /* eslint-disable @elsikora/sonar/no-duplicate-string,@elsikora/unicorn/no-process-exit */
-import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
 import type { ICliInterfaceServiceSelectOptions } from "../../application/interface/cli-interface-service-select-options.interface.js";
+import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
 
 import chalk from "chalk";
 // @ts-ignore
 import ora from "ora";
 import prompts from "prompts";
+
+type TSpinner = {
+	isSpinning?: boolean;
+	start(): TSpinner;
+	stop(): TSpinner;
+	text: string;
+};
 
 /**
  * Implementation of the CLI interface service using the prompts library.
@@ -14,7 +21,7 @@ import prompts from "prompts";
 export class PromptsCliInterface implements ICliInterfaceService {
 	/** Reference to the active spinner instance */
 	// @ts-ignore
-	private spinner: any;
+	private spinner: TSpinner;
 
 	/**
 	 * Initializes a new instance of the PromptsCliInterface.
@@ -28,7 +35,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * Clears the console screen.
 	 */
 	clear(): void {
-		console.clear();
+		process.stdout.write("\u001Bc");
 	}
 
 	/**
@@ -67,7 +74,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param message - The error message to display
 	 */
 	error(message: string): void {
-		console.error(chalk.red(message));
+		process.stderr.write(`${chalk.red(message)}\n`);
 	}
 
 	/**
@@ -80,7 +87,8 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 */
 	async groupMultiselect<T>(message: string, options: Record<string, Array<ICliInterfaceServiceSelectOptions>>, isRequired: boolean = false, initialValues?: Array<string>): Promise<Array<T>> {
 		// Convert options to a flat array with group prefixes
-		const choices: Array<any> = [];
+		// eslint-disable-next-line @elsikora/typescript/naming-convention
+		const choices: Array<{ selected: boolean; title: string; value: string }> = [];
 
 		for (const [group, groupOptions] of Object.entries(options)) {
 			for (const opt of groupOptions) {
@@ -122,8 +130,8 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param error - The error object or details
 	 */
 	handleError(message: string, error: unknown): void {
-		console.error(chalk.red(message));
-		console.error(error);
+		process.stderr.write(`${chalk.red(message)}\n`);
+		process.stderr.write(`${String(error)}\n`);
 	}
 
 	/**
@@ -131,7 +139,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param message - The info message to display
 	 */
 	info(message: string): void {
-		console.log(chalk.blue(message));
+		process.stdout.write(`${chalk.blue(message)}\n`);
 	}
 
 	/**
@@ -139,7 +147,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param message - The message to display
 	 */
 	log(message: string): void {
-		console.log(message);
+		process.stdout.write(`${message}\n`);
 	}
 
 	/**
@@ -204,20 +212,21 @@ export class PromptsCliInterface implements ICliInterfaceService {
 		const paddedLines: Array<string> = lines.map((line: string) => ` ${line.padEnd(width - 2)} `);
 
 		// Log the note box with styling
-		console.log(chalk.dim(top));
-		console.log(chalk.dim("│") + chalk.bold(paddedTitle) + chalk.dim("│"));
+		process.stdout.write(`${chalk.dim(top)}\n`);
+		process.stdout.write(`${chalk.dim("│") + chalk.bold(paddedTitle) + chalk.dim("│")}\n`);
 
 		if (lines.length > 0) {
 			// Add a separator line
-			console.log(chalk.dim(`├${"─".repeat(width)}┤`));
+			const separator: string = `├${"─".repeat(width)}┤`;
+			process.stdout.write(`${chalk.dim(separator)}\n`);
 
 			// Add message content
 			for (const line of paddedLines) {
-				console.log(chalk.dim("│") + chalk.dim(line) + chalk.dim("│"));
+				process.stdout.write(`${chalk.dim("│") + chalk.dim(line) + chalk.dim("│")}\n`);
 			}
 		}
 
-		console.log(chalk.dim(bottom));
+		process.stdout.write(`${chalk.dim(bottom)}\n`);
 	}
 
 	/**
@@ -262,20 +271,8 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param message - The message to display while the spinner is active
 	 */
 	startSpinner(message: string): void {
-		// eslint-disable-next-line @elsikora/typescript/no-unsafe-call,@elsikora/typescript/no-unsafe-member-access
 		this.spinner.stop();
 		this.spinner = ora(message).start();
-	}
-
-	/**
-	 * Update the spinner message without stopping it.
-	 * @param message - The new message to display
-	 */
-	updateSpinner(message: string): void {
-		if (this.spinner && this.spinner.isSpinning) {
-			// eslint-disable-next-line @elsikora/typescript/no-unsafe-member-access
-			this.spinner.text = message;
-		}
 	}
 
 	/**
@@ -283,11 +280,10 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param message - Optional message to display when the spinner stops
 	 */
 	stopSpinner(message?: string): void {
-		// eslint-disable-next-line @elsikora/typescript/no-unsafe-member-access,@elsikora/typescript/no-unsafe-call
 		this.spinner.stop();
 
 		if (message) {
-			console.log(message);
+			process.stdout.write(`${message}\n`);
 		}
 	}
 
@@ -296,7 +292,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param message - The success message to display
 	 */
 	success(message: string): void {
-		console.log(chalk.green(message));
+		process.stdout.write(`${chalk.green(message)}\n`);
 	}
 
 	/**
@@ -346,10 +342,20 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	}
 
 	/**
+	 * Update the spinner message without stopping it.
+	 * @param message - The new message to display
+	 */
+	updateSpinner(message: string): void {
+		if (this.spinner?.isSpinning) {
+			this.spinner.text = message;
+		}
+	}
+
+	/**
 	 * Displays a warning message to the user.
 	 * @param message - The warning message to display
 	 */
 	warn(message: string): void {
-		console.log(chalk.yellow(message));
+		process.stdout.write(`${chalk.yellow(message)}\n`);
 	}
-} 
+}

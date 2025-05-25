@@ -1,4 +1,4 @@
 /**
- * The module name for the configuration
+ * Module name for configuration
  */
-export const CONFIG_MODULE_NAME = "commitlint-ai"; 
+export const CONFIG_MODULE_NAME: string = "commitlint-ai";

@@ -1,7 +1,7 @@
 export default {
-  provider: 'anthropic',
-  mode: 'auto',
-  model: 'claude-opus-4-20250514',
-  maxRetries: 3,
-  validationMaxRetries: 3
+	maxRetries: 3,
+	mode: "auto",
+	model: "claude-opus-4-20250514",
+	provider: "anthropic",
+	validationMaxRetries: 3,
 };

@@ -1,20 +1,19 @@
-/* eslint-disable @elsikora/typescript/naming-convention */
+import type { ICliInterfaceServiceSelectOptions } from "../../application/interface/cli-interface-service-select-options.interface.js";
 import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
 import type { ICommandService } from "../../application/interface/command-service.interface.js";
-import type { ICliInterfaceServiceSelectOptions } from "../../application/interface/cli-interface-service-select-options.interface.js";
 
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
 import chalk from "chalk";
 
-interface NPMError {
-	cmd: string;
-	code: number;
-	killed: boolean;
-	signal: null;
-	stderr: string;
-	stdout: string;
+interface INodeError extends Error {
+	cmd?: string;
+	code?: number | string;
+	isKilled?: boolean;
+	signal?: null | string;
+	stderr?: string;
+	stdout?: string;
 }
 
 /**
@@ -47,7 +46,7 @@ export class NodeCommandService implements ICommandService {
 		} catch (error) {
 			// Check if the failed command is npm
 			if (command.trim().startsWith("npm install") || command.trim().startsWith("npm ci") || command.trim().startsWith("npm update") || command.trim().startsWith("npm uninstall")) {
-				this.formatAndParseNpmError(command, error as NPMError);
+				this.formatAndParseNpmError(command, error as INodeError);
 				await this.handleNpmInstallFailure(command);
 			} else {
 				// For non-npm commands, throw the error as before
@@ -63,10 +62,12 @@ export class NodeCommandService implements ICommandService {
 	 */
 	async executeWithOutput(command: string): Promise<string> {
 		try {
-			const { stdout } = await this.EXEC_ASYNC(command);
+			const { stdout }: { stdout: string } = await this.EXEC_ASYNC(command);
+
 			return stdout.trim();
 		} catch (error) {
 			this.CLI_INTERFACE_SERVICE.handleError(`Failed to execute command: ${command}`, error);
+
 			throw error;
 		}
 	}
@@ -77,7 +78,7 @@ export class NodeCommandService implements ICommandService {
 	 * @param error - Error npm object
 	 * @returns void
 	 */
-	private formatAndParseNpmError(command: string, error: NPMError): void {
+	private formatAndParseNpmError(command: string, error: INodeError): void {
 		// Форматируем и выводим ошибку
 		console.error(chalk.red.bold("🚨 NPM Command Failed"));
 		console.error(chalk.gray(`Command: ${command}`));
@@ -173,4 +174,4 @@ export class NodeCommandService implements ICommandService {
 			}
 		}
 	}
-} 
+}

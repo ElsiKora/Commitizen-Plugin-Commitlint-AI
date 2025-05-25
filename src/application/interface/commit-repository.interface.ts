@@ -18,12 +18,6 @@ export interface ICommitRepository {
 	getCurrentBranch(): Promise<string>;
 
 	/**
-	 * Check if there are staged changes
-	 * @returns Promise resolving to true if there are staged changes
-	 */
-	hasStagedChanges(): Promise<boolean>;
-
-	/**
 	 * Get the staged diff
 	 * @returns Promise resolving to the staged diff
 	 */
@@ -33,5 +27,11 @@ export interface ICommitRepository {
 	 * Get the list of staged files
 	 * @returns Promise resolving to the list of staged files
 	 */
-	getStagedFiles(): Promise<string[]>;
-} 
+	getStagedFiles(): Promise<Array<string>>;
+
+	/**
+	 * Check if there are staged changes
+	 * @returns Promise resolving to true if there are staged changes
+	 */
+	hasStagedChanges(): Promise<boolean>;
+}

@@ -2,63 +2,64 @@
  * Value object representing a commit message body
  */
 export class CommitBody {
-	private readonly content: string;
-	private readonly breakingChange: string | undefined;
+	private readonly BREAKING_CHANGE: string | undefined;
+
+	private readonly CONTENT: string | undefined;
 
 	constructor(content?: string, breakingChange?: string) {
-		this.content = content?.trim() || "";
-		this.breakingChange = breakingChange?.trim();
-	}
-
-	/**
-	 * Get the body content
-	 */
-	getContent(): string {
-		return this.content;
-	}
-
-	/**
-	 * Get the breaking change description
-	 */
-	getBreakingChange(): string | undefined {
-		return this.breakingChange;
-	}
-
-	/**
-	 * Check if there is a breaking change
-	 */
-	hasBreakingChange(): boolean {
-		return !!this.breakingChange;
-	}
-
-	/**
-	 * Format the body as a string
-	 */
-	toString(): string {
-		const parts: string[] = [];
-
-		if (this.breakingChange) {
-			parts.push(`BREAKING CHANGE: ${this.breakingChange}`);
-		}
-
-		if (this.content) {
-			parts.push(this.content);
-		}
-
-		return parts.join("\n\n");
-	}
-
-	/**
-	 * Check if the body is empty
-	 */
-	isEmpty(): boolean {
-		return !this.content && !this.breakingChange;
+		this.CONTENT = content?.trim() ?? undefined;
+		this.BREAKING_CHANGE = breakingChange?.trim() ?? undefined;
 	}
 
 	/**
 	 * Check if two bodies are equal
 	 */
 	equals(other: CommitBody): boolean {
-		return this.content === other.content && this.breakingChange === other.breakingChange;
+		return this.CONTENT === other.CONTENT && this.BREAKING_CHANGE === other.BREAKING_CHANGE;
 	}
-} 
+
+	/**
+	 * Get the breaking change description
+	 */
+	getBreakingChange(): string | undefined {
+		return this.BREAKING_CHANGE;
+	}
+
+	/**
+	 * Get the body content
+	 */
+	getContent(): string | undefined {
+		return this.CONTENT;
+	}
+
+	/**
+	 * Check if there is a breaking change
+	 */
+	hasBreakingChange(): boolean {
+		return !!this.BREAKING_CHANGE;
+	}
+
+	/**
+	 * Check if the body is empty
+	 */
+	isEmpty(): boolean {
+		return !this.CONTENT && !this.BREAKING_CHANGE;
+	}
+
+	/**
+	 * Format the body as a string
+	 */
+	toString(): string {
+		const parts: Array<string> = [];
+
+		if (this.BREAKING_CHANGE) {
+			parts.push(`BREAKING CHANGE: ${this.BREAKING_CHANGE}`);
+		}
+
+		if (this.CONTENT) {
+			parts.push(this.CONTENT);
+		}
+
+		return parts.join("\n\n");
+	}
+}

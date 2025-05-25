@@ -6,27 +6,27 @@ import type { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
  */
 export interface IConfig {
 	/**
-	 * LLM provider (openai, anthropic)
+	 * Number of retries for LLM generation
 	 */
-	provider: ELLMProvider;
-	
+	maxRetries?: number;
+
 	/**
 	 * Commit mode (auto, manual)
 	 */
 	mode: ECommitMode;
-	
+
 	/**
 	 * Model to use
 	 */
 	model?: string;
-	
+
 	/**
-	 * Number of retries for LLM generation
+	 * LLM provider (openai, anthropic)
 	 */
-	maxRetries?: number;
-	
+	provider: ELLMProvider;
+
 	/**
 	 * Number of retries for validation fixes
 	 */
 	validationMaxRetries?: number;
-} 
+}

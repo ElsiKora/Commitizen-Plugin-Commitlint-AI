@@ -210,4 +210,4 @@ export class CosmicConfigService implements IConfigService {
 
 		await this.FILE_SYSTEM_SERVICE.writeFile(filepath, content, "utf8");
 	}
-} 
+}

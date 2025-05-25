@@ -1,1 +1,1 @@
-export * from "./commitlint-validator.service.js"; 
+export * from "./commitlint-validator.service.js";

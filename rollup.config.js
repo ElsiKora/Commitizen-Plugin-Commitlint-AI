@@ -1,6 +1,38 @@
 import typescript from "@rollup/plugin-typescript";
 
-const external = ["node:fs", "node:path", "node:child_process", "node:util", "@commitlint/load", "@commitlint/types", "chalk", "dotenv", "lodash.isplainobject", "@anthropic-ai/sdk", "openai", "prompts"];
+const external = [
+	"@anthropic-ai/claude-code",
+	"@anthropic-ai/sdk",
+	"@commitlint/ensure",
+	"@commitlint/lint",
+	"@commitlint/load",
+	"@commitlint/types",
+	"@elsikora/cladi",
+	"@rollup/plugin-typescript",
+	"chalk",
+	"cosmiconfig",
+	"dotenv",
+	"dotenv/config",
+	"javascript-stringify",
+	"lodash.isplainobject",
+	"openai",
+	"ora",
+	"prompts",
+	"rollup",
+	"word-wrap",
+	"yaml",
+	"commitizen",
+	"node:fs",
+	"node:path",
+	"node:util",
+	"node:child_process",
+	"fs",
+	"path",
+	"util",
+	"child_process",
+	/^@commitlint\/.+/,
+	/^node:.+/,
+];
 
 export default [
 	{

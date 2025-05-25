@@ -51,4 +51,4 @@ export interface IConfigService {
 	 * @returns Promise that resolves when the updated configuration is saved
 	 */
 	setProperty<K extends keyof IConfig>(property: K, value: IConfig[K]): Promise<void>;
-} 
+}

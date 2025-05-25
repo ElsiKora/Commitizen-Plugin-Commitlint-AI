@@ -65,4 +65,4 @@ export interface IFileSystemService {
 	 */
 	// eslint-disable-next-line @elsikora/javascript/no-undef
 	writeFile(path: string, content: string, encoding?: BufferEncoding): Promise<void>;
-} 
+}

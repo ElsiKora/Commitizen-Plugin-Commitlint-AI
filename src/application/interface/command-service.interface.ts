@@ -17,4 +17,4 @@ export interface ICommandService {
 	 * @returns Promise that resolves to the command output
 	 */
 	executeWithOutput(command: string): Promise<string>;
-} 
+}

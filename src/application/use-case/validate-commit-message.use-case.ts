@@ -1,89 +1,91 @@
 import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import type { ICommitValidator, ICommitValidationResult } from "../interface/commit-validator.interface.js";
-import type { ILLMPromptContext } from "../interface/llm-service.interface.js";
+import type { ICommitValidationResult, ICommitValidator } from "../interface/commit-validator.interface.js";
+import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
+
+import { DEFAULT_VALIDATION_MAX_RETRIES } from "../../domain/constant/numeric.constant.js";
 
 /**
  * Use case for validating and fixing commit messages
  */
 export class ValidateCommitMessageUseCase {
-	private readonly validator: ICommitValidator;
-	private readonly defaultMaxRetries: number;
+	private readonly DEFAULT_MAX_RETRIES: number = DEFAULT_VALIDATION_MAX_RETRIES;
 
-	constructor(validator: ICommitValidator, defaultMaxRetries: number = 3) {
-		this.validator = validator;
-		this.defaultMaxRetries = defaultMaxRetries;
+	private readonly VALIDATOR: ICommitValidator;
+
+	constructor(validator: ICommitValidator, defaultMaxRetries: number = DEFAULT_VALIDATION_MAX_RETRIES) {
+		this.VALIDATOR = validator;
+		this.DEFAULT_MAX_RETRIES = defaultMaxRetries;
 	}
 
 	/**
-	 * Execute the use case to validate and optionally fix a commit message
+	 * Execute the validation and optional fixing of a commit message
 	 * @param message - The commit message to validate
-	 * @param attemptFix - Whether to attempt fixing validation errors
-	 * @param maxRetries - Override for max retry attempts (uses default if not provided)
-	 * @param context - Optional original context (diff, files, etc.) for better fixing
+	 * @param shouldAttemptFix - Whether to attempt to fix validation errors
+	 * @param maxRetries - Maximum number of fix attempts
+	 * @param context - Optional context for fixing
 	 * @returns Promise resolving to the validated/fixed message or null if unfixable
 	 */
-	async execute(
-		message: CommitMessage, 
-		attemptFix: boolean = true,
-		maxRetries?: number,
-		context?: ILLMPromptContext
-	): Promise<CommitMessage | null> {
-		const retryLimit = maxRetries ?? this.defaultMaxRetries;
-		let currentMessage = message;
-		let attempts = 0;
+	async execute(message: CommitMessage, shouldAttemptFix: boolean = false, maxRetries?: number, context?: ILlmPromptContext): Promise<CommitMessage | null> {
+		const retryLimit: number = maxRetries ?? this.DEFAULT_MAX_RETRIES;
+		let currentMessage: CommitMessage = message;
+		let attempts: number = 0;
 
-		while (attempts < retryLimit) {
-			const validationResult = await this.validator.validate(currentMessage);
+		while (attempts <= retryLimit) {
+			const validationResult: ICommitValidationResult = await this.validate(currentMessage);
 
 			if (validationResult.isValid) {
 				if (attempts > 0) {
-					console.log(`Validation passed after ${attempts} fix attempts`);
+					process.stdout.write(`✓ Commit message fixed after ${attempts} attempt${attempts > 1 ? "s" : ""}\n`);
 				}
+
 				return currentMessage;
 			}
 
-			// Log validation errors
-			if (attempts === 0) {
-				console.log(`Initial validation failed with ${validationResult.errors?.length || 0} errors:`);
-				validationResult.errors?.forEach(error => console.log(`  - ${error}`));
-			}
+			if (!shouldAttemptFix || attempts >= retryLimit) {
+				if (validationResult.errors && validationResult.errors.length > 0) {
+					process.stdout.write(`✗ Commit message validation failed after ${attempts} attempts:\n`);
 
-			if (!attemptFix) {
+					for (const error of validationResult.errors) {
+						process.stdout.write(`  - ${error}\n`);
+					}
+				}
+
 				return null;
 			}
 
+			// Attempt to fix
 			attempts++;
+			process.stdout.write(`Attempting to fix commit message (attempt ${attempts}/${retryLimit})...\n`);
 
-			// If we've exhausted all attempts, return null
-			if (attempts >= retryLimit) {
-				console.log(`Validation failed after ${attempts} attempts`);
+			try {
+				const fixedMessage: CommitMessage | null = await this.VALIDATOR.fix(currentMessage, validationResult, context);
+
+				if (!fixedMessage) {
+					process.stdout.write("Unable to automatically fix the commit message\n");
+
+					return null;
+				}
+
+				process.stdout.write("Fixed commit message generated\n");
+				currentMessage = fixedMessage;
+			} catch (error) {
+				process.stdout.write(`Error during fix attempt: ${error instanceof Error ? error.message : String(error)}\n`);
+
 				return null;
 			}
-
-			// Attempt to fix the message with context
-			console.log(`Attempting to fix validation errors (attempt ${attempts}/${retryLimit})...`);
-			const fixedMessage = await this.validator.fix(currentMessage, validationResult, context);
-
-			if (!fixedMessage) {
-				console.log(`Fix attempt ${attempts} failed, ${attempts < retryLimit - 1 ? 'retrying...' : 'no more retries left'}`);
-				// Continue to next iteration to try again
-				continue;
-			}
-
-			console.log(`Fix attempt ${attempts} produced a new message, validating...`);
-			// Update current message for next validation attempt
-			currentMessage = fixedMessage;
 		}
+
+		process.stdout.write(`Unable to generate valid commit message after ${retryLimit} attempts\n`);
 
 		return null;
 	}
 
 	/**
-	 * Validate a commit message without attempting to fix it
+	 * Validate a commit message
 	 * @param message - The commit message to validate
 	 * @returns Promise resolving to the validation result
 	 */
 	async validate(message: CommitMessage): Promise<ICommitValidationResult> {
-		return await this.validator.validate(message);
+		return this.VALIDATOR.validate(message);
 	}
-} 
+}

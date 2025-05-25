@@ -4,35 +4,35 @@ import type { LLMConfiguration } from "../../domain/entity/llm-configuration.ent
 /**
  * Context for generating commit messages
  */
-export interface ILLMPromptContext {
-	typeEnum?: string[];
-	typeDescriptions?: Record<string, { description: string; emoji?: string }>;
-	typeDescription?: string;
-	scopeDescription?: string;
-	subject: {
-		description?: string;
-		minLength?: number;
-		maxLength?: number;
-	};
+export interface ILlmPromptContext {
 	body?: {
 		description?: string;
 	};
-	rules?: Record<string, any>;
 	diff?: string;
 	files?: string;
+	rules?: Record<string, unknown>;
+	scopeDescription?: string;
+	subject: {
+		description?: string;
+		maxLength?: number;
+		minLength?: number;
+	};
+	typeDescription?: string;
+	typeDescriptions?: Record<string, { description: string; emoji?: string }>;
+	typeEnum?: Array<string>;
 }
 
 /**
  * Interface for LLM services
  */
-export interface ILLMService {
+export interface ILlmService {
 	/**
 	 * Generate a commit message using the LLM
 	 * @param context - The context for generating the commit message
 	 * @param configuration - The LLM configuration
 	 * @returns Promise resolving to the generated commit message
 	 */
-	generateCommitMessage(context: ILLMPromptContext, configuration: LLMConfiguration): Promise<CommitMessage>;
+	generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage>;
 
 	/**
 	 * Check if the service supports the given configuration
@@ -40,4 +40,4 @@ export interface ILLMService {
 	 * @returns True if the service supports the configuration
 	 */
 	supports(configuration: LLMConfiguration): boolean;
-} 
+}

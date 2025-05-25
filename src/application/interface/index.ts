@@ -1,9 +1,9 @@
-export * from "./cli-interface-service-select-options.interface.js";
-export * from "./cli-interface-service.interface.js";
-export * from "./command-service.interface.js";
-export * from "./commit-repository.interface.js";
-export * from "./commit-validator.interface.js";
-export * from "./config-service.interface.js";
-export * from "./config.interface.js";
-export * from "./file-system-service.interface.js";
-export * from "./llm-service.interface.js"; 
+export type * from "./cli-interface-service-select-options.interface.js";
+export type * from "./cli-interface-service.interface.js";
+export type * from "./command-service.interface.js";
+export type * from "./commit-repository.interface.js";
+export type * from "./commit-validator.interface.js";
+export type * from "./config-service.interface.js";
+export type * from "./config.interface.js";
+export type * from "./file-system-service.interface.js";
+export type * from "./llm-service.interface.js";

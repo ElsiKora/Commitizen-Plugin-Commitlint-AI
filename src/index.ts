@@ -1,30 +1,19 @@
-import { config as loadDotEnvironment } from "dotenv";
-
+import { createAppContainer } from "./infrastructure/di/container.js";
 import { CommitizenAdapter } from "./presentation/commitizen.adapter.js";
 
-// Load environment variables from .env file
-try {
-	loadDotEnvironment();
-} catch {
-	// Silently continue if .env file is not found or cannot be loaded
+import "dotenv/config";
+
+// Initialize the DI container
+createAppContainer();
+
+// Create adapter instance
+const adapter: CommitizenAdapter = new CommitizenAdapter();
+
+// Main adapter function - explicitly typed for module export
+export function prompter(inquirerInstance: unknown, commit: (message: string) => void): void {
+	void adapter.prompter(inquirerInstance, commit);
 }
 
-// Create a singleton instance of the adapter
-const adapter = new CommitizenAdapter();
-
-/**
- * Entry point for commitizen
- * @param inquirerIns - Instance passed by commitizen
- * @param commit - Callback to execute with complete commit message
- * @return {void}
- */
-export async function prompter(
-	inquirerIns: any,
-	commit: (message: string) => void,
-): Promise<void> {
-	return adapter.prompter(inquirerIns, commit);
-}
-
+export * from "./application/index.js";
 // Re-export types and utilities that might be needed by consumers
 export * from "./domain/index.js";
-export * from "./application/index.js";

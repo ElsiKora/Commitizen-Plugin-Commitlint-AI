@@ -1,62 +1,55 @@
 import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
 import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
-import type { ILLMPromptContext, ILLMService } from "../interface/llm-service.interface.js";
+import type { ILlmPromptContext, ILlmService } from "../interface/llm-service.interface.js";
+
+import { RETRY_DELAY_MS } from "../../domain/constant/numeric.constant.js";
 
 /**
- * Use case for generating commit messages using LLM
+ * Use case for generating commit messages
  */
 export class GenerateCommitMessageUseCase {
-	private readonly llmServices: ILLMService[];
+	private readonly LLM_SERVICES: Array<ILlmService>;
 
-	constructor(llmServices: ILLMService[]) {
-		this.llmServices = llmServices;
+	constructor(llmServices: Array<ILlmService>) {
+		this.LLM_SERVICES = llmServices;
 	}
 
 	/**
-	 * Execute the use case to generate a commit message
+	 * Execute the use case
 	 * @param context - The context for generating the commit message
 	 * @param configuration - The LLM configuration
 	 * @param onRetry - Optional callback for retry notifications
 	 * @returns Promise resolving to the generated commit message
-	 * @throws Error if no suitable LLM service is found or max retries exceeded
 	 */
-	async execute(
-		context: ILLMPromptContext, 
-		configuration: LLMConfiguration,
-		onRetry?: (attempt: number, maxRetries: number, error: Error) => void
-	): Promise<CommitMessage> {
-		// Find a suitable LLM service
-		const service = this.llmServices.find((s) => s.supports(configuration));
+	async execute(context: ILlmPromptContext, configuration: LLMConfiguration, onRetry?: (attempt: number, maxRetries: number, error: Error) => void): Promise<CommitMessage> {
+		const service: ILlmService | undefined = this.LLM_SERVICES.find((s: ILlmService) => s.supports(configuration));
 
 		if (!service) {
 			throw new Error(`No LLM service found for provider: ${configuration.getProvider()}`);
 		}
 
-		// Get retry count from configuration
-		const maxRetries = configuration.getMaxRetries();
-		let lastError: Error | null = null;
+		const maxRetries: number = configuration.getMaxRetries();
 
-		// Attempt to generate with retries
-		for (let attempt = 0; attempt < maxRetries; attempt++) {
+		// Try to generate with retries
+		for (let attempt: number = 1; attempt <= maxRetries; attempt++) {
 			try {
-				// Generate the commit message
 				return await service.generateCommitMessage(context, configuration);
 			} catch (error) {
-				lastError = error instanceof Error ? error : new Error(String(error));
-				
-				// Call retry callback if provided and not last attempt
-				if (attempt < maxRetries - 1) {
-					if (onRetry) {
-						onRetry(attempt + 1, maxRetries, lastError);
-					}
-					
-					// Add a small delay between retries
-					await new Promise(resolve => setTimeout(resolve, 1000));
+				if (attempt === maxRetries) {
+					throw new Error(`Failed to generate commit message after ${maxRetries} attempts: ${error instanceof Error ? error.message : String(error)}`);
 				}
+
+				// Notify about retry
+				if (onRetry) {
+					onRetry(attempt, maxRetries, error as Error);
+				}
+
+				// Wait before retrying
+				await new Promise<void>((resolve: () => void) => setTimeout(resolve, RETRY_DELAY_MS));
 			}
 		}
 
-		// All retries exhausted
-		throw new Error(`Failed to generate commit message after ${maxRetries} attempts. Last error: ${lastError?.message || 'Unknown error'}`);
+		// This should never be reached due to the throw in the loop
+		throw new Error(`Failed to generate commit message after ${maxRetries} attempts`);
 	}
-} 
+}

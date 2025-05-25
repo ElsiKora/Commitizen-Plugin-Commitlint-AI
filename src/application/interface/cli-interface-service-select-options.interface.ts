@@ -1,7 +1,17 @@
 /**
- * Options for select prompts in CLI interface
+ * Options for select inputs in the CLI interface
  */
 export interface ICliInterfaceServiceSelectOptions {
+	/**
+	 * Optional hint text for the option
+	 */
+	hint?: string;
+
+	/**
+	 * Whether the option is disabled
+	 */
+	isDisabled?: boolean;
+
 	/**
 	 * Display label for the option
 	 */
@@ -11,14 +21,4 @@ export interface ICliInterfaceServiceSelectOptions {
 	 * Value to be returned when the option is selected
 	 */
 	value: string;
-
-	/**
-	 * Optional hint text for the option
-	 */
-	hint?: string;
-
-	/**
-	 * Whether the option is disabled
-	 */
-	disabled?: boolean;
-} 
+}

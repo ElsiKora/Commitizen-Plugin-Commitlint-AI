@@ -1,140 +1,26 @@
-import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import type { ECommitMode } from "../../domain/enum/commit-mode.enum.js";
 import type { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
 import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
 import type { IConfigService } from "../interface/config-service.interface.js";
 import type { IConfig } from "../interface/config.interface.js";
 
-import { EOpenAIModel } from "../../domain/enum/openai-model.enum.js";
+import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES, MAX_RETRY_COUNT, MIN_RETRY_COUNT } from "../../domain/constant/numeric.constant.js";
+import { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import { EAnthropicModel } from "../../domain/enum/anthropic-model.enum.js";
+import { EOpenAIModel } from "../../domain/enum/openai-model.enum.js";
+import { ApiKey } from "../../domain/value-object/api-key.value-object.js";
 
 /**
  * Use case for configuring LLM settings
  */
 export class ConfigureLLMUseCase {
-	private readonly configService: IConfigService;
-	private readonly cliInterface: ICliInterfaceService;
+	private readonly CLI_INTERFACE: ICliInterfaceService;
+
+	private readonly CONFIG_SERVICE: IConfigService;
 
 	constructor(configService: IConfigService, cliInterface: ICliInterfaceService) {
-		this.configService = configService;
-		this.cliInterface = cliInterface;
-	}
-
-	/**
-	 * Get the current LLM configuration
-	 * @returns Promise resolving to the current configuration or null if not configured
-	 */
-	async getCurrentConfiguration(): Promise<LLMConfiguration | null> {
-		const config = await this.configService.get();
-
-		if (!config.provider || !config.mode) {
-			return null;
-		}
-
-		// Add backward compatibility - set default retry values if missing
-		let configUpdated = false;
-		if (config.maxRetries === undefined) {
-			config.maxRetries = 3;
-			configUpdated = true;
-		}
-		if (config.validationMaxRetries === undefined) {
-			config.validationMaxRetries = 3;
-			configUpdated = true;
-		}
-		
-		// Save updated config if we added defaults
-		if (configUpdated) {
-			await this.configService.set(config);
-		}
-
-		// Migrate deprecated models
-		let migratedModel = config.model;
-		if (migratedModel) {
-			// Map old models to new ones
-			const modelMigrations: Record<string, string> = {
-				// Anthropic migrations
-				"claude-3-sonnet-20240229": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-3-haiku-20240307": EAnthropicModel.CLAUDE_3_5_HAIKU,
-				"claude-2.1": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-2.0": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-3-5-sonnet-20241022": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-3-5-haiku-20241022": EAnthropicModel.CLAUDE_3_5_HAIKU,
-				// OpenAI migrations (upgrade old GPT-4 references)
-				"gpt-4-0125-preview": EOpenAIModel.GPT_4_TURBO,
-				"gpt-4-1106-preview": EOpenAIModel.GPT_4_TURBO,
-				"gpt-4-0613": EOpenAIModel.GPT_4,
-				"gpt-4-32k": EOpenAIModel.GPT_4_32K,
-				"gpt-4-32k-0613": EOpenAIModel.GPT_4_32K,
-				"gpt-4o": EOpenAIModel.GPT_4O_MAY,
-				"gpt-4o-2024-05-13": EOpenAIModel.GPT_4O_MAY,
-				"gpt-4o-2024-08-06": EOpenAIModel.GPT_4O_AUGUST,
-				"gpt-4o-mini": EOpenAIModel.GPT_4O_MINI,
-				"gpt-3.5-turbo": EOpenAIModel.GPT_35_TURBO,
-			};
-
-			if (modelMigrations[migratedModel]) {
-				const oldModel = migratedModel;
-				migratedModel = modelMigrations[migratedModel];
-				
-				// Save the migrated configuration
-				await this.configService.setProperty("model", migratedModel);
-				
-				this.cliInterface.warn(`Migrated deprecated model ${oldModel} to ${migratedModel}`);
-			}
-		}
-
-		// For manual mode, return configuration with dummy API key
-		if (config.mode === "manual") {
-			const { ApiKey: ApiKeyClass } = await import("../../domain/value-object/api-key.value-object.js");
-
-			return new (await import("../../domain/entity/llm-configuration.entity.js")).LLMConfiguration(
-				config.provider,
-				new ApiKeyClass("manual-mode"),
-				config.mode,
-				migratedModel,
-				config.maxRetries || 3,
-				config.validationMaxRetries || 3
-			);
-		}
-
-		// For auto mode, check environment variables
-		const envVarName = config.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
-		const envApiKey = process.env[envVarName];
-		
-		// If no API key in environment, return null (will prompt later)
-		if (!envApiKey || envApiKey.trim().length === 0) {
-			return null;
-		}
-
-		const { ApiKey: ApiKeyClass } = await import("../../domain/value-object/api-key.value-object.js");
-
-		return new (await import("../../domain/entity/llm-configuration.entity.js")).LLMConfiguration(
-			config.provider,
-			new ApiKeyClass(envApiKey),
-			config.mode,
-			migratedModel,
-			config.maxRetries || 3,
-			config.validationMaxRetries || 3
-		);
-	}
-
-	/**
-	 * Check if the current configuration needs LLM details
-	 * @returns Promise resolving to true if LLM details are needed
-	 */
-	async needsLLMDetails(): Promise<boolean> {
-		const config = await this.configService.get();
-		
-		if (!config.mode || config.mode === "manual") {
-			return false;
-		}
-
-		// For auto mode, check if API key is in environment
-		const envVarName = config.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
-		const envApiKey = process.env[envVarName];
-		
-		// Need details if no API key in environment
-		return !envApiKey || envApiKey.trim().length === 0;
+		this.CONFIG_SERVICE = configService;
+		this.CLI_INTERFACE = cliInterface;
 	}
 
 	/**
@@ -143,28 +29,25 @@ export class ConfigureLLMUseCase {
 	 */
 	async configureInteractively(): Promise<LLMConfiguration> {
 		// First, select mode
-		const mode = await this.cliInterface.select<ECommitMode>(
+		const mode: ECommitMode = await this.CLI_INTERFACE.select<ECommitMode>(
 			"Select commit mode:",
 			[
 				{ label: "Auto (AI-powered)", value: "auto" as ECommitMode },
 				{ label: "Manual", value: "manual" as ECommitMode },
 			],
-			"auto"
+			"auto",
 		);
 
 		// If manual mode, create a minimal configuration
-		if (mode === "manual") {
-			const { ApiKey: ApiKeyClass } = await import("../../domain/value-object/api-key.value-object.js");
-			const { LLMConfiguration: LLMConfigurationClass } = await import("../../domain/entity/llm-configuration.entity.js");
-
+		if (mode === ("manual" as ECommitMode)) {
 			// Create configuration with dummy values for manual mode
-			const configuration = new LLMConfigurationClass(
+			const configuration: LLMConfiguration = new LLMConfiguration(
 				"openai" as ELLMProvider, // Default provider (won't be used)
-				new ApiKeyClass("manual-mode"), // Dummy API key
+				new ApiKey("manual-mode"), // Dummy API key
 				mode,
 				undefined, // No model needed for manual mode
-				3, // Default max retries
-				3  // Default validation max retries
+				DEFAULT_MAX_RETRIES, // Default max retries
+				DEFAULT_VALIDATION_MAX_RETRIES, // Default validation max retries
 			);
 
 			// Save configuration
@@ -174,21 +57,19 @@ export class ConfigureLLMUseCase {
 		}
 
 		// Auto mode - ask for LLM details
-		this.cliInterface.info("Setting up AI-powered commit mode...");
+		this.CLI_INTERFACE.info("Setting up AI-powered commit mode...");
 
 		// Select provider
-		const provider = await this.cliInterface.select<ELLMProvider>(
-			"Select your LLM provider:",
-			[
-				{ label: "OpenAI (GPT-4, GPT-3.5)", value: "openai" as ELLMProvider },
-				{ label: "Anthropic (Claude)", value: "anthropic" as ELLMProvider },
-			]
-		);
+		const provider: ELLMProvider = await this.CLI_INTERFACE.select<ELLMProvider>("Select your LLM provider:", [
+			{ label: "OpenAI (GPT-4, GPT-3.5)", value: "openai" as ELLMProvider },
+			{ label: "Anthropic (Claude)", value: "anthropic" as ELLMProvider },
+		]);
 
 		// Select model based on provider
 		let model: string;
-		if (provider === "openai") {
-			model = await this.cliInterface.select<string>(
+
+		if (provider === ("openai" as ELLMProvider)) {
+			model = await this.CLI_INTERFACE.select<string>(
 				"Select OpenAI model:",
 				[
 					{ label: "GPT-4.1 (Latest 2025, most capable)", value: EOpenAIModel.GPT_4_1 },
@@ -202,10 +83,10 @@ export class ConfigureLLMUseCase {
 					{ label: "O1 (Enhanced reasoning)", value: EOpenAIModel.O1 },
 					{ label: "O1 Mini (Fast reasoning)", value: EOpenAIModel.O1_MINI },
 				],
-				EOpenAIModel.GPT_4O
+				EOpenAIModel.GPT_4O,
 			);
 		} else {
-			model = await this.cliInterface.select<string>(
+			model = await this.CLI_INTERFACE.select<string>(
 				"Select Anthropic model:",
 				[
 					{ label: "Claude Opus 4 (Latest 2025, most capable)", value: EAnthropicModel.CLAUDE_OPUS_4 },
@@ -215,88 +96,168 @@ export class ConfigureLLMUseCase {
 					{ label: "Claude 3.5 Haiku (Fastest)", value: EAnthropicModel.CLAUDE_3_5_HAIKU },
 					{ label: "Claude 3 Opus (Complex tasks)", value: EAnthropicModel.CLAUDE_3_OPUS },
 				],
-				EAnthropicModel.CLAUDE_SONNET_4
+				EAnthropicModel.CLAUDE_SONNET_4,
 			);
 		}
 
 		// Get API key
 		let apiKeyValue: string;
-		
+
 		// Check environment variables first
-		const envVarName = provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
-		const envApiKey = process.env[envVarName];
-		
-		if (envApiKey && envApiKey.trim().length > 0) {
-			this.cliInterface.success(`Found API key in environment variable: ${envVarName}`);
-			apiKeyValue = envApiKey;
+		const environmentVariableName: string = provider === ("openai" as ELLMProvider) ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+		const environmentApiKey: string | undefined = process.env[environmentVariableName];
+
+		if (environmentApiKey && environmentApiKey.trim().length > 0) {
+			this.CLI_INTERFACE.success(`Found API key in environment variable: ${environmentVariableName}`);
+			apiKeyValue = environmentApiKey;
 		} else {
 			// Inform user about environment variable
-			this.cliInterface.info(`API key will be read from ${envVarName} environment variable or prompted each time.`);
+			this.CLI_INTERFACE.info(`API key will be read from ${environmentVariableName} environment variable or prompted each time.`);
 			// Use dummy value for configuration
 			apiKeyValue = "will-prompt-on-use";
 		}
 
 		// Ask for retry configuration (advanced settings)
-		const configureAdvanced = await this.cliInterface.confirm(
-			"Would you like to configure advanced settings (retry counts)?",
-			false
-		);
+		const shouldConfigureAdvanced: boolean = await this.CLI_INTERFACE.confirm("Would you like to configure advanced settings (retry counts)?", false);
 
-		let maxRetries = 3;
-		let validationMaxRetries = 3;
+		let maxRetries: number = DEFAULT_MAX_RETRIES;
+		let validationMaxRetries: number = DEFAULT_VALIDATION_MAX_RETRIES;
 
-		if (configureAdvanced) {
-			const retriesStr = await this.cliInterface.text(
-				"Max retries for AI generation (default: 3):",
-				"3",
-				"3",
-				(value: string) => {
-					const num = parseInt(value, 10);
-					if (isNaN(num) || num < 1 || num > 10) {
-						return "Please enter a number between 1 and 10";
-					}
-					return undefined;
+		if (shouldConfigureAdvanced) {
+			const retriesString: string = await this.CLI_INTERFACE.text("Max retries for AI generation (default: 3):", "3", "3", (value: string) => {
+				const parsedNumber: number = Number.parseInt(value, 10);
+
+				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
+					return "Please enter a number between 1 and 10";
 				}
-			);
-			maxRetries = parseInt(retriesStr, 10);
+			});
+			maxRetries = Number.parseInt(retriesString, 10);
 
-			const validationRetriesStr = await this.cliInterface.text(
-				"Max retries for validation fixes (default: 3):",
-				"3",
-				"3",
-				(value: string) => {
-					const num = parseInt(value, 10);
-					if (isNaN(num) || num < 1 || num > 10) {
-						return "Please enter a number between 1 and 10";
-					}
-					return undefined;
+			const validationRetriesString: string = await this.CLI_INTERFACE.text("Max retries for validation fixes (default: 3):", "3", "3", (value: string) => {
+				const parsedNumber: number = Number.parseInt(value, 10);
+
+				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
+					return "Please enter a number between 1 and 10";
 				}
-			);
-			validationMaxRetries = parseInt(validationRetriesStr, 10);
+			});
+			validationMaxRetries = Number.parseInt(validationRetriesString, 10);
 		}
 
 		// Create configuration
-		const { ApiKey: ApiKeyClass } = await import("../../domain/value-object/api-key.value-object.js");
-		const { LLMConfiguration: LLMConfigurationClass } = await import("../../domain/entity/llm-configuration.entity.js");
-
 		// Create configuration - will save without API key
-		const configuration = new LLMConfigurationClass(
-			provider,
-			new ApiKeyClass(apiKeyValue),
-			mode,
-			model,
-			maxRetries,
-			validationMaxRetries
-		);
+		const configuration: LLMConfiguration = new LLMConfiguration(provider, new ApiKey(apiKeyValue), mode, model, maxRetries, validationMaxRetries);
 
 		// Save configuration (without API key)
 		await this.saveConfiguration(configuration);
 
-		this.cliInterface.success("Configuration saved successfully!");
-		
+		this.CLI_INTERFACE.success("Configuration saved successfully!");
+
 		// If we have an environment API key, return config with it
 		// Otherwise, return config with dummy key (will prompt later)
 		return configuration;
+	}
+
+	/**
+	 * Get the current LLM configuration
+	 * @returns Promise resolving to the current configuration or null if not configured
+	 */
+	async getCurrentConfiguration(): Promise<LLMConfiguration | null> {
+		const config: IConfig = await this.CONFIG_SERVICE.get();
+
+		if (!config.provider || !config.mode) {
+			return null;
+		}
+
+		// Add backward compatibility - set default retry values if missing
+		let isConfigUpdated: boolean = false;
+
+		if (config.maxRetries === undefined) {
+			config.maxRetries = DEFAULT_MAX_RETRIES;
+			isConfigUpdated = true;
+		}
+
+		if (config.validationMaxRetries === undefined) {
+			config.validationMaxRetries = DEFAULT_VALIDATION_MAX_RETRIES;
+			isConfigUpdated = true;
+		}
+
+		// Save updated config if we added defaults
+		if (isConfigUpdated) {
+			await this.CONFIG_SERVICE.set(config);
+		}
+
+		// Migrate deprecated models
+		let migratedModel: string | undefined = config.model;
+
+		if (migratedModel) {
+			// Map old models to new ones
+			const modelMigrations: Record<string, string> = {
+				// Anthropic migrations
+				"claude-2.0": EAnthropicModel.CLAUDE_3_5_SONNET,
+				"claude-2.1": EAnthropicModel.CLAUDE_3_5_SONNET,
+				"claude-3-5-haiku-20241022": EAnthropicModel.CLAUDE_3_5_HAIKU,
+				"claude-3-5-sonnet-20241022": EAnthropicModel.CLAUDE_3_5_SONNET,
+				"claude-3-haiku-20240307": EAnthropicModel.CLAUDE_3_5_HAIKU,
+				"claude-3-sonnet-20240229": EAnthropicModel.CLAUDE_3_5_SONNET,
+				// OpenAI migrations (upgrade old GPT-4 references)
+				"gpt-3.5-turbo": EOpenAIModel.GPT_35_TURBO,
+				"gpt-4": EOpenAIModel.GPT_4,
+				"gpt-4-0125-preview": EOpenAIModel.GPT_4_TURBO,
+				"gpt-4-0613": EOpenAIModel.GPT_4,
+				"gpt-4-1106-preview": EOpenAIModel.GPT_4_TURBO,
+				"gpt-4-32k": EOpenAIModel.GPT_4_32K,
+				"gpt-4-32k-0613": EOpenAIModel.GPT_4_32K,
+				"gpt-4o": EOpenAIModel.GPT_4O_MAY,
+				"gpt-4o-2024-05-13": EOpenAIModel.GPT_4O_MAY,
+				"gpt-4o-2024-08-06": EOpenAIModel.GPT_4O_AUGUST,
+				"gpt-4o-mini": EOpenAIModel.GPT_4O_MINI,
+			};
+
+			if (modelMigrations[migratedModel]) {
+				const oldModel: string = migratedModel;
+				migratedModel = modelMigrations[migratedModel];
+
+				// Save the migrated configuration
+				await this.CONFIG_SERVICE.setProperty("model", migratedModel);
+
+				this.CLI_INTERFACE.warn(`Migrated deprecated model ${oldModel} to ${migratedModel}`);
+			}
+		}
+
+		// For manual mode, return configuration with dummy API key
+		if (config.mode === ("manual" as ECommitMode)) {
+			return new LLMConfiguration(config.provider, new ApiKey("manual-mode"), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES);
+		}
+
+		// For auto mode, check environment variables
+		const environmentVariableName: string = config.provider === ("openai" as ELLMProvider) ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+		const environmentApiKey: string | undefined = process.env[environmentVariableName];
+
+		// If no API key in environment, return null (will prompt later)
+		if (!environmentApiKey || environmentApiKey.trim().length === 0) {
+			return null;
+		}
+
+		return new LLMConfiguration(config.provider, new ApiKey(environmentApiKey), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES);
+	}
+
+	/**
+	 * Check if the current configuration needs LLM details
+	 * @returns Promise resolving to true if LLM details are needed
+	 */
+	async needsLLMDetails(): Promise<boolean> {
+		const config: IConfig = await this.CONFIG_SERVICE.get();
+
+		if (!config.mode || config.mode === ("manual" as ECommitMode)) {
+			return false;
+		}
+
+		// For auto mode, check if API key is in environment
+		const environmentVariableName: string = config.provider === ("openai" as ELLMProvider) ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+		const environmentApiKey: string | undefined = process.env[environmentVariableName];
+
+		// Need details if no API key in environment
+		return !environmentApiKey || environmentApiKey.trim().length === 0;
 	}
 
 	/**
@@ -305,14 +266,14 @@ export class ConfigureLLMUseCase {
 	 */
 	async saveConfiguration(configuration: LLMConfiguration): Promise<void> {
 		const config: IConfig = {
-			provider: configuration.getProvider(),
+			maxRetries: configuration.getMaxRetries(),
 			mode: configuration.getMode(),
 			model: configuration.getModel(),
-			maxRetries: configuration.getMaxRetries(),
+			provider: configuration.getProvider(),
 			validationMaxRetries: configuration.getValidationMaxRetries(),
 		};
 
-		await this.configService.set(config);
+		await this.CONFIG_SERVICE.set(config);
 	}
 
 	/**
@@ -321,15 +282,15 @@ export class ConfigureLLMUseCase {
 	 * @returns Promise resolving to the updated configuration
 	 */
 	async updateMode(mode: ECommitMode): Promise<LLMConfiguration | null> {
-		const current = await this.getCurrentConfiguration();
+		const current: LLMConfiguration | null = await this.getCurrentConfiguration();
 
 		if (!current) {
 			return null;
 		}
 
-		const updated = current.withMode(mode);
+		const updated: LLMConfiguration = current.withMode(mode);
 		await this.saveConfiguration(updated);
 
 		return updated;
 	}
-} 
+}

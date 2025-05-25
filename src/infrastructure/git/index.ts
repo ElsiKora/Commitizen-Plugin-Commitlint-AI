@@ -1,1 +1,1 @@
-export * from "./git-commit.repository.js"; 
+export * from "./git-commit.repository.js";

@@ -1,1 +1,1 @@
-export * from "./commitizen.adapter.js"; 
+export * from "./commitizen.adapter.js";

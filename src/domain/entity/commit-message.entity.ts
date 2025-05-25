@@ -5,59 +5,60 @@ import type { CommitHeader } from "../value-object/commit-header.value-object.js
  * Entity representing a complete commit message
  */
 export class CommitMessage {
-	private readonly header: CommitHeader;
-	private readonly body: CommitBody;
+	private readonly BODY: CommitBody;
+
+	private readonly HEADER: CommitHeader;
 
 	constructor(header: CommitHeader, body: CommitBody) {
-		this.header = header;
-		this.body = body;
-	}
-
-	/**
-	 * Get the commit header
-	 */
-	getHeader(): CommitHeader {
-		return this.header;
+		this.HEADER = header;
+		this.BODY = body;
 	}
 
 	/**
 	 * Get the commit body
 	 */
 	getBody(): CommitBody {
-		return this.body;
+		return this.BODY;
 	}
 
 	/**
-	 * Format the complete commit message
+	 * Get the commit header
 	 */
-	toString(): string {
-		const parts: string[] = [this.header.toString()];
-
-		if (!this.body.isEmpty()) {
-			parts.push(this.body.toString());
-		}
-
-		return parts.join("\n\n");
+	getHeader(): CommitHeader {
+		return this.HEADER;
 	}
 
 	/**
 	 * Check if the commit has a breaking change
 	 */
 	hasBreakingChange(): boolean {
-		return this.body.hasBreakingChange();
+		return this.BODY.hasBreakingChange();
 	}
 
 	/**
-	 * Create a new commit message with updated header
+	 * Format the complete commit message
 	 */
-	withHeader(header: CommitHeader): CommitMessage {
-		return new CommitMessage(header, this.body);
+	toString(): string {
+		const parts: Array<string> = [this.HEADER.toString()];
+
+		if (!this.BODY.isEmpty()) {
+			parts.push(this.BODY.toString());
+		}
+
+		return parts.join("\n\n");
 	}
 
 	/**
 	 * Create a new commit message with updated body
 	 */
 	withBody(body: CommitBody): CommitMessage {
-		return new CommitMessage(this.header, body);
+		return new CommitMessage(this.HEADER, body);
 	}
-} 
+
+	/**
+	 * Create a new commit message with updated header
+	 */
+	withHeader(header: CommitHeader): CommitMessage {
+		return new CommitMessage(header, this.BODY);
+	}
+}
