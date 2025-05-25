@@ -1,108 +1,31 @@
-import type { Answers, DistinctQuestion } from "inquirer";
+import { createAppContainer } from "./infrastructure/di/container.js";
+import { CommitizenAdapter } from "./presentation/commitizen.adapter.js";
 
-import { existsSync } from "node:fs";
-// eslint-disable-next-line @elsikora-unicorn/import-style
-import { join } from "node:path";
+import "dotenv/config";
 
-import load from "@commitlint/load";
-import chalk from "chalk";
-import { config as loadDotEnvironment } from "dotenv";
-import inquirer from "inquirer";
+// Initialize the DI container
+createAppContainer();
 
-import process from "./Process.js";
-export { getLLMConfig, setLLMConfig } from "./services/llm/index.js";
-export type { CommitMode, LLMConfig, LLMConfigStorage, LLMModel, LLMProvider } from "./services/llm/types.js";
-
-// Load environment variables from .env file
-try {
-	loadDotEnvironment();
-} catch {
-	// Silently continue if .env file is not found or cannot be loaded
-}
-
-// eslint-disable-next-line @elsikora-typescript/naming-convention
-type Commit = (message: string) => void;
-
-import type { CommitMode, LLMConfig, LLMConfigStorage } from "./services/llm/types.js";
-
-import { getLLMConfig, setLLMConfig } from "./services/llm/index.js";
-
-// Check what commit mode to use based on config, environment variable, and fallback file
-const getCommitMode = (): CommitMode => {
-	try {
-		// First check environment variable (highest priority)
-
-		// Next check for manual flag file
-		if (existsSync(join("./.elsikora", "manual"))) {
-			return "manual";
-		}
-
-		// Finally check config file
-		const config: ({ apiKey: string } & LLMConfigStorage) | null = getLLMConfig();
-
-		if (
-			config?.mode && // Validation is now done in config.ts to avoid duplicate messages
-			(config.mode === "auto" || config.mode === "manual")
-		) {
-			return config.mode;
-		}
-
-		// Default to auto if not specified
-		return "auto";
-	} catch {
-		// In case of any errors, default to auto
-		return "auto";
-	}
-};
+// Create adapter instance
+const adapter: CommitizenAdapter = new CommitizenAdapter();
 
 /**
- * Entry point for commitizen
- * @param  inquirerIns instance passed by commitizen, unused
- * @param commit callback to execute with complete commit message
- * @return {void}
+ * Commitizen adapter entry point
+ * This function is called by Commitizen when running `git cz`
+ * It delegates to the CommitizenAdapter to handle the interactive commit process
+ * @param {unknown} inquirerInstance - The inquirer instance provided by Commitizen
+ * @param {(message: string) => void} commit - Callback function to execute the commit with the generated message
+ * @returns {Promise<void>} Promise that resolves when the commit process is complete
  */
-export async function prompter(
-	inquirerIns: {
-		prompt(questions: Array<DistinctQuestion>): Promise<Answers>;
-	},
-	commit: Commit,
-): Promise<void> {
-	// eslint-disable-next-line @elsikora-typescript/typedef
-	await load().then(async ({ prompt = {}, rules }) => {
-		// Use process (AI mode) unless manual mode is enabled
-		const commitMode: "auto" | "manual" = getCommitMode();
-
-		if (commitMode === "manual") {
-			const { useExisting }: any = await inquirer.prompt([
-				{
-					// eslint-disable-next-line @elsikora-typescript/naming-convention
-					default: true,
-					message: `Use manual configuration?`,
-					name: "useExisting",
-					type: "confirm",
-				},
-			]);
-
-			if (useExisting) {
-				console.log(chalk.blue("Using manual commit mode..."));
-				// Import manualProcess dynamically to avoid loading AI deps when not needed
-				// eslint-disable-next-line @elsikora-typescript/typedef
-				await import("./ManualProcess.js").then(async ({ default: manualProcess }) => {
-					await manualProcess(rules, prompt, inquirerIns).then(commit);
-				});
-			} else {
-				console.log(chalk.blue("Using AI-powered commit mode..."));
-				// eslint-disable-next-line @elsikora/typescript/no-non-null-assertion
-				const oldConfig: LLMConfig = getLLMConfig()!;
-				setLLMConfig({
-					...oldConfig,
-					mode: "auto",
-				});
-				await process(rules, prompt, inquirerIns).then(commit);
-			}
-		} else {
-			console.log(chalk.blue("Using AI-powered commit mode..."));
-			await process(rules, prompt, inquirerIns).then(commit);
-		}
-	});
+export async function prompter(inquirerInstance: unknown, commit: (message: string) => void): Promise<void> {
+	return adapter.prompter(inquirerInstance, commit);
 }
+
+// Export the prompter function for Commitizen
+export default {
+	prompter,
+};
+
+export * from "./application/index.js";
+// Re-export types and utilities that might be needed by consumers
+export * from "./domain/index.js";

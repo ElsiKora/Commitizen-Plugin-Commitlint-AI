@@ -1,6 +1,42 @@
 import typescript from "@rollup/plugin-typescript";
+import dtsPathAlias from "rollup-plugin-dts-path-alias";
+import generatePackageJson from "rollup-plugin-generate-package-json";
 
-const external = ["node:fs", "node:path", "node:child_process", "node:util", "@commitlint/load", "@commitlint/types", "chalk", "dotenv", "lodash.isplainobject", "@anthropic-ai/sdk", "openai", "inquirer"];
+const external = [
+	"@aws-sdk/client-bedrock-runtime",
+	"@google/generative-ai",
+	"@anthropic-ai/claude-code",
+	"@anthropic-ai/sdk",
+	"@commitlint/ensure",
+	"@commitlint/lint",
+	"@commitlint/load",
+	"@commitlint/types",
+	"@elsikora/cladi",
+	"@rollup/plugin-typescript",
+	"chalk",
+	"cosmiconfig",
+	"dotenv",
+	"dotenv/config",
+	"javascript-stringify",
+	"lodash.isplainobject",
+	"openai",
+	"ora",
+	"prompts",
+	"rollup",
+	"word-wrap",
+	"yaml",
+	"commitizen",
+	"node:fs",
+	"node:path",
+	"node:util",
+	"node:child_process",
+	"fs",
+	"path",
+	"util",
+	"child_process",
+	/^@commitlint\/.+/,
+	/^node:.+/,
+];
 
 export default [
 	{
@@ -13,12 +49,17 @@ export default [
 			sourcemap: true,
 		},
 		plugins: [
+			dtsPathAlias(),
 			typescript({
 				declaration: true,
 				declarationDir: "dist/esm",
 				outDir: "dist/esm",
 				outputToFilesystem: true,
-				tsconfig: "./tsconfig.json",
+				tsconfig: "./tsconfig.build.json",
+			}),
+			generatePackageJson({
+				baseContents: { type: "module" },
+				outputFolder: "dist/esm",
 			}),
 		],
 	},
@@ -33,12 +74,17 @@ export default [
 			sourcemap: true,
 		},
 		plugins: [
+			dtsPathAlias(),
 			typescript({
 				declaration: true,
 				declarationDir: "dist/cjs",
 				outDir: "dist/cjs",
 				outputToFilesystem: true,
-				tsconfig: "./tsconfig.json",
+				tsconfig: "./tsconfig.build.json",
+			}),
+			generatePackageJson({
+				baseContents: { type: "module" },
+				outputFolder: "dist/esm",
 			}),
 		],
 	},
