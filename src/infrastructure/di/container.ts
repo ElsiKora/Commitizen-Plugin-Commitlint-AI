@@ -16,6 +16,10 @@ import { ValidateCommitMessageUseCase as ValidateCommitMessageUseCaseImpl } from
 import { CommitlintValidatorService } from "../commit-validator/commitlint-validator.service.js";
 import { GitCommitRepository } from "../git/git-commit.repository.js";
 import { AnthropicLlmService } from "../llm/anthropic-llm.service.js";
+import { AWSBedrockLlmService } from "../llm/aws-bedrock-llm.service.js";
+import { AzureOpenAILlmService } from "../llm/azure-openai-llm.service.js";
+import { GoogleLlmService } from "../llm/google-llm.service.js";
+import { OllamaLlmService } from "../llm/ollama-llm.service.js";
 import { OpenAILlmService } from "../llm/openai-llm.service.js";
 import { CosmicConfigService } from "../service/cosmic-config.service.js";
 import { NodeCommandService } from "../service/node-command.service.js";
@@ -59,7 +63,7 @@ export function createAppContainer(): IContainer {
 	container.register(CommitRepositoryToken, new GitCommitRepository(commandService));
 
 	// Register LLM services
-	const llmServices: Array<ILlmService> = [new OpenAILlmService(), new AnthropicLlmService()];
+	const llmServices: Array<ILlmService> = [new OpenAILlmService(), new AnthropicLlmService(), new GoogleLlmService(), new AzureOpenAILlmService(), new AWSBedrockLlmService(), new OllamaLlmService()];
 	container.register(LLMServicesToken, llmServices);
 
 	// Register commit validator with LLM services

@@ -1,5 +1,4 @@
 import type { ECommitMode } from "../../domain/enum/commit-mode.enum.js";
-import type { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
 import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
 import type { IConfigService } from "../interface/config-service.interface.js";
 import type { IConfig } from "../interface/config.interface.js";
@@ -7,6 +6,11 @@ import type { IConfig } from "../interface/config.interface.js";
 import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES, MAX_RETRY_COUNT, MIN_RETRY_COUNT } from "../../domain/constant/numeric.constant.js";
 import { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import { EAnthropicModel } from "../../domain/enum/anthropic-model.enum.js";
+import { EAWSBedrockModel } from "../../domain/enum/aws-bedrock-model.enum.js";
+import { EAzureOpenAIModel } from "../../domain/enum/azure-openai-model.enum.js";
+import { EGoogleModel } from "../../domain/enum/google-model.enum.js";
+import { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
+import { EOllamaModel } from "../../domain/enum/ollama-model.enum.js";
 import { EOpenAIModel } from "../../domain/enum/openai-model.enum.js";
 import { ApiKey } from "../../domain/value-object/api-key.value-object.js";
 
@@ -61,58 +65,213 @@ export class ConfigureLLMUseCase {
 
 		// Select provider
 		const provider: ELLMProvider = await this.CLI_INTERFACE.select<ELLMProvider>("Select your LLM provider:", [
-			{ label: "OpenAI (GPT-4, GPT-3.5)", value: "openai" as ELLMProvider },
-			{ label: "Anthropic (Claude)", value: "anthropic" as ELLMProvider },
+			{ label: "OpenAI (GPT-4, GPT-3.5)", value: ELLMProvider.OPENAI },
+			{ label: "Anthropic (Claude)", value: ELLMProvider.ANTHROPIC },
+			{ label: "Google (Gemini)", value: ELLMProvider.GOOGLE },
+			{ label: "Azure OpenAI", value: ELLMProvider.AZURE_OPENAI },
+			{ label: "AWS Bedrock", value: ELLMProvider.AWS_BEDROCK },
+			{ label: "Ollama (Local)", value: ELLMProvider.OLLAMA },
 		]);
 
 		// Select model based on provider
 		let model: string;
 
-		if (provider === ("openai" as ELLMProvider)) {
-			model = await this.CLI_INTERFACE.select<string>(
-				"Select OpenAI model:",
-				[
-					{ label: "GPT-4.1 (Latest 2025, most capable)", value: EOpenAIModel.GPT_4_1 },
-					{ label: "GPT-4.1 Nano (Fastest 4.1 model)", value: EOpenAIModel.GPT_4_1_NANO },
-					{ label: "GPT-4.1 Mini", value: EOpenAIModel.GPT_4_1_MINI },
-					{ label: "GPT-4o (Latest, enhanced creative writing)", value: EOpenAIModel.GPT_4O },
-					{ label: "GPT-4o Mini (Faster, cheaper)", value: EOpenAIModel.GPT_4O_MINI },
-					{ label: "GPT-4 Turbo", value: EOpenAIModel.GPT_4_TURBO },
-					{ label: "GPT-4 (Original)", value: EOpenAIModel.GPT_4 },
-					{ label: "GPT-3.5 Turbo (Fastest, cheapest)", value: EOpenAIModel.GPT_35_TURBO },
-					{ label: "O1 (Enhanced reasoning)", value: EOpenAIModel.O1 },
-					{ label: "O1 Mini (Fast reasoning)", value: EOpenAIModel.O1_MINI },
-				],
-				EOpenAIModel.GPT_4O,
-			);
-		} else {
-			model = await this.CLI_INTERFACE.select<string>(
-				"Select Anthropic model:",
-				[
-					{ label: "Claude Opus 4 (Latest 2025, most capable)", value: EAnthropicModel.CLAUDE_OPUS_4 },
-					{ label: "Claude Sonnet 4 (Latest 2025, high-performance)", value: EAnthropicModel.CLAUDE_SONNET_4 },
-					{ label: "Claude 3.7 Sonnet (Extended thinking)", value: EAnthropicModel.CLAUDE_3_7_SONNET },
-					{ label: "Claude 3.5 Sonnet (Previous flagship)", value: EAnthropicModel.CLAUDE_3_5_SONNET },
-					{ label: "Claude 3.5 Haiku (Fastest)", value: EAnthropicModel.CLAUDE_3_5_HAIKU },
-					{ label: "Claude 3 Opus (Complex tasks)", value: EAnthropicModel.CLAUDE_3_OPUS },
-				],
-				EAnthropicModel.CLAUDE_SONNET_4,
-			);
+		switch (provider) {
+			case ELLMProvider.ANTHROPIC: {
+				model = await this.CLI_INTERFACE.select<string>(
+					"Select Anthropic model:",
+					[
+						{ label: "Claude Opus 4 (Latest 2025, most capable)", value: EAnthropicModel.CLAUDE_OPUS_4 },
+						{ label: "Claude Sonnet 4 (Latest 2025, high-performance)", value: EAnthropicModel.CLAUDE_SONNET_4 },
+						{ label: "Claude 3.7 Sonnet (Extended thinking)", value: EAnthropicModel.CLAUDE_3_7_SONNET },
+						{ label: "Claude 3.5 Sonnet (Previous flagship)", value: EAnthropicModel.CLAUDE_3_5_SONNET },
+						{ label: "Claude 3.5 Haiku (Fastest)", value: EAnthropicModel.CLAUDE_3_5_HAIKU },
+						{ label: "Claude 3 Opus (Complex tasks)", value: EAnthropicModel.CLAUDE_3_OPUS },
+					],
+					EAnthropicModel.CLAUDE_SONNET_4,
+				);
+
+				break;
+			}
+
+			case ELLMProvider.AWS_BEDROCK: {
+				model = await this.CLI_INTERFACE.select<string>(
+					"Select AWS Bedrock model:",
+					[
+						{ label: "Claude Opus 4 (Latest 2025, most capable)", value: EAWSBedrockModel.CLAUDE_OPUS_4 },
+						{ label: "Claude Sonnet 4 (Latest 2025, balanced performance)", value: EAWSBedrockModel.CLAUDE_SONNET_4 },
+						{ label: "Claude 3.5 Sonnet v2 (Previous flagship)", value: EAWSBedrockModel.CLAUDE_3_5_SONNET_V2 },
+						{ label: "Claude 3.5 Haiku (Fast)", value: EAWSBedrockModel.CLAUDE_3_5_HAIKU },
+						{ label: "Claude 3.5 Sonnet", value: EAWSBedrockModel.CLAUDE_3_5_SONNET },
+						{ label: "Amazon Nova Pro (Latest Amazon model)", value: EAWSBedrockModel.NOVA_PRO },
+						{ label: "DeepSeek R1 (Advanced reasoning)", value: EAWSBedrockModel.DEEPSEEK_R1 },
+						{ label: "Llama 3.2 90B (Open source)", value: EAWSBedrockModel.LLAMA_3_2_90B },
+						{ label: "Mistral Large (Latest)", value: EAWSBedrockModel.MISTRAL_LARGE_2_24_11 },
+					],
+					EAWSBedrockModel.CLAUDE_SONNET_4,
+				);
+
+				break;
+			}
+
+			case ELLMProvider.AZURE_OPENAI: {
+				model = await this.CLI_INTERFACE.select<string>(
+					"Select Azure OpenAI model:",
+					[
+						{ label: "GPT-4.1 Turbo (Latest 2025, most capable)", value: EAzureOpenAIModel.GPT_4_1_TURBO_2024_12_17 },
+						{ label: "GPT-4.1 Preview (Latest preview)", value: EAzureOpenAIModel.GPT_4_1_PREVIEW_2024_12_17 },
+						{ label: "GPT-4.1 Mini (Fast 4.1 model)", value: EAzureOpenAIModel.GPT_4_1_MINI_2024_12_17 },
+						{ label: "GPT-4o 2024-11 (Enhanced creative)", value: EAzureOpenAIModel.GPT_4O_2024_11_20 },
+						{ label: "GPT-4o Mini", value: EAzureOpenAIModel.GPT_4O_MINI_2024_07_18 },
+						{ label: "GPT-4 Turbo", value: EAzureOpenAIModel.GPT_4_TURBO },
+						{ label: "GPT-3.5 Turbo", value: EAzureOpenAIModel.GPT_35_TURBO },
+						{ label: "O3 (Enhanced reasoning)", value: EAzureOpenAIModel.O3_2024_12_17 },
+						{ label: "O4 Mini (Fast reasoning)", value: EAzureOpenAIModel.O4_MINI_2024_12_17 },
+					],
+					EAzureOpenAIModel.GPT_4_1_TURBO_2024_12_17,
+				);
+
+				break;
+			}
+
+			case ELLMProvider.GOOGLE: {
+				model = await this.CLI_INTERFACE.select<string>(
+					"Select Google model:",
+					[
+						{ label: "Gemini 2.5 Pro (Latest 2025, most capable)", value: EGoogleModel.GEMINI_2_5_PRO },
+						{ label: "Gemini 2.5 Flash (Latest 2025, fast)", value: EGoogleModel.GEMINI_2_5_FLASH },
+						{ label: "Gemini 2.0 Flash (Experimental)", value: EGoogleModel.GEMINI_2_0_FLASH_EXP },
+						{ label: "Gemini 1.5 Pro (Stable, capable)", value: EGoogleModel.GEMINI_1_5_PRO },
+						{ label: "Gemini 1.5 Flash (Fast, stable)", value: EGoogleModel.GEMINI_1_5_FLASH },
+						{ label: "Gemini 1.5 Flash 8B (Lightweight)", value: EGoogleModel.GEMINI_1_5_FLASH_8B },
+						{ label: "Gemini 1.0 Pro", value: EGoogleModel.GEMINI_1_0_PRO },
+						{ label: "Gemma 3 27B (Most capable open model)", value: EGoogleModel.GEMMA_3_27B },
+						{ label: "Gemma 3 12B (Strong language model)", value: EGoogleModel.GEMMA_3_12B },
+						{ label: "Gemma 3 4B (Balanced, multimodal)", value: EGoogleModel.GEMMA_3_4B },
+						{ label: "Gemma 3 1B (Lightweight)", value: EGoogleModel.GEMMA_3_1B },
+					],
+					EGoogleModel.GEMINI_2_5_FLASH,
+				);
+
+				break;
+			}
+
+			case ELLMProvider.OLLAMA: {
+				model = await this.CLI_INTERFACE.select<string>(
+					"Select Ollama model:",
+					[
+						{ label: "Llama 3.2 (Latest)", value: EOllamaModel.LLAMA3_2 },
+						{ label: "Llama 3.1", value: EOllamaModel.LLAMA3_1 },
+						{ label: "Llama 3", value: EOllamaModel.LLAMA3 },
+						{ label: "Mistral", value: EOllamaModel.MISTRAL },
+						{ label: "CodeLlama", value: EOllamaModel.CODELLAMA },
+						{ label: "DeepSeek Coder", value: EOllamaModel.DEEPSEEK_CODER },
+						{ label: "Custom Model", value: EOllamaModel.CUSTOM },
+					],
+					EOllamaModel.LLAMA3_2,
+				);
+
+				break;
+			}
+
+			case ELLMProvider.OPENAI: {
+				model = await this.CLI_INTERFACE.select<string>(
+					"Select OpenAI model:",
+					[
+						{ label: "GPT-4.1 (Latest 2025, most capable)", value: EOpenAIModel.GPT_4_1 },
+						{ label: "GPT-4.1 Nano (Fastest 4.1 model)", value: EOpenAIModel.GPT_4_1_NANO },
+						{ label: "GPT-4.1 Mini", value: EOpenAIModel.GPT_4_1_MINI },
+						{ label: "GPT-4o (Latest, enhanced creative writing)", value: EOpenAIModel.GPT_4O },
+						{ label: "GPT-4o Mini (Faster, cheaper)", value: EOpenAIModel.GPT_4O_MINI },
+						{ label: "GPT-4 Turbo", value: EOpenAIModel.GPT_4_TURBO },
+						{ label: "GPT-4 (Original)", value: EOpenAIModel.GPT_4 },
+						{ label: "GPT-3.5 Turbo (Fastest, cheapest)", value: EOpenAIModel.GPT_35_TURBO },
+						{ label: "O1 (Enhanced reasoning)", value: EOpenAIModel.O1 },
+						{ label: "O1 Mini (Fast reasoning)", value: EOpenAIModel.O1_MINI },
+					],
+					EOpenAIModel.GPT_4O,
+				);
+
+				break;
+			}
+
+			default: {
+				// This ensures exhaustiveness - TypeScript will error if a case is missing
+				const exhaustiveCheck: never = provider;
+
+				throw new Error(`Unsupported provider: ${String(exhaustiveCheck)}`);
+			}
 		}
 
 		// Get API key
 		let apiKeyValue: string;
 
 		// Check environment variables first
-		const environmentVariableName: string = provider === ("openai" as ELLMProvider) ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+		const environmentVariableNames: Record<string, string> = {
+			anthropic: "ANTHROPIC_API_KEY",
+			"aws-bedrock": "AWS_BEDROCK_API_KEY",
+			"azure-openai": "AZURE_OPENAI_API_KEY",
+			google: "GOOGLE_API_KEY",
+			ollama: "OLLAMA_API_KEY",
+			openai: "OPENAI_API_KEY",
+		};
+
+		const environmentVariableName: string = environmentVariableNames[provider] || "";
 		const environmentApiKey: string | undefined = process.env[environmentVariableName];
 
 		if (environmentApiKey && environmentApiKey.trim().length > 0) {
 			this.CLI_INTERFACE.success(`Found API key in environment variable: ${environmentVariableName}`);
 			apiKeyValue = environmentApiKey;
 		} else {
-			// Inform user about environment variable
-			this.CLI_INTERFACE.info(`API key will be read from ${environmentVariableName} environment variable or prompted each time.`);
+			// Inform user about environment variable and format requirements
+			let keyFormatInfo: string = "";
+
+			switch (provider) {
+				case ELLMProvider.ANTHROPIC: {
+					// Standard API key format - no special format info needed
+					// keyFormatInfo is already initialized as empty string
+					break;
+				}
+
+				case ELLMProvider.AWS_BEDROCK: {
+					keyFormatInfo = " (format: region|access-key-id|secret-access-key)";
+
+					break;
+				}
+
+				case ELLMProvider.AZURE_OPENAI: {
+					keyFormatInfo = " (format: endpoint|api-key|deployment-name)";
+
+					break;
+				}
+
+				case ELLMProvider.GOOGLE: {
+					// Standard API key format - no special format info needed
+					// keyFormatInfo is already initialized as empty string
+					break;
+				}
+
+				case ELLMProvider.OLLAMA: {
+					keyFormatInfo = " (format: host:port or host:port|custom-model)";
+
+					break;
+				}
+
+				case ELLMProvider.OPENAI: {
+					// Standard API key format - no special format info needed
+					// keyFormatInfo is already initialized as empty string
+					break;
+				}
+
+				default: {
+					// This ensures exhaustiveness - TypeScript will error if a case is missing
+					const exhaustiveCheck: never = provider;
+
+					throw new Error(`Unsupported provider: ${String(exhaustiveCheck)}`);
+				}
+			}
+
+			this.CLI_INTERFACE.info(`API key will be read from ${environmentVariableName} environment variable${keyFormatInfo} or prompted each time.`);
 			// Use dummy value for configuration
 			apiKeyValue = "will-prompt-on-use";
 		}
@@ -230,7 +389,16 @@ export class ConfigureLLMUseCase {
 		}
 
 		// For auto mode, check environment variables
-		const environmentVariableName: string = config.provider === ("openai" as ELLMProvider) ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+		const environmentVariableNames: Record<string, string> = {
+			anthropic: "ANTHROPIC_API_KEY",
+			"aws-bedrock": "AWS_BEDROCK_API_KEY",
+			"azure-openai": "AZURE_OPENAI_API_KEY",
+			google: "GOOGLE_API_KEY",
+			ollama: "OLLAMA_API_KEY",
+			openai: "OPENAI_API_KEY",
+		};
+
+		const environmentVariableName: string = environmentVariableNames[config.provider] || "";
 		const environmentApiKey: string | undefined = process.env[environmentVariableName];
 
 		// If no API key in environment, return null (will prompt later)
@@ -253,7 +421,16 @@ export class ConfigureLLMUseCase {
 		}
 
 		// For auto mode, check if API key is in environment
-		const environmentVariableName: string = config.provider === ("openai" as ELLMProvider) ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+		const environmentVariableNames: Record<string, string> = {
+			anthropic: "ANTHROPIC_API_KEY",
+			"aws-bedrock": "AWS_BEDROCK_API_KEY",
+			"azure-openai": "AZURE_OPENAI_API_KEY",
+			google: "GOOGLE_API_KEY",
+			ollama: "OLLAMA_API_KEY",
+			openai: "OPENAI_API_KEY",
+		};
+
+		const environmentVariableName: string = environmentVariableNames[config.provider] || "";
 		const environmentApiKey: string | undefined = process.env[environmentVariableName];
 
 		// Need details if no API key in environment

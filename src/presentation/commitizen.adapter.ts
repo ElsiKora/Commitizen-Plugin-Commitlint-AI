@@ -13,7 +13,6 @@ import type { ManualCommitUseCase } from "../application/use-case/manual-commit.
 import type { ValidateCommitMessageUseCase } from "../application/use-case/validate-commit-message.use-case.js";
 import type { CommitMessage } from "../domain/entity/commit-message.entity.js";
 import type { ECommitMode } from "../domain/enum/commit-mode.enum.js";
-import type { ELLMProvider } from "../domain/enum/llm-provider.enum.js";
 
 import load from "@commitlint/load";
 
@@ -90,9 +89,9 @@ export class CommitizenAdapter {
 					// Check if we need to prompt for API key after configuration
 					if (llmConfig.isAutoMode() && llmConfig.getApiKey().getValue() === "will-prompt-on-use") {
 						// Ask for API key
-						const defaultHint: string = llmConfig.getProvider() === ("openai" as ELLMProvider) ? "sk-..." : "sk-ant-...";
+						const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(llmConfig.getProvider());
 
-						const apiKeyValue: string = await cliInterface.text(`Enter your API key for this session:`, defaultHint, "", (value: string) => {
+						const apiKeyValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 							if (!value || value.trim().length === 0) {
 								return "API key is required";
 							}
@@ -103,13 +102,21 @@ export class CommitizenAdapter {
 					}
 				} else if (config.mode === ("auto" as ECommitMode) && !llmConfig) {
 					// User wants to use existing config but API key is missing
-					const environmentVariableName: string = config.provider === ("openai" as ELLMProvider) ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+					const environmentVariableNames: Record<string, string> = {
+						anthropic: "ANTHROPIC_API_KEY",
+						"aws-bedrock": "AWS_BEDROCK_API_KEY",
+						"azure-openai": "AZURE_OPENAI_API_KEY",
+						google: "GOOGLE_API_KEY",
+						ollama: "OLLAMA_API_KEY",
+						openai: "OPENAI_API_KEY",
+					};
+					const environmentVariableName: string = environmentVariableNames[config.provider] || "";
 					cliInterface.warn(`API key not found in ${environmentVariableName} environment variable.`);
 
 					// Ask for API key
-					const defaultHint: string = config.provider === ("openai" as ELLMProvider) ? "sk-..." : "sk-ant-...";
+					const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(config.provider);
 
-					const apiKeyValue: string = await cliInterface.text(`Enter your API key for this session:`, defaultHint, "", (value: string) => {
+					const apiKeyValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 						if (!value || value.trim().length === 0) {
 							return "API key is required";
 						}
@@ -128,9 +135,9 @@ export class CommitizenAdapter {
 				// Check if we need to prompt for API key after configuration
 				if (llmConfig.isAutoMode() && llmConfig.getApiKey().getValue() === "will-prompt-on-use") {
 					// Ask for API key
-					const defaultHint: string = llmConfig.getProvider() === ("openai" as ELLMProvider) ? "sk-..." : "sk-ant-...";
+					const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(llmConfig.getProvider());
 
-					const apiKeyValue: string = await cliInterface.text(`Enter your API key for this session:`, defaultHint, "", (value: string) => {
+					const apiKeyValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 						if (!value || value.trim().length === 0) {
 							return "API key is required";
 						}
@@ -327,5 +334,40 @@ export class CommitizenAdapter {
 		}
 
 		return context;
+	}
+
+	/**
+	 * Get API key prompt information based on provider
+	 */
+	private getApiKeyPromptInfo(provider: string): { hint: string; prompt: string } {
+		switch (provider) {
+			case "anthropic": {
+				return { hint: "sk-ant-...", prompt: "Enter your Anthropic API key for this session:" };
+			}
+
+			case "aws-bedrock": {
+				return { hint: "us-east-1|AKIA...|secret...", prompt: "Enter your AWS Bedrock credentials (region|access-key-id|secret-access-key):" };
+			}
+
+			case "azure-openai": {
+				return { hint: "https://your.openai.azure.com|key|deployment", prompt: "Enter your Azure OpenAI credentials (endpoint|api-key|deployment-name):" };
+			}
+
+			case "google": {
+				return { hint: "AIza...", prompt: "Enter your Google API key for this session:" };
+			}
+
+			case "ollama": {
+				return { hint: "localhost:11434", prompt: "Enter your Ollama host (host:port or host:port|custom-model):" };
+			}
+
+			case "openai": {
+				return { hint: "sk-...", prompt: "Enter your OpenAI API key for this session:" };
+			}
+
+			default: {
+				return { hint: "", prompt: "Enter your API key for this session:" };
+			}
+		}
 	}
 }

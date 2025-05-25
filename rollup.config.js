@@ -1,6 +1,8 @@
 import typescript from "@rollup/plugin-typescript";
 
 const external = [
+	"@aws-sdk/client-bedrock-runtime",
+	"@google/generative-ai",
 	"@anthropic-ai/claude-code",
 	"@anthropic-ai/sdk",
 	"@commitlint/ensure",

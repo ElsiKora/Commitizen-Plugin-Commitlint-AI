@@ -54,11 +54,13 @@
 	"dependencies": {
 		"@anthropic-ai/claude-code": "^1.0.3",
 		"@anthropic-ai/sdk": "^0.52.0",
+		"@aws-sdk/client-bedrock-runtime": "^3.726.0",
 		"@commitlint/ensure": "^19.8.1",
 		"@commitlint/lint": "^19.8.1",
 		"@commitlint/load": "^19.8.1",
 		"@commitlint/types": "^19.8.1",
 		"@elsikora/cladi": "^2.0.2",
+		"@google/generative-ai": "^0.21.0",
 		"@rollup/plugin-typescript": "^12.1.2",
 		"chalk": "^5.4.1",
 		"cosmiconfig": "^9.0.0",
