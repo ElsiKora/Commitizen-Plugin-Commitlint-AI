@@ -10,10 +10,8 @@ const store: {
 	[storeKey]: {},
 };
 
-// eslint-disable-next-line @elsikora-typescript/naming-convention
 export type GetRuleMethod = typeof getRule;
 
-// eslint-disable-next-line @elsikora-typescript/naming-convention
 export type SetRulesMethod = typeof setRules;
 
 export function getRule(key: string, property: string): Rule | undefined {

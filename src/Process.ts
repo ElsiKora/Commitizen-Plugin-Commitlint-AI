@@ -1,7 +1,7 @@
 import type { QualifiedRules, UserPromptConfig } from "@commitlint/types";
-import type { Answers, DistinctQuestion } from "inquirer";
 
 import type { CommitConfig, LLMConfigStorage, LLMPromptContext } from "./services/llm/index.js";
+import type { PromptsAnswers, PromptsQuestion } from "./services/promptsInterface.js";
 
 import chalk from "chalk";
 
@@ -9,21 +9,30 @@ import { commitConfirmation } from "./services/commitConfirmation.js";
 import { extractLLMPromptContext } from "./services/commitlintConfig.js";
 import { validateAndFixCommitMessage } from "./services/commitlintValidator.js";
 import { generateCommitMessage, getLLMConfig, selectLLMProvider } from "./services/llm/index.js";
+import { promptsInterface } from "./services/promptsInterface.js";
 import { setPromptConfig } from "./store/prompts.js";
 import { setRules } from "./store/rules.js";
 
 export default async function Process(
 	rules: QualifiedRules,
 	prompts: UserPromptConfig,
-	inquirer: {
-		prompt(questions: Array<DistinctQuestion>): Promise<Answers>;
-	},
+	// Legacy inquirer parameter kept for backward compatibility
+	_inquirer?: unknown,
 ): Promise<string> {
 	setRules(rules);
 	setPromptConfig(prompts);
 
 	// First, ask for LLM provider and API key
-	await selectLLMProvider(inquirer);
+	try {
+		await selectLLMProvider(promptsInterface);
+	} catch (error) {
+		if (error instanceof Error && error.message === "PROMPT_CANCELLED") {
+			throw error; // Re-throw to let the parent handle it
+		}
+		console.error(chalk.red("Error during LLM provider selection:"), error);
+
+		throw error;
+	}
 
 	// Extract context from commitlint config
 	const promptContext: LLMPromptContext = extractLLMPromptContext(rules, prompts);
@@ -33,10 +42,10 @@ export default async function Process(
 
 	// If manual mode is enabled, skip AI generation and go straight to manual entry
 	if (config && config.mode === "manual") {
-		console.log(chalk.blue("Using manual commit entry mode..."));
+		console.warn(chalk.blue("Using manual commit entry mode..."));
 	} else {
 		try {
-			console.log(chalk.blue("Generating commit message with AI..."));
+			console.warn(chalk.blue("Generating commit message with AI..."));
 
 			// Generate commit message using LLM
 			const commitConfig: CommitConfig = await generateCommitMessage(promptContext);
@@ -46,31 +55,31 @@ export default async function Process(
 
 			// If validation returned null, it means we should switch to manual mode
 			if (validatedCommitMessage === null) {
-				console.log(chalk.yellow("Switching to manual commit entry after failed validation attempts."));
+				console.warn(chalk.yellow("Switching to manual commit entry after failed validation attempts."));
 			} else {
-				console.log(chalk.green("AI generated commit message successfully!"));
+				console.warn(chalk.green("AI generated commit message successfully!"));
 
 				// Show the generated message to the user
-				console.log("\n" + chalk.yellow("Generated commit message:"));
-				console.log(chalk.white("-----------------------------------"));
-				console.log(chalk.white(validatedCommitMessage));
-				console.log(chalk.white("-----------------------------------\n"));
+				console.warn("\n" + chalk.yellow("Generated commit message:"));
+				console.warn(chalk.white("-----------------------------------"));
+				console.warn(chalk.white(validatedCommitMessage));
+				console.warn(chalk.white("-----------------------------------\n"));
 
 				// Ask for confirmation
-				const { confirmCommit }: Answers = await inquirer.prompt([
+				const response = (await promptsInterface.prompt([
 					{
-						// eslint-disable-next-line @elsikora-typescript/naming-convention
 						default: true,
 						message: "Do you want to proceed with this commit message?",
 						name: "confirmCommit",
 						type: "confirm",
 					},
-				]);
+				])) as { confirmCommit: boolean };
+				const { confirmCommit } = response;
 
 				if (confirmCommit) {
 					return validatedCommitMessage;
 				} else {
-					console.log(chalk.yellow("AI generated message rejected. Switching to commit edit mode."));
+					console.warn(chalk.yellow("AI generated message rejected. Switching to commit edit mode."));
 					const confirmedCommitMessage: string = await commitConfirmation(promptContext, { ...commitConfig, scope: extractCommitScope(validatedCommitMessage) });
 
 					return confirmedCommitMessage;
@@ -81,35 +90,13 @@ export default async function Process(
 			// Only show error for AI mode errors, not when manual mode is intentionally used
 			if (config?.mode !== "manual") {
 				console.error(chalk.red("Error generating commit with AI:"), error);
-				console.log(chalk.yellow("Falling back to manual commit entry..."));
+				console.warn(chalk.yellow("Falling back to manual commit entry..."));
 			}
 		}
 	}
 
 	// Fallback to regular prompts if LLM fails or in manual mode
-	const commitQuestions: Array<
-		| {
-				// eslint-disable-next-line @elsikora-typescript/naming-convention
-				default: boolean;
-				message: string;
-				name: string;
-				type: string;
-		  }
-		| {
-				choices: Array<{ name: string; value: string }>;
-				message: string;
-				name: string;
-				type: string;
-		  }
-		| {
-				message: string;
-				name: string;
-				type: string;
-				validate: (input: string) => boolean | string;
-		  }
-		| { message: string; name: string; type: string; when: (answers: Answers) => any }
-		| { message: string; name: string; type: string }
-	> = [
+	const commitQuestions: Array<PromptsQuestion> = [
 		{
 			choices:
 				promptContext.typeEnum?.map((type: string) => {
@@ -124,7 +111,7 @@ export default async function Process(
 					}
 
 					return {
-						name: type + (emoji ? " " + emoji : "") + ": " + cleanDesc,
+						title: type + (emoji ? " " + emoji : "") + ": " + cleanDesc,
 						value: type,
 					};
 				}) ?? [],
@@ -141,7 +128,7 @@ export default async function Process(
 			message: promptContext.subject.description ?? "Write a short, imperative mood description of the change:",
 			name: "subject",
 			type: "input",
-			// eslint-disable-next-line @elsikora-sonar/function-return-type
+			// eslint-disable-next-line @elsikora/sonar/function-return-type
 			validate: (input: string): boolean | string => {
 				if (!input) return "Subject is required";
 
@@ -154,7 +141,6 @@ export default async function Process(
 			type: "input",
 		},
 		{
-			// eslint-disable-next-line @elsikora-typescript/naming-convention
 			default: false,
 			message: "Are there any breaking changes?",
 			name: "isBreaking",
@@ -164,53 +150,48 @@ export default async function Process(
 			message: "Describe the breaking changes:",
 			name: "breakingBody",
 			type: "input",
-			// eslint-disable-next-line @elsikora-typescript/no-unsafe-return
-			when: (answers: Answers) => answers.isBreaking,
+
+			when: (answers: PromptsAnswers) => answers.isBreaking as boolean,
 		},
 	];
 
 	// First get all commit details
-	// @ts-ignore
-	const answers: Answers = await inquirer.prompt(commitQuestions);
+	const answers: PromptsAnswers = await promptsInterface.prompt(commitQuestions);
 
 	// Construct message from manual answers
-	// eslint-disable-next-line @elsikora-typescript/no-unsafe-argument,@elsikora-typescript/restrict-plus-operands
-	const header: string = "".concat(answers.type, answers.scope ? "(" + answers.scope + ")" : "", ": ", answers.subject);
+
+	const header: string = "".concat(answers.type as string, answers.scope ? "(" + (answers.scope as string) + ")" : "", ": ", answers.subject as string);
 
 	let body: string = "";
 
 	if (answers.isBreaking) {
-		// eslint-disable-next-line @elsikora-typescript/restrict-template-expressions
-		body = `BREAKING CHANGE: ${answers.breakingBody || "This commit introduces breaking changes."}\n\n`;
+		body = `BREAKING CHANGE: ${(answers.breakingBody as string) ?? "This commit introduces breaking changes."}\n\n`;
 	}
 
 	if (answers.body) {
-		// eslint-disable-next-line @elsikora-typescript/restrict-plus-operands
-		body += answers.body;
+		body += answers.body as string;
 	}
 
 	const commitMessage: string = [header, body].filter(Boolean).join("\n\n");
 
 	// Display the commit message to the user
-	console.log("\n" + chalk.yellow("Your commit message:"));
-	console.log(chalk.white("-----------------------------------"));
-	console.log(chalk.white(commitMessage));
-	console.log(chalk.white("-----------------------------------\n"));
+	console.warn("\n" + chalk.yellow("Your commit message:"));
+	console.warn(chalk.white("-----------------------------------"));
+	console.warn(chalk.white(commitMessage));
+	console.warn(chalk.white("-----------------------------------\n"));
 
 	// Now ask for confirmation
-	const { confirmCommit }: Answers = await inquirer.prompt([
-		{
-			// eslint-disable-next-line @elsikora-typescript/naming-convention
-			default: true,
-			message: "Are you sure you want to proceed with the commit above?",
-			name: "confirmCommit",
-			type: "confirm",
-		},
-	]);
+	const confirmResponse = await promptsInterface.prompt({
+		default: true,
+		message: "Are you sure you want to proceed with the commit above?",
+		name: "confirmCommit",
+		type: "confirm",
+	});
+	const confirmCommit = confirmResponse.confirmCommit as boolean;
 
 	// Check confirmation
 	if (!confirmCommit) {
-		console.log(chalk.yellow("Commit canceled."));
+		console.warn(chalk.yellow("Commit canceled."));
 
 		throw new Error("User canceled the commit");
 	}

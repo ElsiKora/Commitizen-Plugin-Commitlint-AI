@@ -1,15 +1,15 @@
-import type { Answers, DistinctQuestion } from "inquirer";
+import type { PromptsAnswers, PromptsQuestion } from "./services/promptsInterface.js";
 
 import { existsSync } from "node:fs";
-// eslint-disable-next-line @elsikora-unicorn/import-style
+// eslint-disable-next-line @elsikora/unicorn/import-style
 import { join } from "node:path";
 
 import load from "@commitlint/load";
 import chalk from "chalk";
 import { config as loadDotEnvironment } from "dotenv";
-import inquirer from "inquirer";
 
 import process from "./Process.js";
+import { promptsInterface } from "./services/promptsInterface.js";
 export { getLLMConfig, setLLMConfig } from "./services/llm/index.js";
 export type { CommitMode, LLMConfig, LLMConfigStorage, LLMModel, LLMProvider } from "./services/llm/types.js";
 
@@ -20,7 +20,6 @@ try {
 	// Silently continue if .env file is not found or cannot be loaded
 }
 
-// eslint-disable-next-line @elsikora-typescript/naming-convention
 type Commit = (message: string) => void;
 
 import type { CommitMode, LLMConfig, LLMConfigStorage } from "./services/llm/types.js";
@@ -63,46 +62,45 @@ const getCommitMode = (): CommitMode => {
  */
 export async function prompter(
 	inquirerIns: {
-		prompt(questions: Array<DistinctQuestion>): Promise<Answers>;
+		prompt(questions: Array<PromptsQuestion>): Promise<PromptsAnswers>;
 	},
 	commit: Commit,
 ): Promise<void> {
-	// eslint-disable-next-line @elsikora-typescript/typedef
 	await load().then(async ({ prompt = {}, rules }) => {
 		// Use process (AI mode) unless manual mode is enabled
 		const commitMode: "auto" | "manual" = getCommitMode();
 
 		if (commitMode === "manual") {
-			const { useExisting }: any = await inquirer.prompt([
+			const response = (await promptsInterface.prompt([
 				{
-					// eslint-disable-next-line @elsikora-typescript/naming-convention
 					default: true,
 					message: `Use manual configuration?`,
 					name: "useExisting",
 					type: "confirm",
 				},
-			]);
+			])) as { useExisting: boolean };
+			const { useExisting } = response;
 
 			if (useExisting) {
-				console.log(chalk.blue("Using manual commit mode..."));
+				console.warn(chalk.blue("Using manual commit mode..."));
 				// Import manualProcess dynamically to avoid loading AI deps when not needed
-				// eslint-disable-next-line @elsikora-typescript/typedef
+
 				await import("./ManualProcess.js").then(async ({ default: manualProcess }) => {
 					await manualProcess(rules, prompt, inquirerIns).then(commit);
 				});
 			} else {
-				console.log(chalk.blue("Using AI-powered commit mode..."));
+				console.warn(chalk.blue("Using AI-powered commit mode..."));
 				// eslint-disable-next-line @elsikora/typescript/no-non-null-assertion
 				const oldConfig: LLMConfig = getLLMConfig()!;
 				setLLMConfig({
 					...oldConfig,
 					mode: "auto",
 				});
-				await process(rules, prompt, inquirerIns).then(commit);
+				await process(rules, prompt).then(commit);
 			}
 		} else {
-			console.log(chalk.blue("Using AI-powered commit mode..."));
-			await process(rules, prompt, inquirerIns).then(commit);
+			console.warn(chalk.blue("Using AI-powered commit mode..."));
+			await process(rules, prompt).then(commit);
 		}
 	});
 }

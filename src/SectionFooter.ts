@@ -1,12 +1,10 @@
-/* eslint-disable @elsikora-typescript/no-unsafe-argument,@elsikora-typescript/naming-convention,@elsikora-typescript/no-unsafe-call,@elsikora-typescript/no-unsafe-member-access,@elsikora-typescript/no-unsafe-return */
 import type { PromptMessages, PromptName } from "@commitlint/types";
-import type { Answers, DistinctQuestion } from "inquirer";
 
 import type { QuestionConfig } from "./Question.js";
+import type { PromptsAnswers, PromptsQuestion } from "./services/promptsInterface.js";
 
 import wrap from "word-wrap";
 
-// eslint-disable-next-line no-duplicate-imports
 import Question from "./Question.js";
 import getRuleQuestionConfig from "./services/getRuleQuestionConfig.js";
 import { getPromptMessages, getPromptQuestions } from "./store/prompts.js";
@@ -25,24 +23,23 @@ export class FooterQuestion extends Question {
 		this.footerMinLength = footerMinLength ?? 0;
 	}
 
-	beforeQuestionStart(answers: Answers): void {
+	beforeQuestionStart(answers: PromptsAnswers): void {
 		const footerRemainLength: number = this.footerMaxLength - combineCommitMessage(answers).length - "\n".length;
 		this.maxLength = Math.min(this.maxLength, footerRemainLength);
 		this.minLength = Math.min(this.minLength, this.footerMinLength);
 	}
 }
 
-export function combineCommitMessage(answers: Answers): string {
+export function combineCommitMessage(answers: PromptsAnswers): string {
 	const maxLineLength: number = getMaxLength(getRule("footer", "max-line-length"));
 	const leadingBlankFunction: (input: string) => string = getLeadingBlankFunction(getRule("footer", "leading-blank"));
 
-	const { breaking, footer, issues }: Answers = answers;
+	const { breaking, footer, issues } = answers as { breaking?: string; footer?: string; issues?: string };
 	const footerNotes: Array<string> = [];
 
 	if (breaking) {
 		const BREAKING_CHANGE: string = "BREAKING CHANGE: ";
 
-		// eslint-disable-next-line @elsikora-typescript/restrict-plus-operands
 		const message: string = BREAKING_CHANGE + breaking.replace(new RegExp(`^${BREAKING_CHANGE}`), "");
 		footerNotes.push(
 			maxLineLength < Infinity
@@ -83,7 +80,7 @@ export function combineCommitMessage(answers: Answers): string {
 	return leadingBlankFunction(footerNotes.join("\n"));
 }
 
-export function getQuestions(): Array<DistinctQuestion> {
+export function getQuestions(): Array<PromptsQuestion> {
 	const footerQuestionConfig: null | QuestionConfig = getRuleQuestionConfig("footer");
 
 	if (!footerQuestionConfig) return [];
@@ -95,7 +92,7 @@ export function getQuestions(): Array<DistinctQuestion> {
 
 	return (
 		fields
-			// eslint-disable-next-line @elsikora-sonar/use-type-alias
+			// eslint-disable-next-line @elsikora/sonar/use-type-alias
 			.filter((name: "body" | "breaking" | "breakingBody" | "footer" | "header" | "isBreaking" | "isIssueAffected" | "issues" | "issuesBody" | "scope" | "subject" | "type") => name in getPromptQuestions())
 			.map((name: "body" | "breaking" | "breakingBody" | "footer" | "header" | "isBreaking" | "isIssueAffected" | "issues" | "issuesBody" | "scope" | "subject" | "type") => {
 				const questions: Readonly<
@@ -131,16 +128,16 @@ export function getQuestions(): Array<DistinctQuestion> {
 
 				if (name === "breakingBody") {
 					Object.assign(questionConfigs, {
-						when: (answers: Answers) => {
-							return answers.isBreaking && !answers.body;
+						when: (answers: PromptsAnswers) => {
+							return (answers.isBreaking as boolean) && !answers.body;
 						},
 					});
 				}
 
 				if (name === "breaking") {
 					Object.assign(questionConfigs, {
-						when: (answers: Answers) => {
-							return answers.isBreaking;
+						when: (answers: PromptsAnswers) => {
+							return answers.isBreaking as boolean;
 						},
 					});
 				}
@@ -153,16 +150,16 @@ export function getQuestions(): Array<DistinctQuestion> {
 
 				if (name === "issuesBody") {
 					Object.assign(questionConfigs, {
-						when: (answers: Answers) => {
-							return answers.isIssueAffected && !answers.body && !answers.breakingBody;
+						when: (answers: PromptsAnswers) => {
+							return (answers.isIssueAffected as boolean) && !answers.body && !answers.breakingBody;
 						},
 					});
 				}
 
 				if (name === "issues") {
 					Object.assign(questionConfigs, {
-						when: (answers: Answers) => {
-							return answers.isIssueAffected;
+						when: (answers: PromptsAnswers) => {
+							return answers.isIssueAffected as boolean;
 						},
 					});
 				}

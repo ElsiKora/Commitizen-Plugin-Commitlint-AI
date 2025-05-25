@@ -1,9 +1,8 @@
 import type { PromptName, RuleField } from "@commitlint/types";
-import type { Answers, DistinctQuestion } from "inquirer";
 
 import type { QuestionConfig } from "./Question.js";
+import type { PromptsAnswers, PromptsQuestion } from "./services/promptsInterface.js";
 
-// eslint-disable-next-line no-duplicate-imports
 import Question from "./Question.js";
 import getRuleQuestionConfig from "./services/getRuleQuestionConfig.js";
 import { getPromptSettings } from "./store/prompts.js";
@@ -19,19 +18,21 @@ export class HeaderQuestion extends Question {
 		this.headerMinLength = headerMinLength ?? 0;
 	}
 
-	beforeQuestionStart(answers: Answers): void {
+	beforeQuestionStart(answers: PromptsAnswers): void {
 		const headerRemainLength: number = this.headerMaxLength - combineCommitMessage(answers).length;
 		this.maxLength = Math.min(this.maxLength, headerRemainLength);
 		this.minLength = Math.min(this.minLength, this.headerMinLength);
 	}
 }
 
-export function combineCommitMessage(answers: Answers): string {
-	const { scope = "", subject = "", type = "" }: Answers = answers;
-	// eslint-disable-next-line @elsikora-typescript/restrict-template-expressions,@elsikora-sonar/no-nested-template-literals
+export function combineCommitMessage(answers: PromptsAnswers): string {
+	const scope = (answers.scope as string) || "";
+	const subject = (answers.subject as string) || "";
+	const type = (answers.type as string) || "";
+	// eslint-disable-next-line @elsikora/sonar/no-nested-template-literals
 	const prefix: string = `${type}${scope ? `(${scope})` : ""}`;
 
-	// eslint-disable-next-line @elsikora-sonar/no-nested-conditional,@elsikora-typescript/restrict-plus-operands
+	// eslint-disable-next-line @elsikora/sonar/no-nested-conditional
 	return subject ? ((prefix ? prefix + ": " : "") + subject).trim() : prefix.trim();
 }
 
@@ -49,9 +50,9 @@ export function getQuestionConfig(name: RuleField): ReturnType<typeof getRuleQue
 	return questionConfig;
 }
 
-export function getQuestions(): Array<DistinctQuestion> {
+export function getQuestions(): Array<PromptsQuestion> {
 	// header: type, scope, subject
-	const questions: Array<DistinctQuestion> = [];
+	const questions: Array<PromptsQuestion> = [];
 
 	const headerRuleFields: Array<RuleField> = ["type", "scope", "subject"];
 	const headerRuleQuestionConfig: null | QuestionConfig = getRuleQuestionConfig("header");

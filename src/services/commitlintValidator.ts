@@ -1,5 +1,5 @@
 /* eslint-disable @elsikora/typescript/prefer-nullish-coalescing */
-/* eslint-disable @elsikora-typescript/restrict-template-expressions */
+
 import type { CommitConfig, LLMPromptContext } from "./llm";
 
 import { exec } from "node:child_process";
@@ -11,7 +11,6 @@ import { generateCommitMessage } from "./llm";
 
 const execAsync: ReturnType<typeof promisify> = promisify(exec);
 
-// eslint-disable-next-line @elsikora-typescript/naming-convention
 interface ValidationResult {
 	errors?: string;
 	isValid: boolean;
@@ -75,13 +74,13 @@ export async function validateAndFixCommitMessage(commitConfig: CommitConfig, pr
 
 	// If not valid and we have errors, try to fix with LLM
 	if (!validation.isValid && validation.errors) {
-		console.log(chalk.yellow("Commit message failed validation. Attempting to fix..."));
+		console.warn(chalk.yellow("Commit message failed validation. Attempting to fix..."));
 		const MAX_RETRIES: number = 3;
 		let currentConfig: CommitConfig = commitConfig;
 		const allErrors: Array<string> = [];
 
 		// Attempt to fix the commit message up to MAX_RETRIES times
-		// eslint-disable-next-line @elsikora-typescript/typedef
+
 		for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
 			// Add the current validation error to our history
 			if (validation.errors) {
@@ -103,14 +102,14 @@ export async function validateAndFixCommitMessage(commitConfig: CommitConfig, pr
 
 				// If valid, return the successful message
 				if (fixedValidation.isValid) {
-					console.log(chalk.green(`Commit message fixed successfully on attempt ${attempt + 1}!`));
+					console.warn(chalk.green(`Commit message fixed successfully on attempt ${attempt + 1}!`));
 
 					return fixedCommitMessage;
 				}
 
 				// If we still have errors, continue with next attempt
 				if (fixedValidation.errors) {
-					console.log(chalk.yellow(`Fix attempt ${attempt + 1} still has errors. ${MAX_RETRIES - attempt - 1} retries left.`));
+					console.warn(chalk.yellow(`Fix attempt ${attempt + 1} still has errors. ${MAX_RETRIES - attempt - 1} retries left.`));
 					// Update the validation errors for the next iteration
 					validation.errors = fixedValidation.errors;
 				}
@@ -122,8 +121,8 @@ export async function validateAndFixCommitMessage(commitConfig: CommitConfig, pr
 		}
 
 		// If we exhausted all retries and still have issues
-		console.log(chalk.red(`Unable to fix commit message automatically after ${MAX_RETRIES} attempts.`));
-		console.log(chalk.yellow("Switching to manual commit entry mode..."));
+		console.error(chalk.red(`Unable to fix commit message automatically after ${MAX_RETRIES} attempts.`));
+		console.warn(chalk.yellow("Switching to manual commit entry mode..."));
 
 		return null; // Signal to switch to manual mode
 	}
@@ -141,7 +140,7 @@ export async function validateWithCommitlint(commitMessage: string): Promise<Val
 	try {
 		// Create temporary file with commit message
 		const cmd: string = `echo "${commitMessage}" | npx commitlint`;
-		// eslint-disable-next-line @elsikora-typescript/no-unsafe-call
+		// eslint-disable-next-line @elsikora/typescript/no-unsafe-call
 		await execAsync(cmd);
 
 		return { isValid: true };
@@ -175,7 +174,7 @@ async function fixCommitMessageWithLLM(commitConfig: CommitConfig, errors: strin
 		diff: `${promptContext.diff ?? ""}\n\nCommit message failed validation with these errors:\n${errorHistory}\n\nOriginal commit structure:\n${JSON.stringify(commitConfig, null)}`,
 	};
 
-	console.log(chalk.yellow(`Commit message had validation errors. Asking LLM to fix... (Attempt ${previousErrors.length + 1})`));
+	console.warn(chalk.yellow(`Commit message had validation errors. Asking LLM to fix... (Attempt ${previousErrors.length + 1})`));
 
 	// Generate a new commit message with the enhanced context
 	return await generateCommitMessage(enhancedContext);

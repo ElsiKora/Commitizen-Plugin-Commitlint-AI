@@ -12,7 +12,7 @@ export default function getLeadingBlankFunction(rule?: Rule): (input: string) =>
 		return (input: string): string => input;
 	}
 
-	// eslint-disable-next-line @elsikora-unicorn/consistent-function-scoping
+	// eslint-disable-next-line @elsikora/unicorn/consistent-function-scoping
 	const remove = (input: string): string => {
 		const fragments: Array<string> = input.split("\n");
 
@@ -23,7 +23,7 @@ export default function getLeadingBlankFunction(rule?: Rule): (input: string) =>
 		return fragments.join("\n");
 	};
 
-	// eslint-disable-next-line @elsikora-unicorn/consistent-function-scoping
+	// eslint-disable-next-line @elsikora/unicorn/consistent-function-scoping
 	const lead = (input: string): string => {
 		const fragments: Array<string> = input.split("\n");
 

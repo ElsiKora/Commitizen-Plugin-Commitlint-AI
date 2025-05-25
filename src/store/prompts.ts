@@ -29,9 +29,9 @@ export function setPromptConfig(newPromptConfig: UserPromptConfig): void {
 
 	if (messages) {
 		const requiredMessageKeys: Array<string> = Object.keys(defaultPromptConfigs.messages);
-		// eslint-disable-next-line @elsikora-unicorn/no-array-for-each
+		// eslint-disable-next-line @elsikora/unicorn/no-array-for-each
 		requiredMessageKeys.forEach((key: string) => {
-			const message: any = messages[key];
+			const message: unknown = messages[key];
 
 			if (typeof message === "string") {
 				store[storeKey].messages[key] = message;
@@ -44,10 +44,10 @@ export function setPromptConfig(newPromptConfig: UserPromptConfig): void {
 	}
 
 	if (settings && isPlainObject(settings)) {
-		// eslint-disable-next-line @elsikora-sonar/anchor-precedence
+		// eslint-disable-next-line @elsikora/sonar/anchor-precedence
 		if (settings.scopeEnumSeparator && !/^\/|\\|,$/.test(settings.scopeEnumSeparator)) {
-			console.log(`prompt.settings.scopeEnumSeparator must be one of ',', '\\', '/'.`);
-			// eslint-disable-next-line @elsikora-unicorn/no-process-exit,elsikora-node/no-process-exit
+			console.error(`prompt.settings.scopeEnumSeparator must be one of ',', '\\', '/'.`);
+			// eslint-disable-next-line @elsikora/unicorn/no-process-exit
 			process.exit(1);
 		}
 		store[storeKey].settings = {

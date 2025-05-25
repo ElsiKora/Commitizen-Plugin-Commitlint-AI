@@ -1,7 +1,7 @@
 import type { LLMConfig, LLMConfigStorage } from "./types.js";
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-// eslint-disable-next-line @elsikora-unicorn/import-style
+// eslint-disable-next-line @elsikora/unicorn/import-style
 import { join } from "node:path";
 
 import chalk from "chalk";
@@ -14,7 +14,7 @@ const CONFIG_FILE: string = join(CONFIG_DIR, "commitlint-ai.config.js");
 let llmConfig: LLMConfig | null = null;
 
 // Track if we've already shown mode error
-// eslint-disable-next-line @elsikora-typescript/naming-convention
+
 let modeErrorShown: boolean = false;
 
 // Check for API keys in environment variables
@@ -74,32 +74,29 @@ const loadConfigFromFile = (): LLMConfigStorage | null => {
 
 				if (match?.[1]) {
 					// Extract the object text
-					const objectText: any = match[1];
+					const objectText: string = match[1];
 
 					// Extract property assignments with a more robust approach
-					const properties: Record<string, any> = {};
+					const properties: Record<string, string> = {};
 
 					// Match each property in the format: key: value,
-					// eslint-disable-next-line @elsikora-sonar/slow-regex
+					// eslint-disable-next-line @elsikora/sonar/slow-regex
 					const propertyRegex: RegExp = /\s*(\w+)\s*:\s*["']?([^,"'}\s]+)["']?\s*,?/g;
-					// eslint-disable-next-line @elsikora-typescript/typedef
+
 					let propertyMatch;
 
-					// eslint-disable-next-line @elsikora-typescript/no-unsafe-argument
 					while ((propertyMatch = propertyRegex.exec(objectText)) !== null) {
-						const [, key, value]: any = propertyMatch;
+						const [, key, value] = propertyMatch;
 						// Remove quotes if present
-						// eslint-disable-next-line @elsikora-sonar/anchor-precedence,@elsikora-typescript/no-unsafe-assignment,@elsikora-typescript/no-unsafe-member-access,@elsikora-typescript/no-unsafe-call
-						const cleanValue: any = value.replaceAll(/^["']|["']$/g, "");
-						// eslint-disable-next-line @elsikora-typescript/no-unsafe-assignment,@elsikora-typescript/no-unsafe-member-access
+						// eslint-disable-next-line @elsikora/sonar/anchor-precedence
+						const cleanValue: string = value.replaceAll(/^["']|["']$/g, "");
 						properties[key] = cleanValue;
 					}
 
 					// Validate mode if present (but only show the error once)
 					if (properties.mode && properties.mode !== "auto" && properties.mode !== "manual") {
 						if (!modeErrorShown) {
-							// eslint-disable-next-line @elsikora-typescript/restrict-template-expressions
-							console.log(chalk.yellow(`Invalid mode "${properties.mode}" in config. Valid values are "auto" or "manual". Using default mode.`));
+							console.warn(chalk.yellow(`Invalid mode "${properties.mode}" in config. Valid values are "auto" or "manual". Using default mode.`));
 							modeErrorShown = true;
 						}
 						properties.mode = "auto";
@@ -126,7 +123,6 @@ const loadConfigFromFile = (): LLMConfigStorage | null => {
 const saveConfigToFile = (config: LLMConfig): void => {
 	try {
 		if (!existsSync(CONFIG_DIR)) {
-			// eslint-disable-next-line @elsikora-typescript/naming-convention
 			mkdirSync(CONFIG_DIR, { recursive: true });
 		}
 
@@ -169,7 +165,7 @@ export const setLLMConfig = (config: LLMConfig | null): void => {
 
 	if (config) {
 		// For debugging
-		console.log("Saving config:", JSON.stringify({ ...config, apiKey: "[REDACTED]" }));
+		console.warn("Saving config:", JSON.stringify({ ...config, apiKey: "[REDACTED]" }));
 		saveConfigToFile(config);
 	}
 };

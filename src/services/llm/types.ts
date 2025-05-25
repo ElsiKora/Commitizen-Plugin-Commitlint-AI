@@ -1,4 +1,3 @@
-/* eslint-disable @elsikora-typescript/naming-convention */
 export type CommitConfig = {
 	body?: string;
 	breakingBody?: string;
@@ -21,7 +20,7 @@ export type LLMConfigStorage = {
 	provider: LLMProvider;
 };
 
-// eslint-disable-next-line @elsikora-sonar/redundant-type-aliases
+// eslint-disable-next-line @elsikora/sonar/redundant-type-aliases
 export type LLMModel = string; // Any model name
 
 export type LLMPromptContext = {

@@ -25,7 +25,6 @@ export default {
 		},
 	},
 	settings: {
-		// eslint-disable-next-line @elsikora-typescript/naming-convention
 		enableMultipleScopes: false,
 		scopeEnumSeparator: ",",
 	},

@@ -1,4 +1,3 @@
-/* eslint-disable @elsikora-typescript/no-magic-numbers */
 import type { Rule } from "../types.js";
 
 import { RuleConfigSeverity } from "@commitlint/types";
@@ -8,7 +7,7 @@ export function enumRuleIsActive(rule: Rule): rule is Readonly<[RuleConfigSeveri
 }
 
 export function getEnumList(rule: Rule): Array<string> {
-	// eslint-disable-next-line @elsikora-typescript/no-unsafe-return
+	// eslint-disable-next-line @elsikora/typescript/no-unsafe-return
 	return Array.isArray(rule[2]) ? rule[2] : [];
 }
 

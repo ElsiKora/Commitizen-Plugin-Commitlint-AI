@@ -1,4 +1,4 @@
-/* eslint-disable @elsikora-typescript/restrict-plus-operands,@elsikora-sonar/no-nested-conditional */
+/* eslint-disable @elsikora/typescript/restrict-plus-operands,@elsikora/sonar/no-nested-conditional */
 import type { CommitConfig, LLMPromptContext } from "./types.js";
 
 import OpenAI from "openai";
@@ -15,7 +15,7 @@ export async function generateCommitWithOpenAI(apiKey: string, model: string, co
 				const emoji: string = context.typeDescriptions?.[type]?.emoji ?? "";
 				const title: string = context.typeDescriptions?.[type]?.title ?? "";
 
-				// eslint-disable-next-line @elsikora-sonar/no-nested-template-literals
+				// eslint-disable-next-line @elsikora/sonar/no-nested-template-literals
 				return `${type}${emoji ? ` (${emoji})` : ""}: ${description}${title ? ` (${title})` : ""}`;
 			})
 			.join("\n") ?? "";
@@ -92,7 +92,7 @@ ${context.files ? `Files changed:\n${context.files}` : ""}
 Based on these changes, generate an appropriate commit message following the conventions.`;
 
 	try {
-		const response: any = await openai.chat.completions.create({
+		const response = await openai.chat.completions.create({
 			messages: [
 				{ content: systemPrompt, role: "system" },
 				{ content: userPrompt, role: "user" },
@@ -101,14 +101,12 @@ Based on these changes, generate an appropriate commit message following the con
 			response_format: { type: "json_object" },
 		});
 
-		// eslint-disable-next-line @elsikora-typescript/no-unsafe-member-access,@elsikora-typescript/no-unsafe-assignment
-		const content: any = response.choices[0]?.message.content;
+		const content = response.choices[0]?.message.content;
 
 		if (!content) {
 			throw new Error("Empty response from OpenAI");
 		}
 
-		// eslint-disable-next-line @elsikora-typescript/no-unsafe-argument
 		return JSON.parse(content) as CommitConfig;
 	} catch (error) {
 		console.error("Error generating commit with OpenAI:", error);
