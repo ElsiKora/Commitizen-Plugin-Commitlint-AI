@@ -15,11 +15,11 @@ export class GenerateCommitMessageUseCase {
 	}
 
 	/**
-	 * Execute the use case
-	 * @param context - The context for generating the commit message
-	 * @param configuration - The LLM configuration
-	 * @param onRetry - Optional callback for retry notifications
-	 * @returns Promise resolving to the generated commit message
+	 * Execute the commit message generation
+	 * @param {ILlmPromptContext} context - The context for generating the commit message
+	 * @param {LLMConfiguration} configuration - The LLM configuration
+	 * @param {(attempt: number, maxRetries: number, error: Error) => void} onRetry - Callback function called on retry attempts
+	 * @returns {Promise<CommitMessage>} Promise resolving to the generated commit message
 	 */
 	async execute(context: ILlmPromptContext, configuration: LLMConfiguration, onRetry?: (attempt: number, maxRetries: number, error: Error) => void): Promise<CommitMessage> {
 		const service: ILlmService | undefined = this.LLM_SERVICES.find((s: ILlmService) => s.supports(configuration));

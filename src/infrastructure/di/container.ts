@@ -43,7 +43,7 @@ export const ManualCommitUseCaseToken: symbol = Symbol("ManualCommitUseCase");
 
 /**
  * Create and configure the application DI container
- * @returns The configured container
+ * @returns {IContainer} The configured DI container
  */
 export function createAppContainer(): IContainer {
 	const container: IContainer = createContainer({});

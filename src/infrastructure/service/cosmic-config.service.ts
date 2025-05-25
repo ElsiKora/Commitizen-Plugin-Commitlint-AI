@@ -26,7 +26,7 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Initializes a new instance of the CosmicConfigService.
-	 * @param fileSystemService
+	 * @param {IFileSystemService} fileSystemService - The file system service for file operations
 	 */
 	constructor(fileSystemService: IFileSystemService) {
 		this.FILE_SYSTEM_SERVICE = fileSystemService;
@@ -61,7 +61,7 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Checks if the configuration exists.
-	 * @returns Promise resolving to true if the configuration exists, false otherwise
+	 * @returns {Promise<boolean>} Promise resolving to true if the configuration exists, false otherwise
 	 */
 	public async exists(): Promise<boolean> {
 		const result: { config: IConfig; filepath: string; isEmpty?: boolean } | null = await this.EXPLORER.search();
@@ -71,7 +71,7 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Retrieves the current configuration.
-	 * @returns Promise resolving to the configuration object
+	 * @returns {Promise<IConfig>} Promise resolving to the configuration object
 	 */
 	public async get(): Promise<IConfig> {
 		if (this.cachedConfig) {
@@ -91,8 +91,9 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Gets a specific property from the configuration.
-	 * @param property - The property key to retrieve
-	 * @returns Promise resolving to the value of the specified property
+	 * @param {K} property - The property key to retrieve
+	 * @returns {Promise<IConfig[K]>} Promise resolving to the value of the specified property
+	 * @template K - The type of the property key
 	 */
 	public async getProperty<K extends keyof IConfig>(property: K): Promise<IConfig[K]> {
 		const config: IConfig = await this.get();
@@ -102,8 +103,8 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Merges partial configuration with the existing configuration.
-	 * @param partial - Partial configuration to merge
-	 * @returns Promise that resolves when the merged configuration is saved
+	 * @param {Partial<IConfig>} partial - Partial configuration to merge
+	 * @returns {Promise<void>} Promise that resolves when the merged configuration is saved
 	 */
 	public async merge(partial: Partial<IConfig>): Promise<void> {
 		try {
@@ -118,8 +119,8 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Saves the entire configuration.
-	 * @param config - The complete configuration to save
-	 * @returns Promise that resolves when the configuration is saved
+	 * @param {IConfig} config - The complete configuration to save
+	 * @returns {Promise<void>} Promise that resolves when the configuration is saved
 	 */
 	public async set(config: IConfig): Promise<void> {
 		try {
@@ -140,9 +141,10 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Sets a specific property in the configuration.
-	 * @param property - The property key to set
-	 * @param value - The value to assign to the property
-	 * @returns Promise that resolves when the updated configuration is saved
+	 * @param {K} property - The property key to set
+	 * @param {IConfig[K]} value - The value to assign to the property
+	 * @returns {Promise<void>} Promise that resolves when the updated configuration is saved
+	 * @template K - The type of the property key
 	 */
 	public async setProperty<K extends keyof IConfig>(property: K, value: IConfig[K]): Promise<void> {
 		const config: IConfig = await this.get();
@@ -152,9 +154,9 @@ export class CosmicConfigService implements IConfigService {
 
 	/**
 	 * Writes configuration to a file.
-	 * @param filepath - Path to write the configuration to
-	 * @param config - Configuration to write
-	 * @returns Promise that resolves when the file is written
+	 * @param {string} filepath - Path to write the configuration to
+	 * @param {IConfig} config - Configuration to write
+	 * @returns {Promise<void>} Promise that resolves when the file is written
 	 */
 	private async writeFile(filepath: string, config: IConfig): Promise<void> {
 		const extension: string = this.FILE_SYSTEM_SERVICE.getExtensionFromFilePath(filepath);

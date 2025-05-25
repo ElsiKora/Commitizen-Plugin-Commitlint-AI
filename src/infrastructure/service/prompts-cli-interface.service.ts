@@ -40,9 +40,9 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a confirmation prompt to the user.
-	 * @param message - The message to display to the user
-	 * @param isConfirmedByDefault - The default value for the confirmation, defaults to false
-	 * @returns Promise that resolves to the user's response (true for confirmed, false for declined)
+	 * @param {string} message - The message to display to the user
+	 * @param {boolean} isConfirmedByDefault - The default value for the confirmation, defaults to false
+	 * @returns {Promise<boolean>} Promise that resolves to the user's response (true for confirmed, false for declined)
 	 */
 	async confirm(message: string, isConfirmedByDefault: boolean = false): Promise<boolean> {
 		try {
@@ -71,7 +71,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays an error message to the user.
-	 * @param message - The error message to display
+	 * @param {string} message - The error message to display
 	 */
 	error(message: string): void {
 		process.stderr.write(`${chalk.red(message)}\n`);
@@ -79,11 +79,12 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a grouped multi-select prompt to the user.
-	 * @param message - The message to display to the user
-	 * @param options - Record of groups and their options
-	 * @param isRequired - Whether a selection is required, defaults to false
-	 * @param initialValues - Initial selected values
-	 * @returns Promise that resolves to an array of selected values
+	 * @param {string} message - The message to display to the user
+	 * @param {Record<string, Array<ICliInterfaceServiceSelectOptions>>} options - Record of groups and their options
+	 * @param {boolean} isRequired - Whether a selection is required, defaults to false
+	 * @param {Array<string>} initialValues - Initial selected values
+	 * @returns {Promise<Array<T>>} Promise that resolves to an array of selected values
+	 * @template T - The type of the selected values
 	 */
 	async groupMultiselect<T>(message: string, options: Record<string, Array<ICliInterfaceServiceSelectOptions>>, isRequired: boolean = false, initialValues?: Array<string>): Promise<Array<T>> {
 		// Convert options to a flat array with group prefixes
@@ -126,8 +127,8 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Handles and displays an error message with additional error details.
-	 * @param message - The error message to display
-	 * @param error - The error object or details
+	 * @param {string} message - The error message to display
+	 * @param {unknown} error - The error object or details
 	 */
 	handleError(message: string, error: unknown): void {
 		process.stderr.write(`${chalk.red(message)}\n`);
@@ -136,7 +137,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays an informational message to the user.
-	 * @param message - The info message to display
+	 * @param {string} message - The info message to display
 	 */
 	info(message: string): void {
 		process.stdout.write(`${chalk.blue(message)}\n`);
@@ -144,7 +145,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a standard message to the user.
-	 * @param message - The message to display
+	 * @param {string} message - The message to display
 	 */
 	log(message: string): void {
 		process.stdout.write(`${message}\n`);
@@ -152,11 +153,12 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a multi-select prompt to the user.
-	 * @param message - The message to display to the user
-	 * @param options - Array of options to select from
-	 * @param isRequired - Whether a selection is required, defaults to false
-	 * @param initialValues - Initial selected values
-	 * @returns Promise that resolves to an array of selected values
+	 * @param {string} message - The message to display to the user
+	 * @param {Array<ICliInterfaceServiceSelectOptions>} options - Array of options to select from
+	 * @param {boolean} isRequired - Whether a selection is required, defaults to false
+	 * @param {Array<string>} initialValues - Initial selected values
+	 * @returns {Promise<Array<T>>} Promise that resolves to an array of selected values
+	 * @template T - The type of the selected values
 	 */
 	async multiselect<T>(message: string, options: Array<ICliInterfaceServiceSelectOptions>, isRequired: boolean = false, initialValues?: Array<string>): Promise<Array<T>> {
 		// eslint-disable-next-line @elsikora/typescript/naming-convention
@@ -193,8 +195,8 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a note to the user with a title and message.
-	 * @param title - The title of the note
-	 * @param message - The message content of the note
+	 * @param {string} title - The title of the note
+	 * @param {string} message - The message content of the note
 	 */
 	note(title: string, message: string): void {
 		const lines: Array<string> = message.split("\n");
@@ -231,10 +233,11 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a single select prompt to the user.
-	 * @param message - The message to display to the user
-	 * @param options - Array of options to select from
-	 * @param initialValue - Initial selected value
-	 * @returns Promise that resolves to the selected value
+	 * @param {string} message - The message to display to the user
+	 * @param {Array<ICliInterfaceServiceSelectOptions>} options - Array of options to select from
+	 * @param {string} initialValue - Initial selected value
+	 * @returns {Promise<T>} Promise that resolves to the selected value
+	 * @template T - The type of the selected value
 	 */
 	async select<T>(message: string, options: Array<ICliInterfaceServiceSelectOptions>, initialValue?: string): Promise<T> {
 		const choices: Array<{ title: string; value: string }> = options.map((opt: ICliInterfaceServiceSelectOptions) => ({
@@ -268,7 +271,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	/**
 	 * Starts a spinner with the specified message.
 	 * Stops any existing spinner first.
-	 * @param message - The message to display while the spinner is active
+	 * @param {string} message - The message to display while the spinner is active
 	 */
 	startSpinner(message: string): void {
 		this.spinner.stop();
@@ -277,7 +280,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Stops the current spinner with an optional completion message.
-	 * @param message - Optional message to display when the spinner stops
+	 * @param {string} message - Optional message to display when the spinner stops
 	 */
 	stopSpinner(message?: string): void {
 		this.spinner.stop();
@@ -289,7 +292,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a success message to the user.
-	 * @param message - The success message to display
+	 * @param {string} message - The success message to display
 	 */
 	success(message: string): void {
 		process.stdout.write(`${chalk.green(message)}\n`);
@@ -297,11 +300,11 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a text input prompt to the user.
-	 * @param message - The message to display to the user
-	 * @param placeholder - Optional placeholder text for the input field
-	 * @param initialValue - Optional initial value for the input field
-	 * @param validate - Optional validation function for the input
-	 * @returns Promise that resolves to the user's input text
+	 * @param {string} message - The message to display to the user
+	 * @param {string} _placeholder - Optional placeholder text for the input field (unused)
+	 * @param {string} initialValue - Optional initial value for the input field
+	 * @param {(value: string) => Error | string | undefined} validate - Optional validation function for the input
+	 * @returns {Promise<string>} Promise that resolves to the user's input text
 	 */
 	async text(message: string, _placeholder?: string, initialValue?: string, validate?: (value: string) => Error | string | undefined): Promise<string> {
 		// Convert the validate function to match prompts' expected format
@@ -343,7 +346,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Update the spinner message without stopping it.
-	 * @param message - The new message to display
+	 * @param {string} message - The new message to display
 	 */
 	updateSpinner(message: string): void {
 		if (this.spinner?.isSpinning) {
@@ -353,7 +356,7 @@ export class PromptsCliInterface implements ICliInterfaceService {
 
 	/**
 	 * Displays a warning message to the user.
-	 * @param message - The warning message to display
+	 * @param {string} message - The warning message to display
 	 */
 	warn(message: string): void {
 		process.stdout.write(`${chalk.yellow(message)}\n`);

@@ -3,7 +3,9 @@ export default {
 		const commands = [];
 		commands.push("prettier --write --ignore-unknown");
 
-		const eslintFiles = files.filter((file) => {
+		const filteredFiles = files.filter((file) => !file.includes("test/") && !file.includes("vitest") && !file.includes("CHANGELOG"));
+
+		const eslintFiles = filteredFiles.filter((file) => {
 			const validExtensions = ["js", "jsx", "mjs", "cjs", "ts", "tsx", "json", "jsonc", "yml", "yaml"];
 			const fileExtension = file.split(".").pop();
 			const hasValidExtension = validExtensions.includes(fileExtension);

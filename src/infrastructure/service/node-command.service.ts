@@ -30,14 +30,17 @@ export class NodeCommandService implements ICommandService {
 	 */
 	private readonly EXEC_ASYNC: (argument1: string) => Promise<{ stderr: string; stdout: string }> = promisify(exec);
 
+	/**
+	 * @param {ICliInterfaceService} cliInterfaceService - The CLI interface service for user interactions
+	 */
 	constructor(cliInterfaceService: ICliInterfaceService) {
 		this.CLI_INTERFACE_SERVICE = cliInterfaceService;
 	}
 
 	/**
 	 * Executes a shell command.
-	 * @param command - The shell command to execute
-	 * @returns Promise that resolves when the command completes successfully
+	 * @param {string} command - The shell command to execute
+	 * @returns {Promise<void>} Promise that resolves when the command completes successfully
 	 * @throws Will throw an error if the command execution fails, except for npm install which offers retry options
 	 */
 	async execute(command: string): Promise<void> {
@@ -57,8 +60,8 @@ export class NodeCommandService implements ICommandService {
 
 	/**
 	 * Execute a command and return its output
-	 * @param command - The command to execute
-	 * @returns Promise that resolves to the command output
+	 * @param {string} command - The command to execute
+	 * @returns {Promise<string>} Promise that resolves to the command output
 	 */
 	async executeWithOutput(command: string): Promise<string> {
 		try {
@@ -73,10 +76,9 @@ export class NodeCommandService implements ICommandService {
 	}
 
 	/**
-	 * Formate and parse npm error to readable format
-	 * @param command - The original npm command that failed
-	 * @param error - Error npm object
-	 * @returns void
+	 * Format and parse npm error to readable format
+	 * @param {string} command - The original npm command that failed
+	 * @param {INodeError} error - Error npm object
 	 */
 	private formatAndParseNpmError(command: string, error: INodeError): void {
 		// Форматируем и выводим ошибку
@@ -131,8 +133,8 @@ export class NodeCommandService implements ICommandService {
 
 	/**
 	 * Handles npm install command failures by offering retry options to the user.
-	 * @param originalCommand - The original npm command that failed
-	 * @returns Promise that resolves when the chosen action completes
+	 * @param {string} originalCommand - The original npm command that failed
+	 * @returns {Promise<void>} Promise that resolves when the chosen action completes
 	 * @throws Will throw an error if the user chooses to cancel or if retried command still fails
 	 */
 	private async handleNpmInstallFailure(originalCommand: string): Promise<void> {

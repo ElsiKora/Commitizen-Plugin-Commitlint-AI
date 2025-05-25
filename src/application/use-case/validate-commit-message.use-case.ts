@@ -18,12 +18,12 @@ export class ValidateCommitMessageUseCase {
 	}
 
 	/**
-	 * Execute the validation and optional fixing of a commit message
-	 * @param message - The commit message to validate
-	 * @param shouldAttemptFix - Whether to attempt to fix validation errors
-	 * @param maxRetries - Maximum number of fix attempts
-	 * @param context - Optional context for fixing
-	 * @returns Promise resolving to the validated/fixed message or null if unfixable
+	 * Execute the validation use case
+	 * @param {CommitMessage} message - The commit message to validate
+	 * @param {boolean} shouldAttemptFix - Whether to attempt fixing validation errors
+	 * @param {number | undefined} maxRetries - Maximum number of retry attempts (optional, defaults to DEFAULT_MAX_RETRIES)
+	 * @param {ILlmPromptContext} context - The LLM prompt context
+	 * @returns {Promise<CommitMessage | null>} Promise resolving to the validated message or null if validation fails
 	 */
 	async execute(message: CommitMessage, shouldAttemptFix: boolean = false, maxRetries?: number, context?: ILlmPromptContext): Promise<CommitMessage | null> {
 		const retryLimit: number = maxRetries ?? this.DEFAULT_MAX_RETRIES;
@@ -41,6 +41,7 @@ export class ValidateCommitMessageUseCase {
 				return currentMessage;
 			}
 
+			// If we shouldn't attempt fix or we've exhausted all retries
 			if (!shouldAttemptFix || attempts >= retryLimit) {
 				if (validationResult.errors && validationResult.errors.length > 0) {
 					process.stdout.write(`✗ Commit message validation failed after ${attempts} attempts:\n`);
@@ -82,8 +83,8 @@ export class ValidateCommitMessageUseCase {
 
 	/**
 	 * Validate a commit message
-	 * @param message - The commit message to validate
-	 * @returns Promise resolving to the validation result
+	 * @param {CommitMessage} message - The commit message to validate
+	 * @returns {Promise<ICommitValidationResult>} Promise resolving to the validation result
 	 */
 	async validate(message: CommitMessage): Promise<ICommitValidationResult> {
 		return this.VALIDATOR.validate(message);

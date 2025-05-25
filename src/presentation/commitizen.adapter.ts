@@ -12,12 +12,12 @@ import type { GenerateCommitMessageUseCase } from "../application/use-case/gener
 import type { ManualCommitUseCase } from "../application/use-case/manual-commit.use-case.js";
 import type { ValidateCommitMessageUseCase } from "../application/use-case/validate-commit-message.use-case.js";
 import type { CommitMessage } from "../domain/entity/commit-message.entity.js";
-import type { ECommitMode } from "../domain/enum/commit-mode.enum.js";
 
 import load from "@commitlint/load";
 
 import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES } from "../domain/constant/numeric.constant.js";
 import { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
+import { ECommitMode } from "../domain/enum/commit-mode.enum.js";
 import { ApiKey } from "../domain/value-object/api-key.value-object.js";
 import { CommitlintValidatorService } from "../infrastructure/commit-validator/commitlint-validator.service.js";
 import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
@@ -40,8 +40,8 @@ export class CommitizenAdapter {
 
 	/**
 	 * Main entry point for commitizen
-	 * @param inquirerIns - Instance passed by commitizen (unused in our implementation)
-	 * @param commit - Callback to execute with complete commit message
+	 * @param {unknown} _inquirerIns - Instance passed by commitizen (unused in our implementation)
+	 * @param {TCommit} commit - Callback to execute with complete commit message
 	 */
 	async prompter(_inquirerIns: unknown, commit: TCommit): Promise<void> {
 		const loadResult: TLoadResult = await load();
@@ -79,7 +79,7 @@ export class CommitizenAdapter {
 				const config: IConfig = await configService.get();
 
 				// Ask if they want to use existing configuration
-				const modeInfo: string = config.mode === ("auto" as ECommitMode) ? `${config.mode} mode, ${config.provider} provider` : `${config.mode} mode`;
+				const modeInfo: string = config.mode === ECommitMode.AUTO ? `${config.mode} mode, ${config.provider} provider` : `${config.mode} mode`;
 				const isUseExisting: boolean = await cliInterface.confirm(`Found existing configuration (${modeInfo}). Use it?`, true);
 
 				if (!isUseExisting) {
@@ -91,16 +91,19 @@ export class CommitizenAdapter {
 						// Ask for API key
 						const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(llmConfig.getProvider());
 
-						const apiKeyValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
+						const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 							if (!value || value.trim().length === 0) {
 								return "API key is required";
 							}
+
+							// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
+							return;
 						});
 
 						// Create new configuration with the provided API key
-						llmConfig = new LLMConfiguration(llmConfig.getProvider(), new ApiKey(apiKeyValue), llmConfig.getMode(), llmConfig.getModel(), llmConfig.getMaxRetries(), llmConfig.getValidationMaxRetries());
+						llmConfig = new LLMConfiguration(llmConfig.getProvider(), new ApiKey(credentialValue), llmConfig.getMode(), llmConfig.getModel(), llmConfig.getMaxRetries(), llmConfig.getValidationMaxRetries());
 					}
-				} else if (config.mode === ("auto" as ECommitMode) && !llmConfig) {
+				} else if (config.mode === ECommitMode.AUTO && !llmConfig) {
 					// User wants to use existing config but API key is missing
 					const environmentVariableNames: Record<string, string> = {
 						anthropic: "ANTHROPIC_API_KEY",
@@ -110,22 +113,25 @@ export class CommitizenAdapter {
 						ollama: "OLLAMA_API_KEY",
 						openai: "OPENAI_API_KEY",
 					};
-					const environmentVariableName: string = environmentVariableNames[config.provider] || "";
+					const environmentVariableName: string = environmentVariableNames[config.provider] ?? "";
 					cliInterface.warn(`API key not found in ${environmentVariableName} environment variable.`);
 
 					// Ask for API key
 					const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(config.provider);
 
-					const apiKeyValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
+					const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 						if (!value || value.trim().length === 0) {
 							return "API key is required";
 						}
+
+						// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
+						return;
 					});
 
 					// Create new configuration with the provided API key
 					const maxRetries: number = config.maxRetries ?? DEFAULT_MAX_RETRIES;
 					const validationMaxRetries: number = config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES;
-					llmConfig = new LLMConfiguration(config.provider, new ApiKey(apiKeyValue), config.mode, config.model, maxRetries, validationMaxRetries);
+					llmConfig = new LLMConfiguration(config.provider, new ApiKey(credentialValue), config.mode, config.model, maxRetries, validationMaxRetries);
 				}
 			} else {
 				// No configuration at all
@@ -137,14 +143,17 @@ export class CommitizenAdapter {
 					// Ask for API key
 					const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(llmConfig.getProvider());
 
-					const apiKeyValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
+					const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 						if (!value || value.trim().length === 0) {
 							return "API key is required";
 						}
+
+						// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
+						return;
 					});
 
 					// Create new configuration with the provided API key
-					llmConfig = new LLMConfiguration(llmConfig.getProvider(), new ApiKey(apiKeyValue), llmConfig.getMode(), llmConfig.getModel(), llmConfig.getMaxRetries(), llmConfig.getValidationMaxRetries());
+					llmConfig = new LLMConfiguration(llmConfig.getProvider(), new ApiKey(credentialValue), llmConfig.getMode(), llmConfig.getModel(), llmConfig.getMaxRetries(), llmConfig.getValidationMaxRetries());
 				}
 			}
 
@@ -262,6 +271,9 @@ export class CommitizenAdapter {
 
 	/**
 	 * Extract LLM prompt context from commitlint rules and prompts
+	 * @param {QualifiedRules} rules - The commitlint rules
+	 * @param {UserPromptConfig} prompts - The user prompt configuration
+	 * @returns {ILlmPromptContext} The extracted LLM prompt context
 	 */
 	private extractLlmPromptContext(rules: QualifiedRules, prompts: UserPromptConfig): ILlmPromptContext {
 		const context: ILlmPromptContext = {
@@ -338,6 +350,8 @@ export class CommitizenAdapter {
 
 	/**
 	 * Get API key prompt information based on provider
+	 * @param {string} provider - The LLM provider name
+	 * @returns {{ hint: string; prompt: string }} The hint and prompt text for API key input
 	 */
 	private getApiKeyPromptInfo(provider: string): { hint: string; prompt: string } {
 		switch (provider) {

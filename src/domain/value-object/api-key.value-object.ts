@@ -15,6 +15,8 @@ export class ApiKey {
 
 	/**
 	 * Check if two API keys are equal
+	 * @param {ApiKey} other - The other API key to compare with
+	 * @returns {boolean} True if the API keys are equal
 	 */
 	equals(other: ApiKey): boolean {
 		return this.VALUE === other.VALUE;
@@ -22,7 +24,7 @@ export class ApiKey {
 
 	/**
 	 * Get the API key value
-	 * @returns The API key value
+	 * @returns {string} The API key value
 	 */
 	getValue(): string {
 		return this.VALUE;
@@ -30,7 +32,7 @@ export class ApiKey {
 
 	/**
 	 * Check if the API key is valid
-	 * @returns True if the API key appears to be valid
+	 * @returns {boolean} True if the API key appears to be valid
 	 */
 	isValid(): boolean {
 		// Basic validation - just check it's not a placeholder
@@ -39,7 +41,7 @@ export class ApiKey {
 
 	/**
 	 * Get a redacted version of the API key for display
-	 * @returns Redacted API key
+	 * @returns {string} Redacted API key
 	 */
 	toRedacted(): string {
 		if (this.VALUE.length <= REDACTED_LENGTH) return "****";

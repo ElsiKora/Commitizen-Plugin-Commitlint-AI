@@ -63,29 +63,4 @@ export default [
 			}),
 		],
 	},
-	{
-		external,
-		input: "src/index.ts",
-		output: {
-			dir: "dist/cjs",
-			exports: "named",
-			format: "cjs",
-			preserveModules: true,
-			sourcemap: true,
-		},
-		plugins: [
-			dtsPathAlias(),
-			typescript({
-				declaration: true,
-				declarationDir: "dist/cjs",
-				outDir: "dist/cjs",
-				outputToFilesystem: true,
-				tsconfig: "./tsconfig.build.json",
-			}),
-			generatePackageJson({
-				baseContents: { type: "module" },
-				outputFolder: "dist/esm",
-			}),
-		],
-	},
 ];

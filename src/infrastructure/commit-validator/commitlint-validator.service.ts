@@ -26,10 +26,10 @@ export class CommitlintValidatorService implements ICommitValidator {
 
 	/**
 	 * Attempt to fix a commit message based on validation errors
-	 * @param message - The commit message to fix
-	 * @param validationResult - The validation result containing errors
-	 * @param context - Optional original context for LLM-based fixing
-	 * @returns Promise resolving to the fixed commit message or null if unfixable
+	 * @param {CommitMessage} message - The commit message to fix
+	 * @param {ICommitValidationResult} validationResult - The validation result containing errors
+	 * @param {ILlmPromptContext} context - Optional original context for LLM-based fixing
+	 * @returns {Promise<CommitMessage | null>} Promise resolving to the fixed commit message or null if unfixable
 	 */
 	async fix(message: CommitMessage, validationResult: ICommitValidationResult, context?: ILlmPromptContext): Promise<CommitMessage | null> {
 		if (!validationResult.errors || validationResult.errors.length === 0) {
@@ -125,7 +125,7 @@ export class CommitlintValidatorService implements ICommitValidator {
 			if (error.includes("header must not be longer than")) {
 				const maxLengthNumbers: Array<string> = error.match(/\d+/g) ?? [];
 
-				if (maxLengthNumbers.length > 0) {
+				if (maxLengthNumbers.length > 0 && maxLengthNumbers[0]) {
 					const maxLength: number = Number.parseInt(maxLengthNumbers[0], 10);
 					const header: CommitHeader = fixedMessage.getHeader();
 					const currentLength: number = header.toString().length;
@@ -145,7 +145,7 @@ export class CommitlintValidatorService implements ICommitValidator {
 			if (error.includes("footer's lines must not be longer than") || error.includes("body's lines must not be longer than")) {
 				const maxLengthNumbers: Array<string> = error.match(/\d+/g) ?? [];
 
-				if (maxLengthNumbers.length > 0) {
+				if (maxLengthNumbers.length > 0 && maxLengthNumbers[0]) {
 					const maxLength: number = Number.parseInt(maxLengthNumbers[0], 10);
 					const body: CommitBody = fixedMessage.getBody();
 
@@ -175,8 +175,8 @@ export class CommitlintValidatorService implements ICommitValidator {
 	}
 
 	/**
-	 * Set the LLM configuration for context-aware fixing
-	 * @param configuration - The LLM configuration
+	 * Set the LLM configuration for this validator
+	 * @param {LLMConfiguration} configuration - The LLM configuration to set
 	 */
 	setLLMConfiguration(configuration: LLMConfiguration): void {
 		this.llmConfiguration = configuration;
@@ -184,8 +184,8 @@ export class CommitlintValidatorService implements ICommitValidator {
 
 	/**
 	 * Validate a commit message using commitlint
-	 * @param message - The commit message to validate
-	 * @returns Promise resolving to the validation result
+	 * @param {CommitMessage} message - The commit message to validate
+	 * @returns {Promise<ICommitValidationResult>} Promise resolving to the validation result
 	 */
 	async validate(message: CommitMessage): Promise<ICommitValidationResult> {
 		const loadResult: { rules?: QualifiedRules } = await load();
@@ -201,9 +201,9 @@ export class CommitlintValidatorService implements ICommitValidator {
 
 	/**
 	 * Wrap text to ensure no line exceeds the specified length
-	 * @param text - The text to wrap
-	 * @param maxLength - Maximum line length
-	 * @returns The wrapped text
+	 * @param {string | undefined} text - The text to wrap
+	 * @param {number} maxLength - Maximum line length
+	 * @returns {string | undefined} The wrapped text
 	 */
 	private wrapText(text: string | undefined, maxLength: number): string | undefined {
 		if (!text) {

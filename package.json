@@ -34,6 +34,7 @@
 	"scripts": {
 		"prebuild": "rimraf dist",
 		"build": "npm run prebuild && rollup -c",
+		"build:test": "npm run prebuild && rollup -c rollup.test.config.js",
 		"commit": "cz",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
@@ -44,7 +45,10 @@
 		"lint:types": "tsc --noEmit",
 		"lint:types:fix": "tsc --noEmit --skipLibCheck",
 		"prepare": "husky",
-		"release": "semantic-release"
+		"release": "semantic-release",
+		"test:all": "npm run test:unit && npm run test:e2e",
+		"test:e2e": "npm run build:test && vitest --config vitest.e2e.config.js --typecheck.tsconfig tsconfig.json",
+		"test:unit": "vitest run test/unit --config vitest.unit.config.js"
 	},
 	"config": {
 		"commitizen": {
@@ -71,6 +75,8 @@
 		"ora": "^8.2.0",
 		"prompts": "^2.4.2",
 		"rollup": "^4.41.1",
+		"rollup-plugin-dts-path-alias": "^0.0.3",
+		"rollup-plugin-generate-package-json": "^3.2.0",
 		"word-wrap": "^1.2.5",
 		"yaml": "^2.8.0"
 	},
@@ -89,6 +95,7 @@
 		"@types/lodash.isfunction": "^3.0.9",
 		"@types/lodash.isplainobject": "^4.0.9",
 		"@types/prompts": "^2.4.9",
+		"@vitest/coverage-v8": "^2.1.8",
 		"commitizen": "^4.3.1",
 		"conventional-changelog-conventionalcommits": "^9.0.0",
 		"eslint": "^9.27.0",
@@ -99,7 +106,8 @@
 		"prettier": "^3.5.3",
 		"rimraf": "^6.0.1",
 		"semantic-release": "^24.2.5",
-		"typescript": "^5.8.3"
+		"typescript": "^5.8.3",
+		"vitest": "^2.1.8"
 	},
 	"peerDependencies": {
 		"commitizen": "^4.0.3"

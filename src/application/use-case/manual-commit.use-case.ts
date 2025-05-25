@@ -17,8 +17,8 @@ export class ManualCommitUseCase {
 
 	/**
 	 * Execute the manual commit creation process
-	 * @param context - The context for the commit
-	 * @returns Promise resolving to the commit message
+	 * @param {ILlmPromptContext} context - The context for the commit
+	 * @returns {Promise<CommitMessage>} Promise resolving to the commit message
 	 */
 	async execute(context: ILlmPromptContext): Promise<CommitMessage> {
 		// Build type options from context
@@ -59,6 +59,9 @@ export class ManualCommitUseCase {
 			if (context.subject.maxLength && value.length > context.subject.maxLength) {
 				return `Subject must be at most ${context.subject.maxLength} characters`;
 			}
+
+			// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
+			return;
 		});
 
 		// Get body
