@@ -1,6 +1,6 @@
 {
 	"name": "@elsikora/commitizen-plugin-commitlint-ai",
-	"version": "2.0.0-dev.1",
+	"version": "2.0.0-dev.2",
 	"description": "AI-powered Commitizen adapter with Commitlint integration",
 	"keywords": [
 		"conventional-changelog",
