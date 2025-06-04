@@ -1,349 +1,313 @@
 <p align="center">
-  <img src="https://6jft62zmy9nx2oea.public.blob.vercel-storage.com/commitizen-plugin-commitlint-ai-NDrywOvLY7r3a2w5qeC1bzTAaBoAtI.png" width="500" alt="project-logo">
+  <img src="https://6jft62zmy9nx2oea.public.blob.vercel-storage.com/commitizen-plugin-commitlint-ai-5z2uE7Wo3HXxhEkaeQQmNYyl3eWvjM.png" width="500" alt="project-logo">
 </p>
 
-<h1 align="center">Commitizen Plugin Commitlint AI 🤖</h1>
-<p align="center"><em>AI-powered Commitizen adapter that generates conventional commits with Commitlint integration, built with clean architecture principles</em></p>
+<h1 align="center">🤖 Commitizen Plugin Commitlint AI</h1>
+<p align="center"><em>Transform your Git workflow with AI-powered commit messages that follow conventional standards and pass Commitlint validation every time</em></p>
 
 <p align="center">
     <a aria-label="ElsiKora logo" href="https://elsikora.com">
   <img src="https://img.shields.io/badge/MADE%20BY%20ElsiKora-333333.svg?style=for-the-badge" alt="ElsiKora">
-</a> <img src="https://img.shields.io/badge/version-blue.svg?style=for-the-badge&logo=npm&logoColor=white" alt="version"> <img src="https://img.shields.io/badge/typescript-blue.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="typescript"> <img src="https://img.shields.io/badge/license-green.svg?style=for-the-badge&logo=license&logoColor=white" alt="license"> <img src="https://img.shields.io/badge/commitizen-green.svg?style=for-the-badge&logo=commitizen&logoColor=white" alt="commitizen"> <img src="https://img.shields.io/badge/commitlint-red.svg?style=for-the-badge&logo=commitlint&logoColor=white" alt="commitlint">
+</a> <img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"> <img src="https://img.shields.io/badge/Node.js-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"> <img src="https://img.shields.io/badge/npm-CB3837.svg?style=for-the-badge&logo=npm&logoColor=white" alt="npm"> <img src="https://img.shields.io/badge/Git-F05032.svg?style=for-the-badge&logo=git&logoColor=white" alt="Git"> <img src="https://img.shields.io/badge/OpenAI-412991.svg?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI"> <img src="https://img.shields.io/badge/ESLint-4B32C3.svg?style=for-the-badge&logo=eslint&logoColor=white" alt="ESLint"> <img src="https://img.shields.io/badge/Prettier-F7B93E.svg?style=for-the-badge&logo=prettier&logoColor=black" alt="Prettier"> <img src="https://img.shields.io/badge/Vitest-6E9F18.svg?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest"> <img src="https://img.shields.io/badge/Rollup-EC4A3F.svg?style=for-the-badge&logo=rollup&logoColor=white" alt="Rollup">
 </p>
 
-## 📚 Table of Contents
 
+## 📚 Table of Contents
 - [Description](#-description)
 - [Features](#-features)
-- [Architecture](#-architecture)
 - [Installation](#-installation)
 - [Usage](#-usage)
-- [Configuration](#-configuration)
 - [Roadmap](#-roadmap)
 - [FAQ](#-faq)
 - [License](#-license)
 
-## 📖 Description
 
-This plugin enhances your Git workflow by combining the power of AI with conventional commit standards. Built with clean architecture principles, it intelligently analyzes your code changes and generates meaningful commit messages that follow your project's commitlint rules. Whether you're working solo or in a team, this tool helps maintain consistent, high-quality commit history while reducing the cognitive load of writing commit messages.
+## 📖 Description
+Commitizen Plugin Commitlint AI revolutionizes the way developers write commit messages by combining the power of artificial intelligence with strict conventional commit standards. Built with clean architecture principles, this plugin seamlessly integrates with your existing Commitizen workflow to generate meaningful, context-aware commit messages that adhere to your project's Commitlint rules.
+
+Whether you're working on a solo project or collaborating in a large team, this tool eliminates the cognitive overhead of crafting perfect commit messages while maintaining a consistent, high-quality Git history. It supports multiple AI providers including OpenAI's GPT-4.1, Anthropic's Claude 4, Google's Gemini 2.5, and even local models through Ollama.
+
+The plugin intelligently analyzes your staged changes, understands the context of your modifications, and generates commit messages that not only follow the conventional format but also provide meaningful descriptions of the changes. With automatic validation and smart retry mechanisms, it ensures every commit message meets your project's standards.
 
 ## 🚀 Features
-
-- ✨ **AI-powered commit message generation using OpenAI, Anthropic, Google, Azure OpenAI, AWS Bedrock, or Ollama models**
-- ✨ **Full integration with Commitlint rules and configuration**
-- ✨ **Flexible configuration with Cosmiconfig support**
-- ✨ **Environment variable support for API keys (prioritized over config)**
-- ✨ **Automatic model migration for deprecated models**
-- ✨ **Configurable retry mechanism for generation and validation**
-- ✨ **Support for both manual and automatic commit modes**
-- ✨ **Smart scope detection based on changed files**
-- ✨ **Breaking change detection and documentation**
-- ✨ **Interactive commit message confirmation with validation**
-- ✨ **Clean architecture with dependency injection**
-- ✨ **Real-time retry status updates in the UI**
-- ✨ **Supports latest AI models including GPT-4.1 and Claude 4**
-- ✨ **Fallback to manual mode if AI generation fails**
-
-## 🏗 Architecture
-
-The plugin is built using clean architecture principles with clear separation of concerns:
-
-### Layers
-
-- **Domain Layer**: Core business logic, entities, and value objects
-
-  - Entities: `CommitMessage`, `LLMConfiguration`
-  - Value Objects: `ApiKey`, `CommitBody`, `CommitHeader`
-  - Enums: `ECommitMode`, `ELLMProvider`, `ELogLevel`
-
-- **Application Layer**: Use cases and interfaces
-
-  - Use Cases: `GenerateCommitMessageUseCase`, `ValidateCommitMessageUseCase`, `ConfigureLLMUseCase`
-  - Interfaces: `ILLMService`, `ICommitValidator`, `IConfigService`, etc.
-
-- **Infrastructure Layer**: External services and implementations
-
-  - LLM Services: `OpenAILLMService`, `AnthropicLLMService`, `GoogleLLMService`, `AzureOpenAILLMService`, `AWSBedrockLLMService`, `OllamaLLMService`
-  - Services: `CommitlintValidatorService`, `CosmicConfigService`, `PromptsCliInterface`
-  - Repositories: `GitCommitRepository`
-
-- **Presentation Layer**: User interface adapters
-  - `CommitizenAdapter` as the main entry point
-
-### Dependency Injection
-
-The plugin uses `@elsikora/cladi` for dependency injection, ensuring loose coupling and testability.
+- ✨ **🤖 **AI-Powered Generation** - Leverage GPT-4.1, Claude 4, Gemini 2.5, and more to create contextually relevant commit messages**
+- ✨ **✅ **Commitlint Integration** - Automatically validates and fixes messages to comply with your project's Commitlint rules**
+- ✨ **🔄 **Smart Retry Mechanism** - Intelligently retries generation and validation with configurable attempts**
+- ✨ **🎯 **Clean Architecture** - Built with SOLID principles, dependency injection, and clear separation of concerns**
+- ✨ **🌐 **Multi-Provider Support** - Choose from OpenAI, Anthropic, Google, Azure, AWS Bedrock, or local Ollama models**
+- ✨ **🛡️ **Type-Safe** - Fully typed with TypeScript for enhanced developer experience and reliability**
+- ✨ **⚡ **Flexible Configuration** - Cosmiconfig support for easy setup via JSON, YAML, or JavaScript**
+- ✨ **🔐 **Secure API Key Handling** - Environment variable support with session-based key input options**
+- ✨ **📝 **Manual Mode Fallback** - Seamlessly switch to guided manual entry when needed**
+- ✨ **🚀 **Breaking Change Detection** - Automatically identifies and documents breaking changes**
 
 ## 🛠 Installation
-
 ```bash
-# Using npm
+# Install the plugin as a dev dependency
 npm install --save-dev @elsikora/commitizen-plugin-commitlint-ai
 
-# Using yarn
-yarn add -D @elsikora/commitizen-plugin-commitlint-ai
-
-# Using pnpm
-pnpm add -D @elsikora/commitizen-plugin-commitlint-ai
-
-# Configure commitizen to use the adapter
+# Initialize Commitizen with this adapter
 npx commitizen init @elsikora/commitizen-plugin-commitlint-ai --save-dev --save-exact
+
+# Install Commitlint (if not already installed)
+npm install --save-dev @commitlint/cli @commitlint/config-conventional
+
+# Create a commitlint config file
+echo "export default { extends: ['@commitlint/config-conventional'] };" > commitlint.config.js
 ```
 
 ## 💡 Usage
+## Basic Usage
 
-### Basic Usage
+### Quick Start
 
 ```bash
-# Commit changes using the AI-powered adapter
+# Stage your changes
 git add .
+
+# Run the AI-powered commit wizard
 git cz
+# or
+npm run commit
 ```
 
-The plugin will:
+### Configuration Methods
 
-1. Ask for your commit mode preference (auto/manual)
-2. If auto mode and no API key is configured, guide you through configuration
-3. Generate or help you write a commit message
-4. Validate against your commitlint rules
-5. Allow you to confirm or edit before committing
+The plugin supports multiple configuration approaches:
 
-### Environment Variables
+#### 1. Environment Variables (Recommended)
 
 ```bash
-# .env or shell environment
-OPENAI_API_KEY=your-openai-api-key
+# .env file
+OPENAI_API_KEY=sk-...
 # or
-ANTHROPIC_API_KEY=your-anthropic-api-key
+ANTHROPIC_API_KEY=sk-ant-...
 # or
-GOOGLE_API_KEY=your-google-api-key
-# or (for Azure OpenAI, use pipe-separated format)
+GOOGLE_API_KEY=AIza...
+# or (Azure OpenAI)
 AZURE_OPENAI_API_KEY=https://your-resource.openai.azure.com|your-api-key|your-deployment-name
-# or (for AWS Bedrock, use pipe-separated format)
-AWS_BEDROCK_API_KEY=us-east-1|your-access-key-id|your-secret-access-key
-# or (for Ollama, specify host and optional model)
-OLLAMA_API_KEY=localhost:11434|custom-model-name
+# or (AWS Bedrock)
+AWS_BEDROCK_API_KEY=us-east-1|access-key-id|secret-access-key
+# or (Ollama)
+OLLAMA_API_KEY=localhost:11434|llama3.2
 ```
 
-Environment variables take precedence over stored configuration.
+#### 2. Configuration File
 
-## ⚙️ Configuration
-
-The plugin supports multiple configuration methods using [Cosmiconfig](https://github.com/davidtheclark/cosmiconfig):
-
-### Configuration File Locations
-
-Create a configuration file in any of these locations:
-
-- `.commitlintairc`
-- `.commitlintairc.json`
-- `.commitlintairc.yaml`
-- `.commitlintairc.yml`
-- `.commitlintairc.js`
-- `.commitlintairc.cjs`
-- `commitlintai.config.js`
-- `commitlintai.config.cjs`
-- `package.json` (under `"commitlintai"` key)
-
-### Configuration Options
+Create `.elsikora/commitlint-ai.config.js`:
 
 ```javascript
-// commitlintai.config.js
-module.exports = {
-	// AI provider: 'openai', 'anthropic', 'google', 'azure-openai', 'aws-bedrock', or 'ollama'
-	provider: "openai",
-
-	// Model to use (auto-migrates deprecated models)
-	model: "gpt-4o",
-
-	// Mode: 'auto' or 'manual'
-	mode: "auto",
-
-	// API key (optional - env vars recommended)
-	// Format varies by provider:
-	// - OpenAI/Anthropic/Google: 'your-api-key'
-	// - Azure OpenAI: 'endpoint|api-key|deployment-name'
-	// - AWS Bedrock: 'region|access-key-id|secret-access-key'
-	// - Ollama: 'host:port' or 'host:port|custom-model-name'
-	apiKey: "your-api-key",
-
-	// Retry configuration
-	maxGenerationRetries: 3,
-	maxValidationRetries: 3,
-
-	// Custom instructions for AI
-	instructions: "Focus on user-facing changes",
+export default {
+  provider: 'openai',
+  model: 'gpt-4.1',
+  mode: 'auto',
+  maxRetries: 3,
+  validationMaxRetries: 3
 };
 ```
 
-### Available Models
+#### 3. Package.json
 
-## Supported LLM Providers
+```json
+{
+  "elsikora": {
+    "commitlint-ai": {
+      "provider": "anthropic",
+      "model": "claude-opus-4-20250514",
+      "mode": "auto"
+    }
+  }
+}
+```
 
-### OpenAI
+### Commit Modes
 
-- `gpt-4.1` (Latest 2025, most capable)
-- `gpt-4.1-nano` (Fastest 4.1 model)
-- `gpt-4.1-mini` (Balanced performance)
-- `gpt-4o` (Enhanced creative writing)
-- `gpt-4o-mini` (Faster, cost-effective)
-- `gpt-4-turbo`
-- `gpt-4` (Original)
-- `gpt-3.5-turbo` (Fastest, most economical)
-- `o1` (Enhanced reasoning)
-- `o1-mini` (Fast reasoning)
+#### Auto Mode (AI-Powered)
 
-### Anthropic
+The AI analyzes your changes and generates appropriate commit messages:
 
-- `claude-opus-4-20250514` (Latest 2025, most capable)
-- `claude-sonnet-4-20250514` (Latest 2025, high-performance)
-- `claude-3-7-sonnet-latest` (Extended thinking capabilities)
-- `claude-3-5-sonnet-latest` (Previous flagship)
-- `claude-3-5-haiku-latest` (Fastest)
-- `claude-3-opus-latest` (Complex tasks)
+```bash
+$ git cz
+✔ Using AI-powered commit mode...
+✔ AI generated initial commit message
+✔ AI generated commit message successfully!
 
-### Google (Gemini)
+┌─────────────────────────────────┐
+│ Generated commit message:        │
+├─────────────────────────────────┤
+│ feat(auth): implement OAuth2    │
+│                                 │
+│ Added OAuth2 authentication     │
+│ flow with JWT token support.    │
+│ Includes refresh token logic    │
+│ and secure session management.  │
+│                                 │
+│ BREAKING CHANGE: Auth API       │
+│ endpoints have been updated     │
+└─────────────────────────────────┘
 
-- `gemini-2.5-pro` (Latest 2025, most capable)
-- `gemini-2.5-flash` (Latest 2025, fast)
-- `gemini-2.0-flash-exp` (Experimental)
-- `gemini-1.5-pro` (Stable, capable)
-- `gemini-1.5-flash` (Fast, stable)
-- `gemini-1.5-flash-8b` (Lightweight)
-- `gemini-1.0-pro`
+✔ Do you want to proceed with this commit message? (Y/n)
+```
 
-### Google (Gemma - Open Models for Vertex AI)
+#### Manual Mode
 
-- `gemma-3-27b` (Most capable open model)
-- `gemma-3-12b` (Strong language capabilities)
-- `gemma-3-4b` (Balanced, multimodal support)
-- `gemma-3-1b` (Lightweight for edge deployment)
+Guided commit message creation with validation:
 
-### Azure OpenAI
+```bash
+$ git cz
+✔ Using manual commit mode...
+? Select commit type: (Use arrow keys)
+❯ feat: A new feature ✨
+  fix: A bug fix 🐛
+  docs: Documentation only changes 📚
+  style: Code style changes 🎨
+  refactor: Code refactoring 📦
+  perf: Performance improvements 🚀
+  test: Adding tests 🚨
 
-- `gpt-4.1-turbo-2024-12-17` (Latest 2025, most capable)
-- `gpt-4.1-preview-2024-12-17` (Latest preview)
-- `gpt-4.1-mini-2024-12-17` (Fast 4.1 model)
-- `gpt-4o-2024-11-20` (Enhanced creative)
-- `gpt-4o-mini-2024-07-18`
-- `gpt-4-turbo`
-- `gpt-3.5-turbo`
-- `o3-2024-12-17` (Enhanced reasoning)
-- `o4-mini-2024-12-17` (Fast reasoning)
+? Enter scope (optional): auth
+? Enter commit subject: add login functionality
+? Enter commit body (optional): 
+? Is this a breaking change? No
+```
 
-### AWS Bedrock
+### Advanced Features
 
-- `anthropic.claude-opus-4-20250514-v1:0` (Claude Opus 4 - Latest 2025, most capable)
-- `anthropic.claude-sonnet-4-20250514-v1:0` (Claude Sonnet 4 - Latest 2025, balanced)
-- `anthropic.claude-3-5-sonnet-20241022-v2:0` (Claude 3.5 Sonnet v2)
-- `anthropic.claude-3-5-haiku-20241022-v1:0` (Fast)
-- `anthropic.claude-3-5-sonnet-20240620-v1:0`
-- `us.amazon.nova-pro-v1:0` (Latest Amazon model)
-- `us.deepseek.deepseek-r1:0` (Advanced reasoning)
-- `us.meta.llama3-2-90b-instruct-v1:0` (Open source)
-- `mistral.mistral-large-2411-v1:0` (Latest Mistral)
+#### Custom Instructions
 
-### Ollama (Local Models)
+Provide project-specific guidance to the AI:
 
-- `llama3.2` (Latest Llama)
-- `llama3.1`
-- `llama3`
-- `mistral`
-- `codellama`
-- `deepseek-coder`
-- `custom` (specify any Ollama model)
+```javascript
+// commitlint-ai.config.js
+export default {
+  provider: 'openai',
+  model: 'gpt-4.1',
+  instructions: 'Focus on business impact and user-facing changes. Use present tense.'
+};
+```
 
-### Commitlint Configuration
+#### Retry Configuration
+
+```javascript
+export default {
+  maxRetries: 5,              // AI generation retries
+  validationMaxRetries: 3     // Validation fix attempts
+};
+```
+
+#### Provider-Specific Setup
+
+**Azure OpenAI:**
+```bash
+AZURE_OPENAI_API_KEY=https://myresource.openai.azure.com|api-key|gpt-4-deployment
+```
+
+**AWS Bedrock:**
+```bash
+AWS_BEDROCK_API_KEY=us-west-2|AKIAIOSFODNN7EXAMPLE|wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+```
+
+**Ollama (Local):**
+```bash
+# Default setup
+OLLAMA_API_KEY=localhost:11434
+
+# Custom model
+OLLAMA_API_KEY=localhost:11434|codellama
+```
+
+### Commitlint Integration
+
+The plugin respects all your Commitlint rules:
 
 ```javascript
 // commitlint.config.js
 export default {
-	extends: ["@commitlint/config-conventional"],
-	rules: {
-		"type-enum": [2, "always", ["feat", "fix", "docs", "style", "refactor"]],
-		"scope-case": [2, "always", "lower-case"],
-		"subject-max-length": [2, "always", 72],
-		"body-max-line-length": [2, "always", 100],
-	},
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [2, 'always', ['feat', 'fix', 'docs', 'style', 'refactor']],
+    'scope-case': [2, 'always', 'lower-case'],
+    'subject-max-length': [2, 'always', 72],
+    'body-max-line-length': [2, 'always', 100]
+  }
 };
 ```
 
-### Manual Mode
+### Troubleshooting
 
-To force manual mode without prompting:
+#### Force Manual Mode
 
 ```bash
-# Create .elsikora/manual file
+# Create manual mode marker
 mkdir -p .elsikora
 touch .elsikora/manual
 ```
 
-### Package.json Configuration
+#### Clear Configuration Cache
 
-```json
-{
-	"commitlintai": {
-		"provider": "anthropic",
-		"model": "claude-3-5-sonnet-20241022",
-		"mode": "auto",
-		"maxGenerationRetries": 5
-	}
-}
+```bash
+rm -rf .elsikora/commitlint-ai.config.*
+```
+
+#### Debug Mode
+
+```bash
+DEBUG=commitizen-ai git cz
 ```
 
 ## 🛣 Roadmap
-
-| Task / Feature                                                        | Status      |
-| --------------------------------------------------------------------- | ----------- |
-| AI-powered commit message generation using OpenAI or Anthropic models | ✅ Complete |
-| Full integration with Commitlint rules and configuration              | ✅ Complete |
-| Support for both manual and automatic commit modes                    | ✅ Complete |
-| Clean architecture implementation                                     | ✅ Complete |
-| Cosmiconfig support for flexible configuration                        | ✅ Complete |
-| Environment variable support with priority over config                | ✅ Complete |
-| Automatic model migration for deprecated models                       | ✅ Complete |
-| Configurable retry mechanism with UI feedback                         | ✅ Complete |
-| Dependency injection with @elsikora/cladi                             | ✅ Complete |
-| Support for more AI providers (Google, Azure, AWS, Ollama)            | ✅ Complete |
-| Enhanced diff analysis for better commit suggestions                  | 🚧 Planned  |
-| Custom prompt templates per project                                   | 🚧 Planned  |
-| Integration with more Git hosting platforms                           | 🚧 Planned  |
-| Performance optimizations for large codebases                         | 🚧 Planned  |
-| Multi-language support for commit messages                            | 🚧 Planned  |
-| Team collaboration features                                           | 🚧 Planned  |
-| Web UI for configuration management                                   | 🚧 Planned  |
+| Task / Feature | Status |
+|----------------|--------|
+| Core AI-powered commit generation | ✅ Done |
+| Multi-provider support (OpenAI, Anthropic, Google) | ✅ Done |
+| Commitlint rule integration | ✅ Done |
+| Clean architecture implementation | ✅ Done |
+| Automatic validation and fixing | ✅ Done |
+| Environment variable support | ✅ Done |
+| Cosmiconfig integration | ✅ Done |
+| Interactive mode switching | ✅ Done |
+| Breaking change detection | ✅ Done |
+| AWS Bedrock and Azure OpenAI support | ✅ Done |
+| Local Ollama model support | ✅ Done |
+| Custom prompt templates | 🚧 In Progress |
+| Multi-language commit messages | 🚧 In Progress |
+| Git hook integration | 🚧 In Progress |
+| VS Code extension | 🚧 In Progress |
+| Team collaboration features | 🚧 In Progress |
+| Commit message analytics | 🚧 In Progress |
+| GitHub Copilot integration | 🚧 In Progress |
+| Performance optimizations for monorepos | 🚧 In Progress |
 
 ## ❓ FAQ
+**Q: Which AI providers are supported?**
+A: The plugin supports OpenAI (GPT-4.1, GPT-4o), Anthropic (Claude 4, Claude 3.5), Google (Gemini 2.5), Azure OpenAI, AWS Bedrock, and local Ollama models. Each provider offers different models optimized for various use cases.
 
-**Q: How does the AI generate commit messages?**  
-A: The plugin analyzes your git diff and changed files, then uses AI to understand the changes and generate appropriate conventional commit messages that comply with your commitlint rules.
+**Q: How does the AI understand my code changes?**
+A: The plugin analyzes your git diff, staged files, and file paths to understand the context. It then uses this information along with your Commitlint rules to generate appropriate conventional commit messages.
 
-**Q: What happens if the AI service is unavailable?**  
-A: The plugin has a configurable retry mechanism and will automatically fall back to manual mode after exhausting retries, allowing you to enter commit messages traditionally.
+**Q: Is my code sent to AI services?**
+A: Only the git diff and file names are sent to generate accurate commit messages. Full source code files are not transmitted unless they appear in the diff. For sensitive projects, consider using Ollama for local processing.
 
-**Q: Can I use custom commit message formats?**  
-A: Yes, the plugin respects your commitlint configuration and generates messages accordingly. You can also provide custom instructions to guide the AI.
+**Q: What happens if the AI service is unavailable?**
+A: The plugin has a configurable retry mechanism with real-time status updates. If all retries fail, it automatically falls back to the guided manual mode, ensuring you can always create commits.
 
-**Q: Is my code sent to the AI service?**  
-A: Only the git diff and file names are sent to generate accurate commit messages. No full source code is transmitted unless it appears in the diff.
+**Q: Can I customize the commit message format?**
+A: Yes! The plugin fully respects your Commitlint configuration. You can define custom types, scopes, and rules. Additionally, you can provide custom instructions to guide the AI's generation style.
 
-**Q: How do I switch between providers or models?**  
-A: You can reconfigure at any time by running `git cz` and choosing to reconfigure when prompted, or by updating your configuration file.
+**Q: How do I switch between AI and manual modes?**
+A: When you run `git cz`, you'll be prompted to choose your mode. You can also set a default mode in the configuration or create a `.elsikora/manual` file to force manual mode.
 
-**Q: How do I use Ollama with custom models?**  
-A: Set the model to `custom` and include the model name in your API key: `localhost:11434|your-custom-model`.
+**Q: Is it safe to store API keys?**
+A: The plugin prioritizes security by reading API keys from environment variables. Keys are never stored in configuration files. For added security, you can also input keys per session.
 
-**Q: What's the difference between provider API key formats?**  
-A: Each provider has specific requirements:
+**Q: Can I use this with my existing Commitizen setup?**
+A: Absolutely! This is a drop-in replacement for other Commitizen adapters. It works seamlessly with your existing Commitlint configuration and Git workflow.
 
-- OpenAI/Anthropic/Google: Simple API key string
-- Azure OpenAI: `endpoint|api-key|deployment-name`
-- AWS Bedrock: `region|access-key-id|secret-access-key`
-- Ollama: `host:port` or `host:port|custom-model-name`
+**Q: What's the difference between generation and validation retries?**
+A: Generation retries (`maxRetries`) handle AI service failures, while validation retries (`validationMaxRetries`) attempt to fix commit messages that don't pass Commitlint rules.
 
-**Q: What if I'm using an older model that's deprecated?**  
-A: The plugin automatically migrates deprecated models to their latest versions (e.g., `claude-3-5-sonnet-20240620` → `claude-3-5-sonnet-20241022`).
+**Q: How much does it cost to use?**
+A: The plugin itself is free and open-source. You'll need to pay for API usage with your chosen AI provider, or use free local models with Ollama.
 
 ## 🔒 License
-
-This project is licensed under **MIT License**.
+This project is licensed under **MIT License - see [LICENSE](LICENSE) file for details**.
