@@ -71,7 +71,7 @@
 		"dotenv": "^16.5.0",
 		"javascript-stringify": "^2.1.0",
 		"lodash.isplainobject": "^4.0.6",
-		"openai": "^4.103.0",
+		"openai": "^5.2.0",
 		"ora": "^8.2.0",
 		"prompts": "^2.4.2",
 		"rollup": "^4.41.1",
