@@ -3,7 +3,6 @@ import type { IContainer } from "@elsikora/cladi";
 
 import type { ICliInterfaceService } from "../application/interface/cli-interface-service.interface.js";
 import type { ICommitRepository } from "../application/interface/commit-repository.interface.js";
-import type { ICommitValidationResult, ICommitValidator } from "../application/interface/commit-validator.interface.js";
 import type { IConfigService } from "../application/interface/config-service.interface.js";
 import type { IConfig } from "../application/interface/config.interface.js";
 import type { ILlmPromptContext } from "../application/interface/llm-service.interface.js";
@@ -15,12 +14,11 @@ import type { CommitMessage } from "../domain/entity/commit-message.entity.js";
 
 import load from "@commitlint/load";
 
-import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES } from "../domain/constant/numeric.constant.js";
+import { DEFAULT_MAX_RETRIES } from "../domain/constant/numeric.constant.js";
 import { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
 import { ECommitMode } from "../domain/enum/commit-mode.enum.js";
 import { ApiKey } from "../domain/value-object/api-key.value-object.js";
-import { CommitlintValidatorService } from "../infrastructure/commit-validator/commitlint-validator.service.js";
-import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
+import { CliInterfaceServiceToken, CommitRepositoryToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
 
 // Type constants
 const TYPE_ENUM_INDEX: number = 2;
@@ -130,8 +128,7 @@ export class CommitizenAdapter {
 
 					// Create new configuration with the provided API key
 					const maxRetries: number = config.maxRetries ?? DEFAULT_MAX_RETRIES;
-					const validationMaxRetries: number = config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES;
-					llmConfig = new LLMConfiguration(config.provider, new ApiKey(credentialValue), config.mode, config.model, maxRetries, validationMaxRetries);
+					llmConfig = new LLMConfiguration(config.provider, new ApiKey(credentialValue), config.mode, config.model, maxRetries, maxRetries);
 				}
 			} else {
 				// No configuration at all
@@ -171,25 +168,17 @@ export class CommitizenAdapter {
 				return;
 			}
 
-			// Auto mode - set LLM configuration on validator if it supports it
-			const validator: ICommitValidator = this.CONTAINER.get<ICommitValidator>(CommitValidatorToken) ?? ({} as ICommitValidator);
-
-			if (validator instanceof CommitlintValidatorService) {
-				validator.setLLMConfiguration(llmConfig);
-			}
-
-			// Auto mode - generate with AI
+			// Auto mode - generate with AI (validation integrated)
 			cliInterface.info("Using AI-powered commit mode...");
 
 			try {
-				// Generate commit message
-				cliInterface.startSpinner("Generating commit message with AI...");
+				cliInterface.startSpinner("Generating and validating commit message with AI...");
 
-				let generatedMessage: CommitMessage;
+				let validatedMessage: CommitMessage;
 
 				try {
-					generatedMessage = await generateCommitUseCase.execute(promptContext, llmConfig, (attempt: number, maxRetries: number, error: Error) => {
-						cliInterface.updateSpinner(`Generating commit message with AI... (Attempt ${attempt}/${maxRetries} failed: ${error.message})`);
+					validatedMessage = await generateCommitUseCase.execute(promptContext, llmConfig, (attempt: number, maxRetries: number, error: Error) => {
+						cliInterface.updateSpinner(`Generating and validating commit message... (Attempt ${attempt}/${maxRetries} - ${error.message})`);
 					});
 				} catch (genError) {
 					cliInterface.stopSpinner();
@@ -198,45 +187,9 @@ export class CommitizenAdapter {
 				}
 
 				cliInterface.stopSpinner();
-				cliInterface.success("AI generated initial commit message");
-
-				// Validate and fix if needed
-				cliInterface.startSpinner("Validating commit message format...");
-
-				// Track validation attempts
-				let lastValidationAttempt: number = 0;
-				const originalValidate: (message: CommitMessage) => Promise<ICommitValidationResult> = validateCommitUseCase.validate.bind(validateCommitUseCase);
-
-				validateCommitUseCase.validate = async (message: CommitMessage): Promise<ICommitValidationResult> => {
-					lastValidationAttempt++;
-
-					if (lastValidationAttempt > 1) {
-						cliInterface.updateSpinner(`Validating commit message format... (attempt ${lastValidationAttempt})`);
-					}
-
-					return originalValidate(message);
-				};
-
-				const validatedMessage: CommitMessage | null = await validateCommitUseCase.execute(generatedMessage, true, llmConfig.getValidationMaxRetries(), promptContext);
-
-				cliInterface.stopSpinner();
-
-				// Restore original validate method
-				validateCommitUseCase.validate = originalValidate;
-
-				if (!validatedMessage) {
-					cliInterface.warn("Could not generate a valid commit message. Switching to manual mode...");
-					const commitMessage: CommitMessage = await manualCommitUseCase.execute(promptContext);
-					commit(commitMessage.toString());
-
-					return;
-				}
-
-				// Show the generated message
-				cliInterface.success("AI generated commit message successfully!");
+				cliInterface.success("AI generated valid commit message successfully!");
 				cliInterface.note("Generated commit message:", validatedMessage.toString());
 
-				// Ask for confirmation
 				const isConfirmed: boolean = await cliInterface.confirm("Do you want to proceed with this commit message?", true);
 
 				if (isConfirmed) {
@@ -247,8 +200,7 @@ export class CommitizenAdapter {
 					commit(commitMessage.toString());
 				}
 			} catch (error) {
-				// Check if it's a retry exhaustion error
-				if (error instanceof Error && error.message.includes("Failed to generate commit message after")) {
+				if (error instanceof Error && error.message.includes("Failed to generate")) {
 					cliInterface.error(error.message);
 				} else {
 					cliInterface.handleError("Error generating commit with AI:", error);
