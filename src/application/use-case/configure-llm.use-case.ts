@@ -2,7 +2,7 @@ import type { ICliInterfaceService } from "../interface/cli-interface-service.in
 import type { IConfigService } from "../interface/config-service.interface.js";
 import type { IConfig } from "../interface/config.interface.js";
 
-import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES, MAX_RETRY_COUNT, MIN_RETRY_COUNT } from "../../domain/constant/numeric.constant.js";
+import { DEFAULT_MAX_RETRIES, MAX_RETRY_COUNT, MIN_RETRY_COUNT } from "../../domain/constant/numeric.constant.js";
 import { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import { EAnthropicModel } from "../../domain/enum/anthropic-model.enum.js";
 import { EAWSBedrockModel } from "../../domain/enum/aws-bedrock-model.enum.js";
@@ -51,7 +51,7 @@ export class ConfigureLLMUseCase {
 				mode,
 				undefined, // No model needed for manual mode
 				DEFAULT_MAX_RETRIES, // Default max retries
-				DEFAULT_VALIDATION_MAX_RETRIES, // Default validation max retries
+				DEFAULT_MAX_RETRIES, // Deprecated parameter (kept for compatibility)
 			);
 
 			// Save configuration
@@ -280,10 +280,9 @@ export class ConfigureLLMUseCase {
 		const shouldConfigureAdvanced: boolean = await this.CLI_INTERFACE.confirm("Would you like to configure advanced settings (retry counts)?", false);
 
 		let maxRetries: number = DEFAULT_MAX_RETRIES;
-		let validationMaxRetries: number = DEFAULT_VALIDATION_MAX_RETRIES;
 
 		if (shouldConfigureAdvanced) {
-			const retriesString: string = await this.CLI_INTERFACE.text("Max retries for AI generation (default: 3):", "3", "3", (value: string) => {
+			const retriesString: string = await this.CLI_INTERFACE.text("Max retries for AI generation and validation (default: 3):", "3", "3", (value: string) => {
 				const parsedNumber: number = Number.parseInt(value, 10);
 
 				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
@@ -294,23 +293,10 @@ export class ConfigureLLMUseCase {
 				return;
 			});
 			maxRetries = Number.parseInt(retriesString, 10);
-
-			const validationRetriesString: string = await this.CLI_INTERFACE.text("Max retries for validation fixes (default: 3):", "3", "3", (value: string) => {
-				const parsedNumber: number = Number.parseInt(value, 10);
-
-				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
-					return "Please enter a number between 1 and 10";
-				}
-
-				// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
-				return;
-			});
-			validationMaxRetries = Number.parseInt(validationRetriesString, 10);
 		}
 
-		// Create configuration
 		// Create configuration - will save without API key
-		const configuration: LLMConfiguration = new LLMConfiguration(provider, new ApiKey(credentialValue), mode, model, maxRetries, validationMaxRetries);
+		const configuration: LLMConfiguration = new LLMConfiguration(provider, new ApiKey(credentialValue), mode, model, maxRetries, maxRetries);
 
 		// Save configuration (without API key)
 		await this.saveConfiguration(configuration);
@@ -334,20 +320,8 @@ export class ConfigureLLMUseCase {
 		}
 
 		// Add backward compatibility - set default retry values if missing
-		let isConfigUpdated: boolean = false;
-
 		if (config.maxRetries === undefined) {
 			config.maxRetries = DEFAULT_MAX_RETRIES;
-			isConfigUpdated = true;
-		}
-
-		if (config.validationMaxRetries === undefined) {
-			config.validationMaxRetries = DEFAULT_VALIDATION_MAX_RETRIES;
-			isConfigUpdated = true;
-		}
-
-		// Save updated config if we added defaults
-		if (isConfigUpdated) {
 			await this.CONFIG_SERVICE.set(config);
 		}
 
@@ -391,7 +365,7 @@ export class ConfigureLLMUseCase {
 
 		// For manual mode, return configuration with dummy API key
 		if (config.mode === ECommitMode.MANUAL) {
-			return new LLMConfiguration(config.provider, new ApiKey("manual-mode"), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES);
+			return new LLMConfiguration(config.provider, new ApiKey("manual-mode"), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.maxRetries ?? DEFAULT_MAX_RETRIES);
 		}
 
 		// For auto mode, check environment variables
@@ -412,7 +386,7 @@ export class ConfigureLLMUseCase {
 			return null;
 		}
 
-		return new LLMConfiguration(config.provider, new ApiKey(environmentApiKey), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES);
+		return new LLMConfiguration(config.provider, new ApiKey(environmentApiKey), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.maxRetries ?? DEFAULT_MAX_RETRIES);
 	}
 
 	/**

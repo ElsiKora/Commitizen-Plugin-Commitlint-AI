@@ -74,7 +74,7 @@ export function createAppContainer(): IContainer {
 
 	// Register use cases
 	container.register(ConfigureLLMUseCaseToken, new ConfigureLLMUseCaseImpl(configService, cliInterface));
-	container.register(GenerateCommitMessageUseCaseToken, new GenerateCommitMessageUseCaseImpl(llmServices));
+	container.register(GenerateCommitMessageUseCaseToken, new GenerateCommitMessageUseCaseImpl(llmServices, validator));
 	container.register(ValidateCommitMessageUseCaseToken, new ValidateCommitMessageUseCaseImpl(validator));
 	container.register(ManualCommitUseCaseToken, new ManualCommitUseCaseImpl(cliInterface));
 
