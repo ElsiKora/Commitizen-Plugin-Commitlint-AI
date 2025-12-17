@@ -26,7 +26,7 @@ export class OllamaLlmService implements ILlmService {
 	async generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage> {
 		// Extract Ollama configuration
 		const credential: string = configuration.getApiKey().getValue();
-		let model: string = configuration.getModel() ?? EOllamaModel.LLAMA3_2;
+		let model: string = configuration.getModel() ?? EOllamaModel.LLAMA3_3;
 
 		// The API key should be in format: "host:port" or just "host" (defaults to port 11434)
 		// If a custom model is specified, the API key format is: "host:port|custom-model-name"

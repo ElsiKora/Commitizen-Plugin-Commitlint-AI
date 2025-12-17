@@ -1,27 +1,35 @@
 /**
- * Enum representing popular Ollama models
+ * Enum representing popular Ollama text models
  * Note: Ollama supports any model available in the Ollama library
  * Users can also specify custom model names
  */
 export enum EOllamaModel {
+	// Code-focused models
 	CODELLAMA = "codellama",
 	// Custom model placeholder
 	CUSTOM = "custom",
-	DEEPSEEK_CODER = "deepseek-coder",
-	GEMMA = "gemma",
-	GEMMA2 = "gemma2",
-	LLAMA2 = "llama2",
-	LLAMA3 = "llama3",
-	LLAMA3_1 = "llama3.1",
-	// Popular Open-Source Models
-	LLAMA3_2 = "llama3.2",
-	MISTRAL = "mistral",
-	MIXTRAL = "mixtral",
-	NEURAL_CHAT = "neural-chat",
-	PHI = "phi",
-	PHI3 = "phi3",
-	QWEN2 = "qwen2",
-	QWEN2_5 = "qwen2.5",
+	// Gemma models (Google)
+	GEMMA3 = "gemma3",
 
-	STARLING_LM = "starling-lm",
+	// Llama models (Meta)
+	LLAMA3_1 = "llama3.1",
+
+	LLAMA3_2 = "llama3.2",
+
+	LLAMA3_3 = "llama3.3",
+	LLAMA4 = "llama4",
+	// Mistral models
+	MIXTRAL = "mixtral",
+	// Phi models (Microsoft)
+	PHI3 = "phi3",
+
+	PHI4 = "phi4",
+
+	PHI4_MINI = "phi4-mini",
+	// Qwen models (Alibaba)
+	QWEN2_5 = "qwen2.5",
+	QWEN2_5_CODER = "qwen2.5-coder",
+
+	QWEN3 = "qwen3",
+	QWEN3_CODER = "qwen3-coder",
 }

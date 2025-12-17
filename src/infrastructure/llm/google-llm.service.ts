@@ -26,7 +26,7 @@ export class GoogleLlmService implements ILlmService {
 		const genAI: GoogleGenerativeAI = new GoogleGenerativeAI(configuration.getApiKey().getValue());
 
 		const model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]> = genAI.getGenerativeModel({
-			model: configuration.getModel() ?? EGoogleModel.GEMINI_1_5_FLASH,
+			model: configuration.getModel() ?? EGoogleModel.GEMINI_2_5_FLASH,
 		});
 
 		const systemPrompt: string = this.buildSystemPrompt(context);
