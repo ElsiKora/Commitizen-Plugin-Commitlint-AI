@@ -37,13 +37,13 @@ export class AnthropicLlmService implements ILlmService {
 					role: "user",
 				},
 			],
-			model: configuration.getModel() ?? EAnthropicModel.CLAUDE_SONNET_4,
+			model: configuration.getModel() ?? EAnthropicModel.CLAUDE_SONNET_4_5,
 			temperature: OPENAI_TEMPERATURE,
 		});
 
 		const content: Anthropic.ContentBlock | undefined = response.content[0];
 
-		if (!content || content.type !== "text") {
+		if (content?.type !== "text") {
 			throw new Error("No response from Anthropic");
 		}
 

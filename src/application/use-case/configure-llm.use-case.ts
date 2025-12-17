@@ -65,7 +65,7 @@ export class ConfigureLLMUseCase {
 
 		// Select provider
 		const provider: ELLMProvider = await this.CLI_INTERFACE.select<ELLMProvider>("Select your LLM provider:", [
-			{ label: "OpenAI (GPT-4, GPT-3.5)", value: ELLMProvider.OPENAI },
+			{ label: "OpenAI (GPT-5, GPT-4o)", value: ELLMProvider.OPENAI },
 			{ label: "Anthropic (Claude)", value: ELLMProvider.ANTHROPIC },
 			{ label: "Google (Gemini)", value: ELLMProvider.GOOGLE },
 			{ label: "Azure OpenAI", value: ELLMProvider.AZURE_OPENAI },
@@ -81,14 +81,16 @@ export class ConfigureLLMUseCase {
 				model = await this.CLI_INTERFACE.select<string>(
 					"Select Anthropic model:",
 					[
-						{ label: "Claude Opus 4 (Latest 2025, most capable)", value: EAnthropicModel.CLAUDE_OPUS_4 },
-						{ label: "Claude Sonnet 4 (Latest 2025, high-performance)", value: EAnthropicModel.CLAUDE_SONNET_4 },
+						{ label: "Claude Opus 4.5 (Latest, most capable)", value: EAnthropicModel.CLAUDE_OPUS_4_5 },
+						{ label: "Claude Sonnet 4.5 (Latest, balanced)", value: EAnthropicModel.CLAUDE_SONNET_4_5 },
+						{ label: "Claude Haiku 4.5 (Latest, fastest)", value: EAnthropicModel.CLAUDE_HAIKU_4_5 },
+						{ label: "Claude Opus 4", value: EAnthropicModel.CLAUDE_OPUS_4 },
+						{ label: "Claude Sonnet 4", value: EAnthropicModel.CLAUDE_SONNET_4 },
 						{ label: "Claude 3.7 Sonnet (Extended thinking)", value: EAnthropicModel.CLAUDE_3_7_SONNET },
-						{ label: "Claude 3.5 Sonnet (Previous flagship)", value: EAnthropicModel.CLAUDE_3_5_SONNET },
-						{ label: "Claude 3.5 Haiku (Fastest)", value: EAnthropicModel.CLAUDE_3_5_HAIKU },
-						{ label: "Claude 3 Opus (Complex tasks)", value: EAnthropicModel.CLAUDE_3_OPUS },
+						{ label: "Claude 3.5 Sonnet", value: EAnthropicModel.CLAUDE_3_5_SONNET },
+						{ label: "Claude 3.5 Haiku (Fast)", value: EAnthropicModel.CLAUDE_3_5_HAIKU },
 					],
-					EAnthropicModel.CLAUDE_SONNET_4,
+					EAnthropicModel.CLAUDE_SONNET_4_5,
 				);
 
 				break;
@@ -98,17 +100,18 @@ export class ConfigureLLMUseCase {
 				model = await this.CLI_INTERFACE.select<string>(
 					"Select AWS Bedrock model:",
 					[
-						{ label: "Claude Opus 4 (Latest 2025, most capable)", value: EAWSBedrockModel.CLAUDE_OPUS_4 },
-						{ label: "Claude Sonnet 4 (Latest 2025, balanced performance)", value: EAWSBedrockModel.CLAUDE_SONNET_4 },
-						{ label: "Claude 3.5 Sonnet v2 (Previous flagship)", value: EAWSBedrockModel.CLAUDE_3_5_SONNET_V2 },
-						{ label: "Claude 3.5 Haiku (Fast)", value: EAWSBedrockModel.CLAUDE_3_5_HAIKU },
-						{ label: "Claude 3.5 Sonnet", value: EAWSBedrockModel.CLAUDE_3_5_SONNET },
-						{ label: "Amazon Nova Pro (Latest Amazon model)", value: EAWSBedrockModel.NOVA_PRO },
+						{ label: "Claude Opus 4.5 (Latest, most capable)", value: EAWSBedrockModel.CLAUDE_OPUS_4_5 },
+						{ label: "Claude Sonnet 4.5 (Latest, balanced)", value: EAWSBedrockModel.CLAUDE_SONNET_4_5 },
+						{ label: "Claude Haiku 4.5 (Latest, fastest)", value: EAWSBedrockModel.CLAUDE_HAIKU_4_5 },
+						{ label: "Claude Opus 4", value: EAWSBedrockModel.CLAUDE_OPUS_4 },
+						{ label: "Claude Sonnet 4", value: EAWSBedrockModel.CLAUDE_SONNET_4 },
+						{ label: "Claude 3.5 Sonnet v2", value: EAWSBedrockModel.CLAUDE_3_5_SONNET_V2 },
+						{ label: "Amazon Nova Pro", value: EAWSBedrockModel.NOVA_PRO },
 						{ label: "DeepSeek R1 (Advanced reasoning)", value: EAWSBedrockModel.DEEPSEEK_R1 },
-						{ label: "Llama 3.2 90B (Open source)", value: EAWSBedrockModel.LLAMA_3_2_90B },
-						{ label: "Mistral Large (Latest)", value: EAWSBedrockModel.MISTRAL_LARGE_2_24_11 },
+						{ label: "Llama 3.2 90B", value: EAWSBedrockModel.LLAMA_3_2_90B },
+						{ label: "Mistral Large", value: EAWSBedrockModel.MISTRAL_LARGE_2_24_11 },
 					],
-					EAWSBedrockModel.CLAUDE_SONNET_4,
+					EAWSBedrockModel.CLAUDE_SONNET_4_5,
 				);
 
 				break;
@@ -118,17 +121,18 @@ export class ConfigureLLMUseCase {
 				model = await this.CLI_INTERFACE.select<string>(
 					"Select Azure OpenAI model:",
 					[
-						{ label: "GPT-4.1 Turbo (Latest 2025, most capable)", value: EAzureOpenAIModel.GPT_4_1_TURBO_2024_12_17 },
-						{ label: "GPT-4.1 Preview (Latest preview)", value: EAzureOpenAIModel.GPT_4_1_PREVIEW_2024_12_17 },
-						{ label: "GPT-4.1 Mini (Fast 4.1 model)", value: EAzureOpenAIModel.GPT_4_1_MINI_2024_12_17 },
-						{ label: "GPT-4o 2024-11 (Enhanced creative)", value: EAzureOpenAIModel.GPT_4O_2024_11_20 },
-						{ label: "GPT-4o Mini", value: EAzureOpenAIModel.GPT_4O_MINI_2024_07_18 },
-						{ label: "GPT-4 Turbo", value: EAzureOpenAIModel.GPT_4_TURBO },
-						{ label: "GPT-3.5 Turbo", value: EAzureOpenAIModel.GPT_35_TURBO },
-						{ label: "O3 (Enhanced reasoning)", value: EAzureOpenAIModel.O3_2024_12_17 },
-						{ label: "O4 Mini (Fast reasoning)", value: EAzureOpenAIModel.O4_MINI_2024_12_17 },
+						{ label: "GPT-5.2 (Latest, most capable)", value: EAzureOpenAIModel.GPT_5_2 },
+						{ label: "GPT-5.2 Pro (Enhanced performance)", value: EAzureOpenAIModel.GPT_5_2_PRO },
+						{ label: "GPT-5.1", value: EAzureOpenAIModel.GPT_5_1 },
+						{ label: "GPT-5", value: EAzureOpenAIModel.GPT_5 },
+						{ label: "GPT-5 Mini (Fast)", value: EAzureOpenAIModel.GPT_5_MINI },
+						{ label: "GPT-5 Nano (Fastest)", value: EAzureOpenAIModel.GPT_5_NANO },
+						{ label: "GPT-4o", value: EAzureOpenAIModel.GPT_4O },
+						{ label: "GPT-4o Mini", value: EAzureOpenAIModel.GPT_4O_MINI },
+						{ label: "O3 (Enhanced reasoning)", value: EAzureOpenAIModel.O3 },
+						{ label: "O4 Mini (Fast reasoning)", value: EAzureOpenAIModel.O4_MINI },
 					],
-					EAzureOpenAIModel.GPT_4_1_TURBO_2024_12_17,
+					EAzureOpenAIModel.GPT_5_2,
 				);
 
 				break;
@@ -138,17 +142,14 @@ export class ConfigureLLMUseCase {
 				model = await this.CLI_INTERFACE.select<string>(
 					"Select Google model:",
 					[
-						{ label: "Gemini 2.5 Pro (Latest 2025, most capable)", value: EGoogleModel.GEMINI_2_5_PRO },
-						{ label: "Gemini 2.5 Flash (Latest 2025, fast)", value: EGoogleModel.GEMINI_2_5_FLASH },
-						{ label: "Gemini 2.0 Flash (Experimental)", value: EGoogleModel.GEMINI_2_0_FLASH_EXP },
-						{ label: "Gemini 1.5 Pro (Stable, capable)", value: EGoogleModel.GEMINI_1_5_PRO },
+						{ label: "Gemini 3 Pro Preview (Latest)", value: EGoogleModel.GEMINI_3_PRO_PREVIEW },
+						{ label: "Gemini 2.5 Pro (Most capable)", value: EGoogleModel.GEMINI_2_5_PRO },
+						{ label: "Gemini 2.5 Flash (Fast)", value: EGoogleModel.GEMINI_2_5_FLASH },
+						{ label: "Gemini 2.5 Flash Lite (Lightweight)", value: EGoogleModel.GEMINI_2_5_FLASH_LITE },
+						{ label: "Gemini 2.0 Flash", value: EGoogleModel.GEMINI_2_0_FLASH },
+						{ label: "Gemini 2.0 Flash Lite", value: EGoogleModel.GEMINI_2_0_FLASH_LITE },
+						{ label: "Gemini 1.5 Pro (Stable)", value: EGoogleModel.GEMINI_1_5_PRO },
 						{ label: "Gemini 1.5 Flash (Fast, stable)", value: EGoogleModel.GEMINI_1_5_FLASH },
-						{ label: "Gemini 1.5 Flash 8B (Lightweight)", value: EGoogleModel.GEMINI_1_5_FLASH_8B },
-						{ label: "Gemini 1.0 Pro", value: EGoogleModel.GEMINI_1_0_PRO },
-						{ label: "Gemma 3 27B (Most capable open model)", value: EGoogleModel.GEMMA_3_27B },
-						{ label: "Gemma 3 12B (Strong language model)", value: EGoogleModel.GEMMA_3_12B },
-						{ label: "Gemma 3 4B (Balanced, multimodal)", value: EGoogleModel.GEMMA_3_4B },
-						{ label: "Gemma 3 1B (Lightweight)", value: EGoogleModel.GEMMA_3_1B },
 					],
 					EGoogleModel.GEMINI_2_5_FLASH,
 				);
@@ -160,15 +161,19 @@ export class ConfigureLLMUseCase {
 				model = await this.CLI_INTERFACE.select<string>(
 					"Select Ollama model:",
 					[
-						{ label: "Llama 3.2 (Latest)", value: EOllamaModel.LLAMA3_2 },
+						{ label: "Llama 4 (Latest)", value: EOllamaModel.LLAMA4 },
+						{ label: "Llama 3.3", value: EOllamaModel.LLAMA3_3 },
+						{ label: "Llama 3.2", value: EOllamaModel.LLAMA3_2 },
 						{ label: "Llama 3.1", value: EOllamaModel.LLAMA3_1 },
-						{ label: "Llama 3", value: EOllamaModel.LLAMA3 },
-						{ label: "Mistral", value: EOllamaModel.MISTRAL },
+						{ label: "Qwen 3 (Latest Alibaba)", value: EOllamaModel.QWEN3 },
+						{ label: "Qwen 3 Coder (Code-focused)", value: EOllamaModel.QWEN3_CODER },
+						{ label: "Phi 4 (Microsoft)", value: EOllamaModel.PHI4 },
+						{ label: "Gemma 3 (Google)", value: EOllamaModel.GEMMA3 },
+						{ label: "Mixtral (Mistral)", value: EOllamaModel.MIXTRAL },
 						{ label: "CodeLlama", value: EOllamaModel.CODELLAMA },
-						{ label: "DeepSeek Coder", value: EOllamaModel.DEEPSEEK_CODER },
 						{ label: "Custom Model", value: EOllamaModel.CUSTOM },
 					],
-					EOllamaModel.LLAMA3_2,
+					EOllamaModel.LLAMA3_3,
 				);
 
 				break;
@@ -178,18 +183,19 @@ export class ConfigureLLMUseCase {
 				model = await this.CLI_INTERFACE.select<string>(
 					"Select OpenAI model:",
 					[
-						{ label: "GPT-4.1 (Latest 2025, most capable)", value: EOpenAIModel.GPT_4_1 },
-						{ label: "GPT-4.1 Nano (Fastest 4.1 model)", value: EOpenAIModel.GPT_4_1_NANO },
-						{ label: "GPT-4.1 Mini", value: EOpenAIModel.GPT_4_1_MINI },
-						{ label: "GPT-4o (Latest, enhanced creative writing)", value: EOpenAIModel.GPT_4O },
+						{ label: "GPT-5.2 (Latest, most capable)", value: EOpenAIModel.GPT_5_2 },
+						{ label: "GPT-5.2 Pro (Enhanced performance)", value: EOpenAIModel.GPT_5_2_PRO },
+						{ label: "GPT-5.1", value: EOpenAIModel.GPT_5_1 },
+						{ label: "GPT-5", value: EOpenAIModel.GPT_5 },
+						{ label: "GPT-5 Mini (Fast)", value: EOpenAIModel.GPT_5_MINI },
+						{ label: "GPT-5 Nano (Fastest)", value: EOpenAIModel.GPT_5_NANO },
+						{ label: "GPT-4o", value: EOpenAIModel.GPT_4O },
 						{ label: "GPT-4o Mini (Faster, cheaper)", value: EOpenAIModel.GPT_4O_MINI },
-						{ label: "GPT-4 Turbo", value: EOpenAIModel.GPT_4_TURBO },
-						{ label: "GPT-4 (Original)", value: EOpenAIModel.GPT_4 },
-						{ label: "GPT-3.5 Turbo (Fastest, cheapest)", value: EOpenAIModel.GPT_35_TURBO },
-						{ label: "O1 (Enhanced reasoning)", value: EOpenAIModel.O1 },
-						{ label: "O1 Mini (Fast reasoning)", value: EOpenAIModel.O1_MINI },
+						{ label: "O3 (Enhanced reasoning)", value: EOpenAIModel.O3 },
+						{ label: "O4 Mini (Fast reasoning)", value: EOpenAIModel.O4_MINI },
+						{ label: "GPT-3.5 Turbo (Legacy)", value: EOpenAIModel.GPT_35_TURBO },
 					],
-					EOpenAIModel.GPT_4O,
+					EOpenAIModel.GPT_5_2,
 				);
 
 				break;
@@ -364,18 +370,26 @@ export class ConfigureLLMUseCase {
 				"claude-3-5-sonnet-20241022": EAnthropicModel.CLAUDE_3_5_SONNET,
 				"claude-3-haiku-20240307": EAnthropicModel.CLAUDE_3_5_HAIKU,
 				"claude-3-sonnet-20240229": EAnthropicModel.CLAUDE_3_5_SONNET,
-				// OpenAI migrations (upgrade old GPT-4 references)
+				"claude-opus-4-20250514": EAnthropicModel.CLAUDE_OPUS_4_5,
+				"claude-sonnet-4-20250514": EAnthropicModel.CLAUDE_SONNET_4_5,
+				// OpenAI migrations
 				"gpt-3.5-turbo": EOpenAIModel.GPT_35_TURBO,
-				"gpt-4": EOpenAIModel.GPT_4,
+				"gpt-4": EOpenAIModel.GPT_4O,
 				"gpt-4-0125-preview": EOpenAIModel.GPT_4_TURBO,
-				"gpt-4-0613": EOpenAIModel.GPT_4,
+				"gpt-4-0613": EOpenAIModel.GPT_4O,
 				"gpt-4-1106-preview": EOpenAIModel.GPT_4_TURBO,
-				"gpt-4-32k": EOpenAIModel.GPT_4_32K,
-				"gpt-4-32k-0613": EOpenAIModel.GPT_4_32K,
-				"gpt-4o": EOpenAIModel.GPT_4O_MAY,
-				"gpt-4o-2024-05-13": EOpenAIModel.GPT_4O_MAY,
-				"gpt-4o-2024-08-06": EOpenAIModel.GPT_4O_AUGUST,
+				"gpt-4-32k": EOpenAIModel.GPT_4O,
+				"gpt-4-32k-0613": EOpenAIModel.GPT_4O,
+				"gpt-4-turbo-preview": EOpenAIModel.GPT_4_TURBO,
+				"gpt-4.1": EOpenAIModel.GPT_5,
+				"gpt-4.1-mini": EOpenAIModel.GPT_5_MINI,
+				"gpt-4.1-nano": EOpenAIModel.GPT_5_NANO,
+				"gpt-4o": EOpenAIModel.GPT_4O,
+				"gpt-4o-2024-05-13": EOpenAIModel.GPT_4O,
+				"gpt-4o-2024-08-06": EOpenAIModel.GPT_4O,
+				"gpt-4o-2024-11-20": EOpenAIModel.GPT_4O,
 				"gpt-4o-mini": EOpenAIModel.GPT_4O_MINI,
+				"o1-preview": EOpenAIModel.O1,
 			};
 
 			if (modelMigrations[migratedModel]) {

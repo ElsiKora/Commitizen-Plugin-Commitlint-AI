@@ -30,7 +30,7 @@ export class AWSBedrockLlmService implements ILlmService {
 	async generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage> {
 		// Extract AWS configuration
 		const credential: string = configuration.getApiKey().getValue();
-		const modelId: string = configuration.getModel() ?? EAWSBedrockModel.CLAUDE_3_5_SONNET_V2;
+		const modelId: string = configuration.getModel() ?? EAWSBedrockModel.CLAUDE_SONNET_4_5;
 
 		// The API key should be in format: "region|access-key-id|secret-access-key"
 		const [region, accessKeyId, secretAccessKey]: Array<string> = credential.split("|");
