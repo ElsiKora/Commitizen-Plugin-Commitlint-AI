@@ -36,7 +36,7 @@ export class OpenAILlmService implements ILlmService {
 				{ content: systemPrompt, role: "system" },
 				{ content: userPrompt, role: "user" },
 			],
-			model: configuration.getModel() ?? EOpenAIModel.GPT_4O,
+			model: configuration.getModel() ?? EOpenAIModel.GPT_5_2,
 			temperature: OPENAI_TEMPERATURE,
 		});
 

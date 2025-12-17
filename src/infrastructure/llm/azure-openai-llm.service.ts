@@ -25,7 +25,7 @@ export class AzureOpenAILlmService implements ILlmService {
 	async generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage> {
 		// Extract Azure-specific configuration
 		const credential: string = configuration.getApiKey().getValue();
-		const model: string = configuration.getModel() ?? EAzureOpenAIModel.GPT_4O_2024_11_20;
+		const model: string = configuration.getModel() ?? EAzureOpenAIModel.GPT_5_2;
 
 		// Azure OpenAI requires endpoint and deployment name
 		// The API key should be in format: "endpoint|api-key|deployment-name"
