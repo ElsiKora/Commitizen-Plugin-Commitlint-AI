@@ -189,7 +189,7 @@ export class CommitlintValidatorService implements ICommitValidator {
 	 */
 	async validate(message: CommitMessage): Promise<ICommitValidationResult> {
 		const loadResult: { rules?: QualifiedRules } = await load();
-		const { rules = {} }: { rules: QualifiedRules } = loadResult as { rules: QualifiedRules };
+		const { rules }: { rules: QualifiedRules } = loadResult as { rules: QualifiedRules };
 		const result: LintOutcome = await lint(message.toString(), rules);
 
 		return {
