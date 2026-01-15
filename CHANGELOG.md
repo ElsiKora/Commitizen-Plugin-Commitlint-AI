@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.1...v2.1.0) (2025-12-17)
+
+
+### Features
+
+* **llm:** update model enums with latest versions across all providers ([89557b4](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/89557b4357cbc8614960301ef85ddc627df59cc4))
+
 ## [2.0.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.0...v2.0.1) (2025-06-04)
 
 # [2.0.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.2.0...v2.0.0) (2025-05-25)
