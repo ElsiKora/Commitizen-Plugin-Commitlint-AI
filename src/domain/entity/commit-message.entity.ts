@@ -48,13 +48,29 @@ export class CommitMessage {
 
 	/**
 	 * Format the complete commit message
+	 * Follows conventional commits format:
+	 * <header>
+	 *
+	 * <body>
+	 *
+	 * <footer>
 	 * @returns {string} The formatted commit message
 	 */
 	toString(): string {
 		const parts: Array<string> = [this.HEADER.toString()];
 
-		if (!this.BODY.isEmpty()) {
-			parts.push(this.BODY.toString());
+		// Add body (content + breaking change) if not empty
+		const bodyText: string = this.BODY.toString();
+
+		if (bodyText) {
+			parts.push(bodyText);
+		}
+
+		// Add footer separately (for proper commitlint parsing)
+		const footer: string | undefined = this.BODY.getFooter();
+
+		if (footer) {
+			parts.push(footer);
 		}
 
 		return parts.join("\n\n");

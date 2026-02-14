@@ -84,7 +84,7 @@ export default {
 		},
 	},
 	rules: {
-		"body-full-stop": [2, "always", "."],
+		"body-full-stop": [0, "always", "."],
 		"body-leading-blank": [2, "always"],
 		"body-max-length": [0, "always", 1000],
 		"body-max-line-length": [2, "always", 100],
@@ -95,7 +95,7 @@ export default {
 		"header-max-length": [2, "always", 100],
 		"header-min-length": [1, "always", 10],
 		"scope-case": [2, "always", "lower-case"],
-		"scope-empty": [2, "never"],
+		"scope-empty": [0, "never"],
 		"scope-max-length": [1, "always", 30],
 		"subject-case": [2, "always", ["lower-case"]],
 		"subject-empty": [2, "never"],

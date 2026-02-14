@@ -10,6 +10,7 @@ import type { ILlmService } from "../../application/interface/llm-service.interf
 import { createContainer } from "@elsikora/cladi";
 
 import { ConfigureLLMUseCase as ConfigureLLMUseCaseImpl } from "../../application/use-case/configure-llm.use-case.js";
+import { EditCommitUseCase as EditCommitUseCaseImpl } from "../../application/use-case/edit-commit.use-case.js";
 import { GenerateCommitMessageUseCase as GenerateCommitMessageUseCaseImpl } from "../../application/use-case/generate-commit-message.use-case.js";
 import { ManualCommitUseCase as ManualCommitUseCaseImpl } from "../../application/use-case/manual-commit.use-case.js";
 import { ValidateCommitMessageUseCase as ValidateCommitMessageUseCaseImpl } from "../../application/use-case/validate-commit-message.use-case.js";
@@ -19,6 +20,7 @@ import { AnthropicLlmService } from "../llm/anthropic-llm.service.js";
 import { AWSBedrockLlmService } from "../llm/aws-bedrock-llm.service.js";
 import { AzureOpenAILlmService } from "../llm/azure-openai-llm.service.js";
 import { GoogleLlmService } from "../llm/google-llm.service.js";
+import { MockLlmService } from "../llm/mock-llm.service.js";
 import { OllamaLlmService } from "../llm/ollama-llm.service.js";
 import { OpenAILlmService } from "../llm/openai-llm.service.js";
 import { CosmicConfigService } from "../service/cosmic-config.service.js";
@@ -40,6 +42,7 @@ export const GenerateCommitMessageUseCaseToken: symbol = Symbol("GenerateCommitM
 export const ValidateCommitMessageUseCaseToken: symbol = Symbol("ValidateCommitMessageUseCase");
 export const ConfigureLLMUseCaseToken: symbol = Symbol("ConfigureLLMUseCase");
 export const ManualCommitUseCaseToken: symbol = Symbol("ManualCommitUseCase");
+export const EditCommitUseCaseToken: symbol = Symbol("EditCommitUseCase");
 
 /**
  * Create and configure the application DI container
@@ -62,8 +65,8 @@ export function createAppContainer(): IContainer {
 
 	container.register(CommitRepositoryToken, new GitCommitRepository(commandService));
 
-	// Register LLM services
-	const llmServices: Array<ILlmService> = [new OpenAILlmService(), new AnthropicLlmService(), new GoogleLlmService(), new AzureOpenAILlmService(), new AWSBedrockLlmService(), new OllamaLlmService()];
+	// Register LLM services - MockLlmService must be first to intercept when MOCK_LLM=true
+	const llmServices: Array<ILlmService> = [new MockLlmService(), new OpenAILlmService(), new AnthropicLlmService(), new GoogleLlmService(), new AzureOpenAILlmService(), new AWSBedrockLlmService(), new OllamaLlmService()];
 	container.register(LLMServicesToken, llmServices);
 
 	// Register commit validator with LLM services
@@ -77,6 +80,7 @@ export function createAppContainer(): IContainer {
 	container.register(GenerateCommitMessageUseCaseToken, new GenerateCommitMessageUseCaseImpl(llmServices));
 	container.register(ValidateCommitMessageUseCaseToken, new ValidateCommitMessageUseCaseImpl(validator));
 	container.register(ManualCommitUseCaseToken, new ManualCommitUseCaseImpl(cliInterface));
+	container.register(EditCommitUseCaseToken, new EditCommitUseCaseImpl(cliInterface, validator, llmServices));
 
 	return container;
 }
