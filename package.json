@@ -1,6 +1,6 @@
 {
 	"name": "@elsikora/commitizen-plugin-commitlint-ai",
-	"version": "2.1.1",
+	"version": "2.2.0-dev.3",
 	"description": "AI-powered Commitizen adapter with Commitlint integration",
 	"keywords": [
 		"conventional-changelog",
@@ -36,6 +36,7 @@
 		"build": "npm run prebuild && rollup -c",
 		"build:test": "npm run prebuild && rollup -c rollup.test.config.js",
 		"commit": "cz",
+		"commit:test": "bash ./test-commitlint-ai.sh",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
 		"lint": "eslint ./",

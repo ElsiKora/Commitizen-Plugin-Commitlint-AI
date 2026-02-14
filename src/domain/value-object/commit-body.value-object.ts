@@ -6,9 +6,12 @@ export class CommitBody {
 
 	private readonly CONTENT: string | undefined;
 
-	constructor(content?: string, breakingChange?: string) {
+	private readonly FOOTER: string | undefined;
+
+	constructor(content?: string, breakingChange?: string, footer?: string) {
 		this.CONTENT = content?.trim() ?? undefined;
 		this.BREAKING_CHANGE = breakingChange?.trim() ?? undefined;
+		this.FOOTER = footer?.trim() ?? undefined;
 	}
 
 	/**
@@ -17,7 +20,7 @@ export class CommitBody {
 	 * @returns {boolean} True if the bodies are equal
 	 */
 	equals(other: CommitBody): boolean {
-		return this.CONTENT === other.CONTENT && this.BREAKING_CHANGE === other.BREAKING_CHANGE;
+		return this.CONTENT === other.CONTENT && this.BREAKING_CHANGE === other.BREAKING_CHANGE && this.FOOTER === other.FOOTER;
 	}
 
 	/**
@@ -37,6 +40,14 @@ export class CommitBody {
 	}
 
 	/**
+	 * Get the footer (issues, references, etc.)
+	 * @returns {string | undefined} The footer or undefined
+	 */
+	getFooter(): string | undefined {
+		return this.FOOTER;
+	}
+
+	/**
 	 * Check if there is a breaking change
 	 * @returns {boolean} True if there is a breaking change
 	 */
@@ -49,22 +60,22 @@ export class CommitBody {
 	 * @returns {boolean} True if the body is empty
 	 */
 	isEmpty(): boolean {
-		return !this.CONTENT && !this.BREAKING_CHANGE;
+		return !this.CONTENT && !this.BREAKING_CHANGE && !this.FOOTER;
 	}
 
 	/**
-	 * Format the body as a string
-	 * @returns {string} The formatted body text
+	 * Format the body as a string (without footer)
+	 * @returns {string} The formatted body text (content + breaking change only)
 	 */
 	toString(): string {
 		const parts: Array<string> = [];
 
-		if (this.BREAKING_CHANGE) {
-			parts.push(`BREAKING CHANGE: ${this.BREAKING_CHANGE}`);
-		}
-
 		if (this.CONTENT) {
 			parts.push(this.CONTENT);
+		}
+
+		if (this.BREAKING_CHANGE) {
+			parts.push(`BREAKING CHANGE: ${this.BREAKING_CHANGE}`);
 		}
 
 		return parts.join("\n\n");

@@ -1,0 +1,3 @@
+# Automatically resolve package.json conflicts during merge
+# Use the version from the current branch (ours)
+package.json merge=ours

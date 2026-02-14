@@ -8,6 +8,7 @@ import type { IConfigService } from "../application/interface/config-service.int
 import type { IConfig } from "../application/interface/config.interface.js";
 import type { ILlmPromptContext } from "../application/interface/llm-service.interface.js";
 import type { ConfigureLLMUseCase } from "../application/use-case/configure-llm.use-case.js";
+import type { EditCommitUseCase } from "../application/use-case/edit-commit.use-case.js";
 import type { GenerateCommitMessageUseCase } from "../application/use-case/generate-commit-message.use-case.js";
 import type { ManualCommitUseCase } from "../application/use-case/manual-commit.use-case.js";
 import type { ValidateCommitMessageUseCase } from "../application/use-case/validate-commit-message.use-case.js";
@@ -20,7 +21,7 @@ import { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
 import { ECommitMode } from "../domain/enum/commit-mode.enum.js";
 import { ApiKey } from "../domain/value-object/api-key.value-object.js";
 import { CommitlintValidatorService } from "../infrastructure/commit-validator/commitlint-validator.service.js";
-import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
+import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, EditCommitUseCaseToken, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
 
 // Type constants
 const TYPE_ENUM_INDEX: number = 2;
@@ -53,11 +54,12 @@ export class CommitizenAdapter {
 			const generateCommitUseCase: GenerateCommitMessageUseCase | undefined = this.CONTAINER.get<GenerateCommitMessageUseCase>(GenerateCommitMessageUseCaseToken);
 			const validateCommitUseCase: undefined | ValidateCommitMessageUseCase = this.CONTAINER.get<ValidateCommitMessageUseCase>(ValidateCommitMessageUseCaseToken);
 			const manualCommitUseCase: ManualCommitUseCase | undefined = this.CONTAINER.get<ManualCommitUseCase>(ManualCommitUseCaseToken);
+			const editCommitUseCase: EditCommitUseCase | undefined = this.CONTAINER.get<EditCommitUseCase>(EditCommitUseCaseToken);
 			const cliInterface: ICliInterfaceService | undefined = this.CONTAINER.get<ICliInterfaceService>(CliInterfaceServiceToken);
 			const commitRepository: ICommitRepository | undefined = this.CONTAINER.get<ICommitRepository>(CommitRepositoryToken);
 			const configService: IConfigService | undefined = this.CONTAINER.get<IConfigService>(ConfigServiceToken);
 
-			if (!configureLLMUseCase || !generateCommitUseCase || !validateCommitUseCase || !manualCommitUseCase || !cliInterface || !commitRepository || !configService) {
+			if (!configureLLMUseCase || !generateCommitUseCase || !validateCommitUseCase || !manualCommitUseCase || !editCommitUseCase || !cliInterface || !commitRepository || !configService) {
 				throw new Error("Failed to initialize required services");
 			}
 
@@ -166,7 +168,7 @@ export class CommitizenAdapter {
 			if (llmConfig.isManualMode()) {
 				cliInterface.info("Using manual commit mode...");
 				const commitMessage: CommitMessage = await manualCommitUseCase.execute(promptContext);
-				commit(commitMessage.toString());
+				this.executeCommit(commit, commitMessage.toString(), cliInterface);
 
 				return;
 			}
@@ -227,7 +229,7 @@ export class CommitizenAdapter {
 				if (!validatedMessage) {
 					cliInterface.warn("Could not generate a valid commit message. Switching to manual mode...");
 					const commitMessage: CommitMessage = await manualCommitUseCase.execute(promptContext);
-					commit(commitMessage.toString());
+					this.executeCommit(commit, commitMessage.toString(), cliInterface);
 
 					return;
 				}
@@ -240,11 +242,11 @@ export class CommitizenAdapter {
 				const isConfirmed: boolean = await cliInterface.confirm("Do you want to proceed with this commit message?", true);
 
 				if (isConfirmed) {
-					commit(validatedMessage.toString());
+					this.executeCommit(commit, validatedMessage.toString(), cliInterface);
 				} else {
-					cliInterface.info("Switching to manual mode to edit the message...");
-					const commitMessage: CommitMessage = await manualCommitUseCase.execute(promptContext);
-					commit(commitMessage.toString());
+					cliInterface.info("Opening edit menu...");
+					const editedMessage: CommitMessage = await editCommitUseCase.execute(validatedMessage, promptContext, llmConfig);
+					this.executeCommit(commit, editedMessage.toString(), cliInterface);
 				}
 			} catch (error) {
 				// Check if it's a retry exhaustion error
@@ -257,7 +259,7 @@ export class CommitizenAdapter {
 				cliInterface.warn("Falling back to manual commit entry...");
 
 				const commitMessage: CommitMessage = await manualCommitUseCase.execute(promptContext);
-				commit(commitMessage.toString());
+				this.executeCommit(commit, commitMessage.toString(), cliInterface);
 			}
 		} catch (error) {
 			if (error instanceof Error && error.message === "User canceled the commit") {
@@ -266,6 +268,24 @@ export class CommitizenAdapter {
 			console.error("Error in commitizen adapter:", error);
 
 			throw error;
+		}
+	}
+
+	/**
+	 * Execute commit or simulate it in mock mode
+	 * @param {TCommit} commit - Callback to execute with complete commit message
+	 * @param {string} message - The commit message to use
+	 * @param {ICliInterfaceService} cliInterface - CLI interface for user interaction
+	 */
+	private executeCommit(commit: TCommit, message: string, cliInterface: ICliInterfaceService): void {
+		const isMockMode: boolean = process.env.MOCK_LLM === "true" || process.env.MOCK_LLM === "1";
+
+		if (isMockMode) {
+			cliInterface.success("🎭 Mock mode: Commit NOT executed (MOCK_LLM=true)");
+			cliInterface.note("Final commit message that would be used:", message);
+			cliInterface.info("In mock mode, staged files remain in staging area for manual cleanup");
+		} else {
+			commit(message);
 		}
 	}
 
