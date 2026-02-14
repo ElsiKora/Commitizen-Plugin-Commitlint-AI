@@ -36,7 +36,7 @@
 		"build": "npm run prebuild && rollup -c",
 		"build:test": "npm run prebuild && rollup -c rollup.test.config.js",
 		"commit": "cz",
-		"commit:test": "bash ./test-commit-edit.sh",
+		"commit:test": "bash ./test-commitlint-ai.sh",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
 		"lint": "eslint ./",
