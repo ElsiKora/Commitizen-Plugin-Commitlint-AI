@@ -1,3 +1,11 @@
+# [2.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.1...v2.2.0) (2026-02-14)
+
+
+### Features
+
+* **use-case:** add edit commit use case with point editing capabilities ([e81c389](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/e81c3895e01aa9cdfc813043ede56f345060f561))
+* **use-case:** add edit commit use case with point editing capabilities ([13a66ed](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/13a66eda2ab04f7245f63d01aa4037b48b41c155))
+
 ## [2.1.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.0...v2.1.1) (2026-01-15)
 
 # [2.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.1...v2.1.0) (2025-12-17)
