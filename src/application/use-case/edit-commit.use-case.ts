@@ -61,8 +61,8 @@ export class EditCommitUseCase {
 			{ label: commitMessage.getBody().getContent() ? "📄 Edit commit body" : "➕ Add commit body", value: "changeBody" },
 			{ isDisabled: true, label: "─────────────────────────────────", value: "separator2" },
 			{
-				label: commitMessage.getBody().getFooter() ? "➖ Remove footer/issues" : "➕ Add footer/issues",
-				value: "toggleFooter",
+				label: commitMessage.getBody().getFooter() ? "🔗 Edit footer/issues" : "➕ Add footer/issues",
+				value: "changeFooter",
 			},
 			{
 				label: commitMessage.isBreakingChange() ? "✔️  Unmark as breaking change" : "⚠️  Mark as breaking change",
@@ -80,6 +80,10 @@ export class EditCommitUseCase {
 		switch (action) {
 			case "changeBody": {
 				return this.handleChangeBody(commitMessage, context, llmConfig);
+			}
+
+			case "changeFooter": {
+				return this.handleChangeFooter(commitMessage, context, llmConfig);
 			}
 
 			case "changeScope": {
@@ -106,10 +110,6 @@ export class EditCommitUseCase {
 				return this.handleToggleBreaking(commitMessage, context, llmConfig);
 			}
 
-			case "toggleFooter": {
-				return this.handleToggleFooter(commitMessage, context, llmConfig);
-			}
-
 			default: {
 				// Should never reach here
 				return commitMessage;
@@ -132,6 +132,27 @@ export class EditCommitUseCase {
 
 		const finalBodyContent = newBodyContent.trim() === "" ? undefined : newBodyContent.trim();
 		const newBody = new CommitBody(finalBodyContent, body.getBreakingChange(), body.getFooter());
+		const newMessage = commitMessage.withBody(newBody);
+
+		return this.execute(newMessage, context, llmConfig);
+	}
+
+	/**
+	 * Handle changing commit footer (issues, references)
+	 * @param {CommitMessage} commitMessage - The current commit message
+	 * @param {ILlmPromptContext} context - The LLM prompt context
+	 * @param {LLMConfiguration | undefined} llmConfig - Optional LLM configuration
+	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
+	 */
+	private async handleChangeFooter(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
+		const body = commitMessage.getBody();
+
+		this.CLI_INTERFACE.info("💡 Examples: 'Closes #123', 'Fixes #456', 'Refs #789'");
+		this.CLI_INTERFACE.info("💡 Leave empty to remove footer (clear all text and press Enter)");
+		const newFooter = await this.CLI_INTERFACE.text("Footer (issues, references):", body.getFooter() ?? "");
+
+		const finalFooter = newFooter.trim() === "" ? undefined : newFooter.trim();
+		const newBody = new CommitBody(body.getContent(), body.getBreakingChange(), finalFooter);
 		const newMessage = commitMessage.withBody(newBody);
 
 		return this.execute(newMessage, context, llmConfig);
@@ -299,43 +320,5 @@ export class EditCommitUseCase {
 
 			return this.execute(newMessage, context, llmConfig);
 		}
-	}
-
-	/**
-	 * Handle toggling footer/issues
-	 * @param {CommitMessage} commitMessage - The current commit message
-	 * @param {ILlmPromptContext} context - The LLM prompt context
-	 * @param {LLMConfiguration | undefined} llmConfig - Optional LLM configuration
-	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
-	 */
-	private async handleToggleFooter(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
-		const body = commitMessage.getBody();
-
-		if (body.getFooter()) {
-			// Remove footer
-			const newBody = new CommitBody(body.getContent(), body.getBreakingChange(), undefined);
-			const newMessage = commitMessage.withBody(newBody);
-
-			this.CLI_INTERFACE.success("✅ Footer/issues removed");
-
-			return this.execute(newMessage, context, llmConfig);
-		}
-
-		// Add footer
-		this.CLI_INTERFACE.info("💡 Examples: 'Closes #123', 'Fixes #456', 'Refs #789'");
-		const footer = await this.CLI_INTERFACE.text("Footer (issues, references):", "");
-
-		if (footer.trim() === "") {
-			this.CLI_INTERFACE.warn("Footer cannot be empty. Skipping...");
-
-			return this.execute(commitMessage, context, llmConfig);
-		}
-
-		const newBody = new CommitBody(body.getContent(), body.getBreakingChange(), footer.trim());
-		const newMessage = commitMessage.withBody(newBody);
-
-		this.CLI_INTERFACE.success("✅ Footer/issues added");
-
-		return this.execute(newMessage, context, llmConfig);
 	}
 }
