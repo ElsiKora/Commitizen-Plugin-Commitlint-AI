@@ -30,6 +30,13 @@ export interface ICommitRepository {
 	getStagedFiles(): Promise<Array<string>>;
 
 	/**
+	 * Get the ticket ID from the current branch name
+	 * Extracts ticket ID in format LETTERS-NUMBERS (e.g., CAS-25, PROJ-123)
+	 * @returns Promise resolving to the ticket ID if found, undefined otherwise
+	 */
+	getTicketIdFromBranch(): Promise<string | undefined>;
+
+	/**
 	 * Check if there are staged changes
 	 * @returns Promise resolving to true if there are staged changes
 	 */

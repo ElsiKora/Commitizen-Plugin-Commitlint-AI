@@ -19,6 +19,7 @@ import load from "@commitlint/load";
 import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES } from "../domain/constant/numeric.constant.js";
 import { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
 import { ECommitMode } from "../domain/enum/commit-mode.enum.js";
+import { addTicketIdToCommitMessage } from "../domain/helper/add-ticket-to-commit.helper.js";
 import { ApiKey } from "../domain/value-object/api-key.value-object.js";
 import { CommitlintValidatorService } from "../infrastructure/commit-validator/commitlint-validator.service.js";
 import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, EditCommitUseCaseToken, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
@@ -234,18 +235,26 @@ export class CommitizenAdapter {
 					return;
 				}
 
+				// Add ticket ID from branch if exists
+				let finalMessage: CommitMessage = validatedMessage;
+				const ticketId: string | undefined = await commitRepository.getTicketIdFromBranch();
+
+				if (ticketId) {
+					finalMessage = addTicketIdToCommitMessage(validatedMessage, ticketId);
+				}
+
 				// Show the generated message
 				cliInterface.success("AI generated commit message successfully!");
-				cliInterface.note("Generated commit message:", validatedMessage.toString());
+				cliInterface.note("Generated commit message:", finalMessage.toString());
 
 				// Ask for confirmation
 				const isConfirmed: boolean = await cliInterface.confirm("Do you want to proceed with this commit message?", true);
 
 				if (isConfirmed) {
-					this.executeCommit(commit, validatedMessage.toString(), cliInterface);
+					this.executeCommit(commit, finalMessage.toString(), cliInterface);
 				} else {
 					cliInterface.info("Opening edit menu...");
-					const editedMessage: CommitMessage = await editCommitUseCase.execute(validatedMessage, promptContext, llmConfig);
+					const editedMessage: CommitMessage = await editCommitUseCase.execute(finalMessage, promptContext, llmConfig);
 					this.executeCommit(commit, editedMessage.toString(), cliInterface);
 				}
 			} catch (error) {

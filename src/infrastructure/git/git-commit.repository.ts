@@ -2,6 +2,8 @@ import type { ICommandService } from "../../application/interface/command-servic
 import type { ICommitRepository } from "../../application/interface/commit-repository.interface.js";
 import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
 
+import { parseTicketIdFromBranch } from "./parse-ticket-id.helper.js";
+
 /**
  * Git implementation of the commit repository
  */
@@ -68,6 +70,17 @@ export class GitCommitRepository implements ICommitRepository {
 		} catch {
 			return [];
 		}
+	}
+
+	/**
+	 * Get the ticket ID from the current branch name
+	 * Extracts ticket ID in format LETTERS-NUMBERS (e.g., CAS-25, PROJ-123)
+	 * @returns {Promise<string | undefined>} Promise resolving to the ticket ID if found, undefined otherwise
+	 */
+	async getTicketIdFromBranch(): Promise<string | undefined> {
+		const branchName: string = await this.getCurrentBranch();
+
+		return parseTicketIdFromBranch(branchName);
 	}
 
 	/**

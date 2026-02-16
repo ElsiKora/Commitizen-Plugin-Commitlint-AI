@@ -75,9 +75,14 @@ export class ManualCommitUseCase {
 			breakingChange = await this.CLI_INTERFACE.text("Describe the breaking change:", "", "");
 		}
 
+		// Get footer (issues, references)
+		this.CLI_INTERFACE.info("💡 Examples: 'Closes #123', 'Fixes #456', 'Refs #789' or 'Refs PROJ-123'");
+		const footer: string | undefined = await this.CLI_INTERFACE.text("Enter footer (issues, references) (optional):", "", "");
+
 		// Create commit message
 		const header: CommitHeader = new CommitHeader(type, subject, scope);
-		const commitBody: CommitBody = new CommitBody(body, breakingChange);
+		const finalFooter: string | undefined = footer && footer.trim().length > 0 ? footer.trim() : undefined;
+		const commitBody: CommitBody = new CommitBody(body, breakingChange, finalFooter);
 		const commitMessage: CommitMessage = new CommitMessage(header, commitBody);
 
 		// Ask for confirmation
