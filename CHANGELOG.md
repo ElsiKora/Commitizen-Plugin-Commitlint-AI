@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.2.0...v2.3.0) (2026-02-16)
+
+
+### Features
+
+* **commit:** add automatic ticket id extraction from branch name ([33252ca](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/33252ca512bbb3f8cdad6d7f0839d1e0697af83e))
+
 # [2.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.1...v2.2.0) (2026-02-14)
 
 
