@@ -2,6 +2,7 @@ import type { IContainer } from "@elsikora/cladi";
 
 import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
 import type { ICommandService } from "../../application/interface/command-service.interface.js";
+import type { ICommitRepository } from "../../application/interface/commit-repository.interface.js";
 import type { ICommitValidator } from "../../application/interface/commit-validator.interface.js";
 import type { IConfigService } from "../../application/interface/config-service.interface.js";
 import type { IFileSystemService } from "../../application/interface/file-system-service.interface.js";
@@ -74,13 +75,14 @@ export function createAppContainer(): IContainer {
 
 	const validator: ICommitValidator = container.get<ICommitValidator>(CommitValidatorToken) ?? new CommitlintValidatorService([]);
 	const configService: IConfigService = container.get<IConfigService>(ConfigServiceToken) ?? new CosmicConfigService(fileSystem);
+	const commitRepository: ICommitRepository = container.get<ICommitRepository>(CommitRepositoryToken) ?? new GitCommitRepository(commandService);
 
 	// Register use cases
 	container.register(ConfigureLLMUseCaseToken, new ConfigureLLMUseCaseImpl(configService, cliInterface));
 	container.register(GenerateCommitMessageUseCaseToken, new GenerateCommitMessageUseCaseImpl(llmServices));
 	container.register(ValidateCommitMessageUseCaseToken, new ValidateCommitMessageUseCaseImpl(validator));
 	container.register(ManualCommitUseCaseToken, new ManualCommitUseCaseImpl(cliInterface));
-	container.register(EditCommitUseCaseToken, new EditCommitUseCaseImpl(cliInterface, validator, llmServices));
+	container.register(EditCommitUseCaseToken, new EditCommitUseCaseImpl(cliInterface, validator, llmServices, commitRepository));
 
 	return container;
 }

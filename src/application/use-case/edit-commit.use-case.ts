@@ -1,10 +1,12 @@
 import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
+import type { ICommitRepository } from "../interface/commit-repository.interface.js";
 import type { ICommitValidator } from "../interface/commit-validator.interface.js";
 import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
 import type { ILlmService } from "../interface/llm-service.interface.js";
 
 import { CommitMessage } from "../../domain/entity/commit-message.entity.js";
+import { addTicketIdToCommitMessage } from "../../domain/helper/add-ticket-to-commit.helper.js";
 import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
 import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
 
@@ -14,14 +16,17 @@ import { CommitHeader } from "../../domain/value-object/commit-header.value-obje
 export class EditCommitUseCase {
 	private readonly CLI_INTERFACE: ICliInterfaceService;
 
+	private readonly COMMIT_REPOSITORY: ICommitRepository;
+
 	private readonly LLM_SERVICES: Array<ILlmService>;
 
 	private readonly VALIDATOR: ICommitValidator;
 
-	constructor(cliInterface: ICliInterfaceService, validator: ICommitValidator, llmServices: Array<ILlmService>) {
+	constructor(cliInterface: ICliInterfaceService, validator: ICommitValidator, llmServices: Array<ILlmService>, commitRepository: ICommitRepository) {
 		this.CLI_INTERFACE = cliInterface;
 		this.VALIDATOR = validator;
 		this.LLM_SERVICES = llmServices;
+		this.COMMIT_REPOSITORY = commitRepository;
 	}
 
 	/**
@@ -252,12 +257,20 @@ export class EditCommitUseCase {
 
 			this.CLI_INTERFACE.stopSpinner();
 
+			// Add ticket ID from branch if exists
+			let finalMessage: CommitMessage = newCommitMessage;
+			const ticketId: string | undefined = await this.COMMIT_REPOSITORY.getTicketIdFromBranch();
+
+			if (ticketId) {
+				finalMessage = addTicketIdToCommitMessage(newCommitMessage, ticketId);
+			}
+
 			// Validate the new message
-			const validation = await this.VALIDATOR.validate(newCommitMessage);
+			const validation = await this.VALIDATOR.validate(finalMessage);
 
 			this.CLI_INTERFACE.success("✅ New commit message generated successfully!");
 			this.CLI_INTERFACE.log("\nRegenerated commit message:");
-			this.CLI_INTERFACE.note("New Commit", newCommitMessage.toString());
+			this.CLI_INTERFACE.note("New Commit", finalMessage.toString());
 
 			if (validation.isValid) {
 				this.CLI_INTERFACE.success("✅ Validation: PASSED");
@@ -272,7 +285,7 @@ export class EditCommitUseCase {
 			}
 
 			// Continue editing with the new message
-			return this.execute(newCommitMessage, context, llmConfig);
+			return this.execute(finalMessage, context, llmConfig);
 		} catch (error) {
 			this.CLI_INTERFACE.stopSpinner();
 			this.CLI_INTERFACE.error("Failed to regenerate commit message");
