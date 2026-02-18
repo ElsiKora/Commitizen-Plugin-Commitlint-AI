@@ -31,7 +31,7 @@ export interface ICommitRepository {
 
 	/**
 	 * Get the ticket ID from the current branch name
-	 * Extracts ticket ID in format LETTERS-NUMBERS (e.g., CAS-25, PROJ-123)
+	 * Extraction behavior is configured via commitlint-ai ticket settings
 	 * @returns Promise resolving to the ticket ID if found, undefined otherwise
 	 */
 	getTicketIdFromBranch(): Promise<string | undefined>;

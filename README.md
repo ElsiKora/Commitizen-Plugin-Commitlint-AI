@@ -106,8 +106,33 @@ export default {
 	mode: "auto",
 	maxRetries: 3,
 	validationMaxRetries: 3,
+	ticket: {
+		// auto | branch-lint | pattern | none
+		source: "auto",
+		// Used in "pattern" mode, and as fallback when configured
+		pattern: "[a-z]{2,}-[0-9]+",
+		patternFlags: "i",
+		// preserve | lower | upper
+		normalization: "preserve",
+		// fallback | error (only for source: "branch-lint")
+		missingBranchLintBehavior: "fallback",
+	},
 };
 ```
+
+#### Ticket Source Configuration
+
+You can control where ticket IDs are extracted from:
+
+- `source: "branch-lint"` - parse ticket by `git-branch-lint` template (`branch-pattern`)
+- `source: "pattern"` - parse ticket by local regex (`ticket.pattern`)
+- `source: "auto"` - try `git-branch-lint` first, then fallback to local regex
+- `source: "none"` - disable ticket extraction completely
+
+When using `source: "branch-lint"` and branch-lint config is absent:
+
+- `missingBranchLintBehavior: "fallback"` - fallback to local regex
+- `missingBranchLintBehavior: "error"` - throw an error and stop
 
 #### 3. Package.json
 

@@ -1,26 +1,23 @@
 # [2.3.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.2.0...v2.3.0) (2026-02-16)
 
-
 ### Features
 
-* **commit:** add automatic ticket id extraction from branch name ([33252ca](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/33252ca512bbb3f8cdad6d7f0839d1e0697af83e))
+- **commit:** add automatic ticket id extraction from branch name ([33252ca](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/33252ca512bbb3f8cdad6d7f0839d1e0697af83e))
 
 # [2.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.1...v2.2.0) (2026-02-14)
 
-
 ### Features
 
-* **use-case:** add edit commit use case with point editing capabilities ([e81c389](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/e81c3895e01aa9cdfc813043ede56f345060f561))
-* **use-case:** add edit commit use case with point editing capabilities ([13a66ed](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/13a66eda2ab04f7245f63d01aa4037b48b41c155))
+- **use-case:** add edit commit use case with point editing capabilities ([e81c389](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/e81c3895e01aa9cdfc813043ede56f345060f561))
+- **use-case:** add edit commit use case with point editing capabilities ([13a66ed](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/13a66eda2ab04f7245f63d01aa4037b48b41c155))
 
 ## [2.1.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.0...v2.1.1) (2026-01-15)
 
 # [2.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.1...v2.1.0) (2025-12-17)
 
-
 ### Features
 
-* **llm:** update model enums with latest versions across all providers ([89557b4](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/89557b4357cbc8614960301ef85ddc627df59cc4))
+- **llm:** update model enums with latest versions across all providers ([89557b4](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/89557b4357cbc8614960301ef85ddc627df59cc4))
 
 ## [2.0.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.0...v2.0.1) (2025-06-04)
 

@@ -24,20 +24,4 @@ export default [
 		withUnicorn: true,
 		withYaml: true,
 	})),
-	// Custom overrides for specific files
-	{
-		files: ["**/mock-llm.service.ts", "**/edit-commit.use-case.ts"],
-		rules: {
-			"@elsikora/node/no-unsupported-features/es-syntax": "off",
-			"@elsikora/sonar/slow-regex": "off",
-			"@elsikora/typescript/naming-convention": "off",
-			"@elsikora/typescript/no-explicit-any": "off",
-			"@elsikora/typescript/no-magic-numbers": "off",
-			"@elsikora/typescript/no-non-null-assertion": "off",
-			"@elsikora/typescript/no-unsafe-assignment": "off",
-			"@elsikora/typescript/prefer-nullish-coalescing": "off",
-			"@elsikora/typescript/return-await": "off",
-			"@elsikora/typescript/typedef": "off",
-		},
-	},
 ];

@@ -1,6 +1,7 @@
 import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
 import type { ICommitRepository } from "../interface/commit-repository.interface.js";
+import type { ICommitValidationResult } from "../interface/commit-validator.interface.js";
 import type { ICommitValidator } from "../interface/commit-validator.interface.js";
 import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
 import type { ILlmService } from "../interface/llm-service.interface.js";
@@ -42,7 +43,7 @@ export class EditCommitUseCase {
 		this.CLI_INTERFACE.note("Commit Preview", commitMessage.toString());
 
 		// Validate current message
-		const validation = await this.VALIDATOR.validate(commitMessage);
+		const validation: ICommitValidationResult = await this.VALIDATOR.validate(commitMessage);
 
 		if (validation.isValid) {
 			this.CLI_INTERFACE.success("✅ Validation: PASSED");
@@ -57,7 +58,7 @@ export class EditCommitUseCase {
 		}
 
 		// Build edit options
-		const editOptions = [
+		const editOptions: Array<{ isDisabled?: boolean; label: string; value: string }> = [
 			{ label: "✅ Confirm and use this commit message", value: "confirm" },
 			{ isDisabled: true, label: "─────────────────────────────────", value: "separator1" },
 			{ label: "🏷️  Edit commit type", value: "changeType" },
@@ -80,7 +81,7 @@ export class EditCommitUseCase {
 			editOptions.splice(1, 0, { label: "🔄 Regenerate with AI", value: "regenerate" });
 		}
 
-		const action = await this.CLI_INTERFACE.select<string>("What would you like to do?", editOptions);
+		const action: string = await this.CLI_INTERFACE.select<string>("What would you like to do?", editOptions);
 
 		switch (action) {
 			case "changeBody": {
@@ -108,7 +109,11 @@ export class EditCommitUseCase {
 			}
 
 			case "regenerate": {
-				return this.handleRegenerate(context, llmConfig!);
+				if (!llmConfig) {
+					return commitMessage;
+				}
+
+				return this.handleRegenerate(context, llmConfig);
 			}
 
 			case "toggleBreaking": {
@@ -130,14 +135,14 @@ export class EditCommitUseCase {
 	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
 	 */
 	private async handleChangeBody(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
-		const body = commitMessage.getBody();
+		const body: CommitBody = commitMessage.getBody();
 
 		this.CLI_INTERFACE.info("💡 Leave empty to remove body (clear all text and press Enter)");
-		const newBodyContent = await this.CLI_INTERFACE.text(context.body?.description ?? "Body description (optional):", body.getContent() ?? "");
+		const newBodyContent: string = await this.CLI_INTERFACE.text(context.body?.description ?? "Body description (optional):", body.getContent() ?? "");
 
-		const finalBodyContent = newBodyContent.trim() === "" ? undefined : newBodyContent.trim();
-		const newBody = new CommitBody(finalBodyContent, body.getBreakingChange(), body.getFooter());
-		const newMessage = commitMessage.withBody(newBody);
+		const finalBodyContent: string | undefined = newBodyContent.trim() === "" ? undefined : newBodyContent.trim();
+		const newBody: CommitBody = new CommitBody(finalBodyContent, body.getBreakingChange(), body.getFooter());
+		const newMessage: CommitMessage = commitMessage.withBody(newBody);
 
 		return this.execute(newMessage, context, llmConfig);
 	}
@@ -150,15 +155,15 @@ export class EditCommitUseCase {
 	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
 	 */
 	private async handleChangeFooter(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
-		const body = commitMessage.getBody();
+		const body: CommitBody = commitMessage.getBody();
 
-		this.CLI_INTERFACE.info("💡 Examples: 'Closes #123', 'Fixes #456', 'Refs #789'");
+		this.CLI_INTERFACE.info("💡 Examples: 'Closes #123', 'Fixes #456', 'Refs PROJ-123.'");
 		this.CLI_INTERFACE.info("💡 Leave empty to remove footer (clear all text and press Enter)");
-		const newFooter = await this.CLI_INTERFACE.text("Footer (issues, references):", body.getFooter() ?? "");
+		const newFooter: string = await this.CLI_INTERFACE.text("Footer (issues, references):", body.getFooter() ?? "");
 
-		const finalFooter = newFooter.trim() === "" ? undefined : newFooter.trim();
-		const newBody = new CommitBody(body.getContent(), body.getBreakingChange(), finalFooter);
-		const newMessage = commitMessage.withBody(newBody);
+		const finalFooter: string | undefined = newFooter.trim() === "" ? undefined : newFooter.trim();
+		const newBody: CommitBody = new CommitBody(body.getContent(), body.getBreakingChange(), finalFooter);
+		const newMessage: CommitMessage = commitMessage.withBody(newBody);
 
 		return this.execute(newMessage, context, llmConfig);
 	}
@@ -171,14 +176,14 @@ export class EditCommitUseCase {
 	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
 	 */
 	private async handleChangeScope(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
-		const header = commitMessage.getHeader();
+		const header: CommitHeader = commitMessage.getHeader();
 
 		// Scope is optional, use placeholder to allow deletion
-		const newScope = await this.CLI_INTERFACE.text(context.scopeDescription ?? "What is the scope of this change?", header.getScope() ?? "");
+		const newScope: string = await this.CLI_INTERFACE.text(context.scopeDescription ?? "What is the scope of this change?", header.getScope() ?? "");
 
-		const finalScope = newScope.trim() === "" ? undefined : newScope.trim();
-		const newHeader = new CommitHeader(header.getType(), header.getSubject(), finalScope);
-		const newMessage = commitMessage.withHeader(newHeader);
+		const finalScope: string | undefined = newScope.trim() === "" ? undefined : newScope.trim();
+		const newHeader: CommitHeader = new CommitHeader(header.getType(), header.getSubject(), finalScope);
+		const newMessage: CommitMessage = commitMessage.withHeader(newHeader);
 
 		return this.execute(newMessage, context, llmConfig);
 	}
@@ -191,13 +196,13 @@ export class EditCommitUseCase {
 	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
 	 */
 	private async handleChangeSubject(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
-		const header = commitMessage.getHeader();
+		const header: CommitHeader = commitMessage.getHeader();
 
 		// Subject is required by commitlint rules, use initialValue to prevent deletion
-		const newSubject = await this.CLI_INTERFACE.text(context.subject?.description ?? "Write a short, imperative description of the change:", "", header.getSubject());
+		const newSubject: string = await this.CLI_INTERFACE.text(context.subject?.description ?? "Write a short, imperative description of the change:", "", header.getSubject());
 
-		const newHeader = new CommitHeader(header.getType(), newSubject.trim(), header.getScope());
-		const newMessage = commitMessage.withHeader(newHeader);
+		const newHeader: CommitHeader = new CommitHeader(header.getType(), newSubject.trim(), header.getScope());
+		const newMessage: CommitMessage = commitMessage.withHeader(newHeader);
 
 		return this.execute(newMessage, context, llmConfig);
 	}
@@ -210,29 +215,29 @@ export class EditCommitUseCase {
 	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
 	 */
 	private async handleChangeType(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
-		const header = commitMessage.getHeader();
+		const header: CommitHeader = commitMessage.getHeader();
 
 		// Build type options
-		const typeOptions =
+		const typeOptions: Array<{ label: string; value: string }> =
 			context.typeEnum?.map((type: string) => {
-				const desc = context.typeDescriptions?.[type]?.description ?? "";
-				const emoji = context.typeDescriptions?.[type]?.emoji ?? "";
+				const desc: string = context.typeDescriptions?.[type]?.description ?? "";
+				const emoji: string = context.typeDescriptions?.[type]?.emoji ?? "";
 
-				let cleanDesc = desc;
+				let cleanDesc: string = desc;
 
 				if (emoji && desc.startsWith(emoji)) {
 					cleanDesc = desc.slice(emoji.length).trim();
 				}
 
-				const label = emoji ? `${type} ${emoji}: ${cleanDesc}` : `${type}: ${cleanDesc}`;
+				const label: string = emoji ? `${type} ${emoji}: ${cleanDesc}` : `${type}: ${cleanDesc}`;
 
 				return { label, value: type };
 			}) ?? [];
 
-		const newType = await this.CLI_INTERFACE.select<string>(context.typeDescription ?? "Select the type of change:", typeOptions, header.getType());
+		const newType: string = await this.CLI_INTERFACE.select<string>(context.typeDescription ?? "Select the type of change:", typeOptions, header.getType());
 
-		const newHeader = new CommitHeader(newType, header.getSubject(), header.getScope());
-		const newMessage = commitMessage.withHeader(newHeader);
+		const newHeader: CommitHeader = new CommitHeader(newType, header.getSubject(), header.getScope());
+		const newMessage: CommitMessage = commitMessage.withHeader(newHeader);
 
 		return this.execute(newMessage, context, llmConfig);
 	}
@@ -247,13 +252,13 @@ export class EditCommitUseCase {
 		this.CLI_INTERFACE.startSpinner("🔄 Regenerating commit message with AI...");
 
 		try {
-			const service = this.LLM_SERVICES.find((s) => s.supports(llmConfig));
+			const service: ILlmService | undefined = this.LLM_SERVICES.find((llmService: ILlmService) => llmService.supports(llmConfig));
 
 			if (!service) {
 				throw new Error(`No LLM service found for provider: ${llmConfig.getProvider()}`);
 			}
 
-			const newCommitMessage = await service.generateCommitMessage(context, llmConfig);
+			const newCommitMessage: CommitMessage = await service.generateCommitMessage(context, llmConfig);
 
 			this.CLI_INTERFACE.stopSpinner();
 
@@ -266,7 +271,7 @@ export class EditCommitUseCase {
 			}
 
 			// Validate the new message
-			const validation = await this.VALIDATOR.validate(finalMessage);
+			const validation: ICommitValidationResult = await this.VALIDATOR.validate(finalMessage);
 
 			this.CLI_INTERFACE.success("✅ New commit message generated successfully!");
 			this.CLI_INTERFACE.log("\nRegenerated commit message:");
@@ -285,21 +290,21 @@ export class EditCommitUseCase {
 			}
 
 			// Continue editing with the new message
-			return this.execute(finalMessage, context, llmConfig);
+			return await this.execute(finalMessage, context, llmConfig);
 		} catch (error) {
 			this.CLI_INTERFACE.stopSpinner();
 			this.CLI_INTERFACE.error("Failed to regenerate commit message");
 			this.CLI_INTERFACE.handleError("Error:", error);
 
 			// Ask if user wants to try again or go back to editing
-			const retry = await this.CLI_INTERFACE.confirm("Would you like to try regenerating again?", false);
+			const isRetryRequested: boolean = await this.CLI_INTERFACE.confirm("Would you like to try regenerating again?", false);
 
-			if (retry) {
-				return this.handleRegenerate(context, llmConfig);
+			if (isRetryRequested) {
+				return await this.handleRegenerate(context, llmConfig);
 			}
 
 			// Return to edit menu with original message
-			return this.execute(new CommitMessage(new CommitHeader(context.typeEnum?.[0] || "feat", "fix: update"), new CommitBody()), context, llmConfig);
+			return await this.execute(new CommitMessage(new CommitHeader(context.typeEnum?.[0] ?? "feat", "fix: update"), new CommitBody()), context, llmConfig);
 		}
 	}
 
@@ -311,23 +316,23 @@ export class EditCommitUseCase {
 	 * @returns {Promise<CommitMessage>} Promise resolving to the edited commit message
 	 */
 	private async handleToggleBreaking(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig?: LLMConfiguration): Promise<CommitMessage> {
-		const body = commitMessage.getBody();
+		const body: CommitBody = commitMessage.getBody();
 
 		if (commitMessage.isBreakingChange()) {
 			// Remove breaking change
-			const newBody = new CommitBody(body.getContent(), undefined, body.getFooter());
-			const newMessage = commitMessage.withBody(newBody);
+			const newBody: CommitBody = new CommitBody(body.getContent(), undefined, body.getFooter());
+			const newMessage: CommitMessage = commitMessage.withBody(newBody);
 
 			this.CLI_INTERFACE.success("✅ Removed breaking change marker");
 
 			return this.execute(newMessage, context, llmConfig);
 		} else {
 			// Add breaking change
-			const breakingDescription = await this.CLI_INTERFACE.text("Describe the breaking change:", "", "");
+			const breakingDescription: string = await this.CLI_INTERFACE.text("Describe the breaking change:", "", "");
 
-			const finalBreaking = breakingDescription.trim() === "" ? "BREAKING CHANGE" : breakingDescription.trim();
-			const newBody = new CommitBody(body.getContent(), finalBreaking, body.getFooter());
-			const newMessage = commitMessage.withBody(newBody);
+			const finalBreaking: string = breakingDescription.trim() === "" ? "BREAKING CHANGE" : breakingDescription.trim();
+			const newBody: CommitBody = new CommitBody(body.getContent(), finalBreaking, body.getFooter());
+			const newMessage: CommitMessage = commitMessage.withBody(newBody);
 
 			this.CLI_INTERFACE.success("✅ Added breaking change marker");
 

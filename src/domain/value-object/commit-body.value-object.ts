@@ -70,12 +70,12 @@ export class CommitBody {
 	toString(): string {
 		const parts: Array<string> = [];
 
-		if (this.CONTENT) {
-			parts.push(this.CONTENT);
-		}
-
 		if (this.BREAKING_CHANGE) {
 			parts.push(`BREAKING CHANGE: ${this.BREAKING_CHANGE}`);
+		}
+
+		if (this.CONTENT) {
+			parts.push(this.CONTENT);
 		}
 
 		return parts.join("\n\n");
