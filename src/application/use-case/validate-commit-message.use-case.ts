@@ -23,14 +23,18 @@ export class ValidateCommitMessageUseCase {
 	 * @param {boolean} shouldAttemptFix - Whether to attempt fixing validation errors
 	 * @param {number | undefined} maxRetries - Maximum number of retry attempts (optional, defaults to DEFAULT_MAX_RETRIES)
 	 * @param {ILlmPromptContext} context - The LLM prompt context
+	 * @param {(attempt: number) => void} onValidationAttempt - Optional callback fired before each validation attempt
 	 * @returns {Promise<CommitMessage | null>} Promise resolving to the validated message or null if validation fails
 	 */
-	async execute(message: CommitMessage, shouldAttemptFix: boolean = false, maxRetries?: number, context?: ILlmPromptContext): Promise<CommitMessage | null> {
+	async execute(message: CommitMessage, shouldAttemptFix: boolean = false, maxRetries?: number, context?: ILlmPromptContext, onValidationAttempt?: (attempt: number) => void): Promise<CommitMessage | null> {
 		const retryLimit: number = maxRetries ?? this.DEFAULT_MAX_RETRIES;
 		let currentMessage: CommitMessage = message;
 		let attempts: number = 0;
 
 		while (attempts <= retryLimit) {
+			const currentAttemptNumber: number = attempts + 1;
+			onValidationAttempt?.(currentAttemptNumber);
+
 			const validationResult: ICommitValidationResult = await this.validate(currentMessage);
 
 			if (validationResult.isValid) {

@@ -1,3 +1,4 @@
+export type * from "./branch-lint-config.interface.js";
 export type * from "./cli-interface-service-select-options.interface.js";
 export type * from "./cli-interface-service.interface.js";
 export type * from "./command-service.interface.js";
@@ -7,3 +8,4 @@ export type * from "./config-service.interface.js";
 export type * from "./config.interface.js";
 export type * from "./file-system-service.interface.js";
 export type * from "./llm-service.interface.js";
+export type * from "./ticket-id-parser.interface.js";

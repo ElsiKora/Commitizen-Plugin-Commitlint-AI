@@ -1,280 +1,267 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { Mock } from "vitest";
+
+import type { ICommandService } from "../../../../src/application/interface/command-service.interface";
+import type { ITicketIdParser } from "../../../../src/application/interface/ticket-id-parser.interface";
+import type { CommitMessage } from "../../../../src/domain/entity/commit-message.entity";
+import type { TicketId } from "../../../../src/domain/value-object/ticket-id.value-object";
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { TicketId as TicketIdValueObject } from "../../../../src/domain/value-object/ticket-id.value-object";
 import { GitCommitRepository } from "../../../../src/infrastructure/git/git-commit.repository";
 import { createMockCommitMessage } from "../../../mocks/commit-message.mock";
-import type { ICommandService } from "../../../../src/application/interface/command-service.interface";
+
+const LARGE_DIFF_LENGTH: number = 4000;
+const MAX_DIFF_LENGTH: number = 3000;
+const TRUNCATED_SUFFIX: string = "\n... (truncated)";
+
+type TExecuteMock = (command: string) => Promise<void>;
+type TExecuteWithOutputMock = (command: string) => Promise<string>;
+type TParseFromBranchNameMock = (branchName: string) => Promise<TicketId | undefined>;
 
 describe("GitCommitRepository", () => {
+	let executeMock: Mock<TExecuteMock>;
+	let executeWithOutputMock: Mock<TExecuteWithOutputMock>;
+	let parseFromBranchNameMock: Mock<TParseFromBranchNameMock>;
 	let repository: GitCommitRepository;
-	let mockCommandService: ICommandService;
 
 	beforeEach(() => {
-		// Create mock command service
-		mockCommandService = {
-			execute: vi.fn(),
-			executeWithOutput: vi.fn(),
+		executeMock = vi.fn<TExecuteMock>();
+		executeWithOutputMock = vi.fn<TExecuteWithOutputMock>();
+		parseFromBranchNameMock = vi.fn<TParseFromBranchNameMock>();
+
+		const mockCommandService: ICommandService = {
+			execute: executeMock,
+			executeWithOutput: executeWithOutputMock,
 		};
 
-		// Create repository instance
-		repository = new GitCommitRepository(mockCommandService);
+		const mockTicketIdParser: ITicketIdParser = {
+			parseFromBranchName: parseFromBranchNameMock,
+		};
 
-		// Clear all mocks
+		repository = new GitCommitRepository(mockCommandService, mockTicketIdParser);
 		vi.clearAllMocks();
 	});
 
 	describe("commit", () => {
 		it("should execute git commit with the message", async () => {
-			// Arrange
-			const commitMessage = createMockCommitMessage({
-				type: "feat",
+			const commitMessage: CommitMessage = createMockCommitMessage({
 				scope: "core",
 				subject: "add new feature",
+				type: "feat",
 			});
 
-			// Act
 			await repository.commit(commitMessage);
 
-			// Assert
-			expect(mockCommandService.execute).toHaveBeenCalledWith("git commit -m 'feat(core): add new feature'");
+			expect(executeMock).toHaveBeenCalledWith("git commit -m 'feat(core): add new feature'");
 		});
 
 		it("should escape single quotes in commit message", async () => {
-			// Arrange
-			const commitMessage = createMockCommitMessage({
-				type: "fix",
+			const commitMessage: CommitMessage = createMockCommitMessage({
 				subject: "fix user's input validation",
+				type: "fix",
 			});
 
-			// Act
 			await repository.commit(commitMessage);
 
-			// Assert
-			expect(mockCommandService.execute).toHaveBeenCalledWith("git commit -m 'fix(test): fix user'\\''s input validation'");
+			expect(executeMock).toHaveBeenCalledWith(String.raw`git commit -m 'fix(test): fix user'\''s input validation'`);
 		});
 
 		it("should handle multi-line commit messages", async () => {
-			// Arrange
-			const commitMessage = createMockCommitMessage({
-				type: "feat",
-				subject: "add authentication",
+			const commitMessage: CommitMessage = createMockCommitMessage({
 				body: "Implemented OAuth2 authentication\nAdded JWT token support",
+				subject: "add authentication",
+				type: "feat",
 			});
 
-			// Act
 			await repository.commit(commitMessage);
 
-			// Assert
-			const expectedMessage = "feat(test): add authentication\n\nImplemented OAuth2 authentication\nAdded JWT token support";
-			expect(mockCommandService.execute).toHaveBeenCalledWith(`git commit -m '${expectedMessage}'`);
+			const expectedMessage: string = "feat(test): add authentication\n\nImplemented OAuth2 authentication\nAdded JWT token support";
+			expect(executeMock).toHaveBeenCalledWith(`git commit -m '${expectedMessage}'`);
 		});
 
 		it("should handle commit messages with breaking changes", async () => {
-			// Arrange
-			const commitMessage = createMockCommitMessage({
-				type: "feat",
-				subject: "redesign API",
+			const commitMessage: CommitMessage = createMockCommitMessage({
 				breaking: "All endpoints have changed",
+				subject: "redesign API",
+				type: "feat",
 			});
 
-			// Act
 			await repository.commit(commitMessage);
 
-			// Assert
-			const expectedMessage = "feat(test): redesign API\n\nBREAKING CHANGE: All endpoints have changed";
-			expect(mockCommandService.execute).toHaveBeenCalledWith(`git commit -m '${expectedMessage}'`);
+			const expectedMessage: string = "feat(test): redesign API\n\nBREAKING CHANGE: All endpoints have changed";
+			expect(executeMock).toHaveBeenCalledWith(`git commit -m '${expectedMessage}'`);
 		});
 	});
 
 	describe("getCurrentBranch", () => {
 		it("should return the current branch name", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockResolvedValue("feature/auth");
+			executeWithOutputMock.mockResolvedValue("feature/auth");
 
-			// Act
-			const branch = await repository.getCurrentBranch();
+			const branchName: string = await repository.getCurrentBranch();
 
-			// Assert
-			expect(branch).toBe("feature/auth");
-			expect(mockCommandService.executeWithOutput).toHaveBeenCalledWith("git rev-parse --abbrev-ref HEAD");
+			expect(branchName).toBe("feature/auth");
+			expect(executeWithOutputMock).toHaveBeenCalledWith("git rev-parse --abbrev-ref HEAD");
 		});
 
 		it("should return 'main' when branch is empty", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockResolvedValue("");
+			executeWithOutputMock.mockResolvedValue("");
 
-			// Act
-			const branch = await repository.getCurrentBranch();
+			const branchName: string = await repository.getCurrentBranch();
 
-			// Assert
-			expect(branch).toBe("main");
+			expect(branchName).toBe("main");
 		});
 
 		it("should handle HEAD state", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockResolvedValue("HEAD");
+			executeWithOutputMock.mockResolvedValue("HEAD");
 
-			// Act
-			const branch = await repository.getCurrentBranch();
+			const branchName: string = await repository.getCurrentBranch();
 
-			// Assert
-			expect(branch).toBe("HEAD");
+			expect(branchName).toBe("HEAD");
+		});
+	});
+
+	describe("getTicketIdFromBranch", () => {
+		it("returns parsed ticket id when parser finds it", async () => {
+			executeWithOutputMock.mockResolvedValue("feature/LINER-91-commit-message-flow");
+			parseFromBranchNameMock.mockResolvedValue(TicketIdValueObject.tryCreate("LINER-91"));
+
+			const ticketId: string | undefined = await repository.getTicketIdFromBranch();
+
+			expect(ticketId).toBe("LINER-91");
+			expect(parseFromBranchNameMock).toHaveBeenCalledWith("feature/LINER-91-commit-message-flow");
+		});
+
+		it("returns undefined when parser does not find ticket id", async () => {
+			executeWithOutputMock.mockResolvedValue("feature/no-ticket-here");
+			parseFromBranchNameMock.mockResolvedValue(TicketIdValueObject.tryCreate("invalid-ticket"));
+
+			const ticketId: string | undefined = await repository.getTicketIdFromBranch();
+
+			expect(ticketId).toBeUndefined();
 		});
 	});
 
 	describe("getStagedDiff", () => {
 		it("should return the staged diff", async () => {
-			// Arrange
-			const mockDiff = `diff --git a/file.ts b/file.ts
+			const mockDiff: string = `diff --git a/file.ts b/file.ts
 index 123..456 789
 --- a/file.ts
 +++ b/file.ts
 @@ -1,3 +1,4 @@
 +console.log('new line');
  existing code`;
-			(mockCommandService.executeWithOutput as any).mockResolvedValue(mockDiff);
+			executeWithOutputMock.mockResolvedValue(mockDiff);
 
-			// Act
-			const diff = await repository.getStagedDiff();
+			const diff: string = await repository.getStagedDiff();
 
-			// Assert
 			expect(diff).toBe(mockDiff);
-			expect(mockCommandService.executeWithOutput).toHaveBeenCalledWith("git diff --cached --stat -p --no-color");
+			expect(executeWithOutputMock).toHaveBeenCalledWith("git diff --cached --stat -p --no-color");
 		});
 
 		it("should truncate long diffs", async () => {
-			// Arrange
-			const longDiff = "a".repeat(4000);
-			(mockCommandService.executeWithOutput as any).mockResolvedValue(longDiff);
+			const longDiff: string = "a".repeat(LARGE_DIFF_LENGTH);
+			executeWithOutputMock.mockResolvedValue(longDiff);
 
-			// Act
-			const diff = await repository.getStagedDiff();
+			const diff: string = await repository.getStagedDiff();
+			const maxAllowedLength: number = MAX_DIFF_LENGTH + TRUNCATED_SUFFIX.length;
 
-			// Assert
-			expect(diff.length).toBeLessThanOrEqual(3000 + 20); // 3000 + "... (truncated)"
-			expect(diff.endsWith("... (truncated)")).toBe(true);
+			expect(diff.length).toBeLessThanOrEqual(maxAllowedLength);
+			expect(diff.endsWith(TRUNCATED_SUFFIX)).toBe(true);
 		});
 
 		it("should return empty string on error", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockRejectedValue(new Error("git error"));
+			executeWithOutputMock.mockRejectedValue(new Error("git error"));
 
-			// Act
-			const diff = await repository.getStagedDiff();
+			const diff: string = await repository.getStagedDiff();
 
-			// Assert
 			expect(diff).toBe("");
 		});
 	});
 
 	describe("getStagedFiles", () => {
 		it("should return list of staged files", async () => {
-			// Arrange
-			const mockOutput = "src/file1.ts\nsrc/file2.ts\nREADME.md";
-			(mockCommandService.executeWithOutput as any).mockResolvedValue(mockOutput);
+			const mockOutput: string = "src/file1.ts\nsrc/file2.ts\nREADME.md";
+			executeWithOutputMock.mockResolvedValue(mockOutput);
 
-			// Act
-			const files = await repository.getStagedFiles();
+			const files: Array<string> = await repository.getStagedFiles();
 
-			// Assert
 			expect(files).toEqual(["src/file1.ts", "src/file2.ts", "README.md"]);
-			expect(mockCommandService.executeWithOutput).toHaveBeenCalledWith("git diff --cached --name-only");
+			expect(executeWithOutputMock).toHaveBeenCalledWith("git diff --cached --name-only");
 		});
 
 		it("should filter out empty lines", async () => {
-			// Arrange
-			const mockOutput = "src/file1.ts\n\n\nsrc/file2.ts\n";
-			(mockCommandService.executeWithOutput as any).mockResolvedValue(mockOutput);
+			const mockOutput: string = "src/file1.ts\n\n\nsrc/file2.ts\n";
+			executeWithOutputMock.mockResolvedValue(mockOutput);
 
-			// Act
-			const files = await repository.getStagedFiles();
+			const files: Array<string> = await repository.getStagedFiles();
 
-			// Assert
 			expect(files).toEqual(["src/file1.ts", "src/file2.ts"]);
 		});
 
 		it("should return empty array when no files are staged", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockResolvedValue("");
+			executeWithOutputMock.mockResolvedValue("");
 
-			// Act
-			const files = await repository.getStagedFiles();
+			const files: Array<string> = await repository.getStagedFiles();
 
-			// Assert
 			expect(files).toEqual([]);
 		});
 
 		it("should return empty array on error", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockRejectedValue(new Error("git error"));
+			executeWithOutputMock.mockRejectedValue(new Error("git error"));
 
-			// Act
-			const files = await repository.getStagedFiles();
+			const files: Array<string> = await repository.getStagedFiles();
 
-			// Assert
 			expect(files).toEqual([]);
 		});
 	});
 
 	describe("hasStagedChanges", () => {
 		it("should return true when there are staged changes", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockResolvedValue("src/file.ts");
+			executeWithOutputMock.mockResolvedValue("src/file.ts");
 
-			// Act
-			const hasChanges = await repository.hasStagedChanges();
+			const hasStagedChanges: boolean = await repository.hasStagedChanges();
 
-			// Assert
-			expect(hasChanges).toBe(true);
-			expect(mockCommandService.executeWithOutput).toHaveBeenCalledWith("git diff --cached --name-only");
+			expect(hasStagedChanges).toBe(true);
+			expect(executeWithOutputMock).toHaveBeenCalledWith("git diff --cached --name-only");
 		});
 
 		it("should return false when there are no staged changes", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockResolvedValue("");
+			executeWithOutputMock.mockResolvedValue("");
 
-			// Act
-			const hasChanges = await repository.hasStagedChanges();
+			const hasStagedChanges: boolean = await repository.hasStagedChanges();
 
-			// Assert
-			expect(hasChanges).toBe(false);
+			expect(hasStagedChanges).toBe(false);
 		});
 
 		it("should return false on error", async () => {
-			// Arrange
-			(mockCommandService.executeWithOutput as any).mockRejectedValue(new Error("git error"));
+			executeWithOutputMock.mockRejectedValue(new Error("git error"));
 
-			// Act
-			const hasChanges = await repository.hasStagedChanges();
+			const hasStagedChanges: boolean = await repository.hasStagedChanges();
 
-			// Assert
-			expect(hasChanges).toBe(false);
+			expect(hasStagedChanges).toBe(false);
 		});
 	});
 
 	describe("edge cases", () => {
 		it("should handle special characters in file names", async () => {
-			// Arrange
-			const mockOutput = "src/file with spaces.ts\nsrc/file-with-dashes.ts\nsrc/file_with_underscores.ts";
-			(mockCommandService.executeWithOutput as any).mockResolvedValue(mockOutput);
+			const mockOutput: string = "src/file with spaces.ts\nsrc/file-with-dashes.ts\nsrc/file_with_underscores.ts";
+			executeWithOutputMock.mockResolvedValue(mockOutput);
 
-			// Act
-			const files = await repository.getStagedFiles();
+			const files: Array<string> = await repository.getStagedFiles();
 
-			// Assert
 			expect(files).toEqual(["src/file with spaces.ts", "src/file-with-dashes.ts", "src/file_with_underscores.ts"]);
 		});
 
 		it("should handle unicode characters in commit messages", async () => {
-			// Arrange
-			const commitMessage = createMockCommitMessage({
-				type: "feat",
+			const commitMessage: CommitMessage = createMockCommitMessage({
 				subject: "add 🚀 rocket feature",
+				type: "feat",
 			});
 
-			// Act
 			await repository.commit(commitMessage);
 
-			// Assert
-			expect(mockCommandService.execute).toHaveBeenCalledWith("git commit -m 'feat(test): add 🚀 rocket feature'");
+			expect(executeMock).toHaveBeenCalledWith("git commit -m 'feat(test): add 🚀 rocket feature'");
 		});
 	});
 });

@@ -1,4 +1,5 @@
 import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
+import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 
 import type { ILlmPromptContext } from "./llm-service.interface.js";
 
@@ -23,6 +24,13 @@ export interface ICommitValidator {
 	 * @returns Promise resolving to the fixed commit message or null if unfixable
 	 */
 	fix(message: CommitMessage, validationResult: ICommitValidationResult, context?: ILlmPromptContext): Promise<CommitMessage | null>;
+
+	/**
+	 * Attach runtime LLM configuration to validator.
+	 * Some validator implementations use this to perform LLM-assisted auto-fixes.
+	 * @param configuration - Runtime LLM configuration
+	 */
+	setLLMConfiguration?(configuration: LLMConfiguration): void;
 
 	/**
 	 * Validate a commit message

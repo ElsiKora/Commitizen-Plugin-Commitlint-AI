@@ -1,8 +1,9 @@
 import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
 import type { IConfigService } from "../interface/config-service.interface.js";
-import type { IConfig } from "../interface/config.interface.js";
+import type { IConfig, ITicketConfig, TTicketMissingBranchLintBehavior, TTicketNormalization, TTicketSource } from "../interface/config.interface.js";
 
 import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES, MAX_RETRY_COUNT, MIN_RETRY_COUNT } from "../../domain/constant/numeric.constant.js";
+import { DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR, DEFAULT_TICKET_NORMALIZATION, DEFAULT_TICKET_PATTERN_FLAGS, DEFAULT_TICKET_PATTERN_SOURCE, DEFAULT_TICKET_SOURCE } from "../../domain/constant/ticket.constant.js";
 import { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import { EAnthropicModel } from "../../domain/enum/anthropic-model.enum.js";
 import { EAWSBedrockModel } from "../../domain/enum/aws-bedrock-model.enum.js";
@@ -352,6 +353,11 @@ export class ConfigureLLMUseCase {
 			isConfigUpdated = true;
 		}
 
+		if (!config.ticket) {
+			config.ticket = getDefaultTicketConfig();
+			isConfigUpdated = true;
+		}
+
 		// Save updated config if we added defaults
 		if (isConfigUpdated) {
 			await this.CONFIG_SERVICE.set(config);
@@ -463,11 +469,14 @@ export class ConfigureLLMUseCase {
 	 * @returns {Promise<void>} Promise that resolves when configuration is saved
 	 */
 	async saveConfiguration(configuration: LLMConfiguration): Promise<void> {
+		const existingConfig: IConfig = await this.CONFIG_SERVICE.get();
+
 		const config: IConfig = {
 			maxRetries: configuration.getMaxRetries(),
 			mode: configuration.getMode(),
 			model: configuration.getModel(),
 			provider: configuration.getProvider(),
+			ticket: existingConfig.ticket ?? getDefaultTicketConfig(),
 			validationMaxRetries: configuration.getValidationMaxRetries(),
 		};
 
@@ -491,4 +500,18 @@ export class ConfigureLLMUseCase {
 
 		return updated;
 	}
+}
+
+/**
+ * Build default ticket extraction settings for commit configuration.
+ * @returns {ITicketConfig} Default ticket settings.
+ */
+function getDefaultTicketConfig(): ITicketConfig {
+	return {
+		missingBranchLintBehavior: DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR as TTicketMissingBranchLintBehavior,
+		normalization: DEFAULT_TICKET_NORMALIZATION as TTicketNormalization,
+		pattern: DEFAULT_TICKET_PATTERN_SOURCE,
+		patternFlags: DEFAULT_TICKET_PATTERN_FLAGS,
+		source: DEFAULT_TICKET_SOURCE as TTicketSource,
+	};
 }

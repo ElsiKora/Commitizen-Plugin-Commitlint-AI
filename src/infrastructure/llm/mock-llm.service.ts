@@ -5,6 +5,20 @@ import { CommitMessage } from "../../domain/entity/commit-message.entity.js";
 import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
 import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
 
+const SIMULATED_DELAY_MS: number = 500;
+const DEFAULT_SCOPE: string = "core";
+const DEFAULT_TYPE: string = "chore";
+const DEFAULT_SUBJECT: string = "update implementation";
+const DEFAULT_SCOPE_MAX_LENGTH: number = 30;
+const DEFAULT_SUBJECT_MAX_LENGTH: number = 80;
+const DEFAULT_SUBJECT_MIN_LENGTH: number = 3;
+const HEADER_MAX_LENGTH: number = 100;
+const HEADER_FORMAT_OVERHEAD: number = 4; // type + "(" + ")" + ": "
+const RULE_VALUE_INDEX: number = 2;
+const MAX_FILES_FOR_BODY: number = 10;
+const MAX_FILES_LISTED_IN_BODY: number = 5;
+const MIN_HEADER_LENGTH: number = 10;
+
 /**
  * Mock LLM service for testing without real API calls
  * Activated when MOCK_LLM environment variable is set to "true"
@@ -20,166 +34,28 @@ export class MockLlmService implements ILlmService {
 		process.stdout.write("🎭 Using MOCK LLM provider (no real API calls)\n");
 
 		// Simulate API delay
-		await new Promise((resolve) => setTimeout(resolve, 500));
+		await new Promise<void>((resolve: () => void) => setTimeout(resolve, SIMULATED_DELAY_MS));
 
-		const filesChanged: Array<string> = context.files ? context.files.split("\n").filter(Boolean) : [];
+		const filesChanged: Array<string> =
+			context.files
+				?.split("\n")
+				.map((file: string) => file.trim())
+				.filter((file: string) => file.length > 0) ?? [];
 		const diffContent: string = context.diff ?? "";
 
-		// Analyze changes to determine type
 		const hasNewFile: boolean = diffContent.includes("new file mode");
 		const hasDeletedFile: boolean = diffContent.includes("deleted file mode");
-		const hasTest: boolean = filesChanged.some((f: string) => f.includes("test") || f.includes("spec"));
-		const hasDocument: boolean = filesChanged.some((f: string) => f.includes("README") || f.includes(".md") || f.includes("doc"));
-		const hasSource: boolean = filesChanged.some((f: string) => f.includes("src/") || f.includes("lib/"));
-		const hasConfig: boolean = filesChanged.some((f: string) => f.includes("config") || f.includes(".json") || f.includes(".yml"));
+		const hasTest: boolean = filesChanged.some((file: string) => file.includes("test") || file.includes("spec"));
+		const hasDocument: boolean = filesChanged.some((file: string) => file.includes("README") || file.includes(".md") || file.includes("doc"));
+		const hasSource: boolean = filesChanged.some((file: string) => file.includes("src/") || file.includes("lib/"));
 
-		// Determine type based on changes
-		let type: string = "chore";
-
-		if (hasNewFile && hasSource) {
-			type = "feat";
-		} else if (hasDocument) {
-			type = "docs";
-		} else if (hasTest) {
-			type = "test";
-		} else if (hasSource && !hasNewFile) {
-			type = "fix";
-		} else if (hasConfig) {
-			// eslint-disable-next-line @elsikora/sonar/no-redundant-assignments
-			type = "chore";
-		}
-
-		// Ensure type is in allowed enum
-		if (context.typeEnum && !context.typeEnum.includes(type)) {
-			type = context.typeEnum[0] ?? "feat";
-		}
-
-		// Determine scope from files - ALWAYS provide scope (scope-empty: never)
-		let scope: string = "core"; // Default scope if nothing else works
-
-		if (filesChanged.length > 0) {
-			const firstFile: string = filesChanged[0] ?? "";
-			const parts: Array<string> = firstFile.split("/");
-
-			if (parts.length > 1) {
-				// Take first directory as scope
-				const rawScope = parts[0]?.replace(/^\.+/, "").replaceAll(/[^\w-]/g, "-");
-
-				if (rawScope && rawScope.length > 0) {
-					scope = rawScope;
-				} else if (parts.length > 1) {
-					// Try second part
-					const secondScope = parts[1]?.replaceAll(/[^\w-]/g, "-");
-
-					if (secondScope && secondScope.length > 0) {
-						scope = secondScope;
-					}
-				}
-			} else if (parts[0]) {
-				// Single file without directory - use filename without extension
-				const filename: string = parts[0].split(".")[0] ?? "core";
-				const cleanFilename = filename.replaceAll(/[^\w-]/g, "-");
-
-				if (cleanFilename && cleanFilename.length > 0) {
-					scope = cleanFilename;
-				}
-			}
-
-			// Apply scope transformations
-			// Always lowercase (scope-case: lower-case)
-			scope = scope.toLowerCase();
-
-			// Apply scope max length (default 30)
-			const scopeMaxLength = this.extractRuleValue(context.rules, "scope-max-length") || 30;
-
-			if (scope.length > scopeMaxLength) {
-				scope = scope.slice(0, scopeMaxLength);
-			}
-
-			// Remove trailing/leading dashes
-			scope = scope.replaceAll(/^-+|-+$/g, "");
-
-			// If scope is empty after cleaning, use default
-			if (!scope || scope.length === 0) {
-				scope = "core";
-			}
-		}
-
-		// Generate subject - ALWAYS lowercase (subject-case: lower-case)
-		let subject: string = "";
-
-		if (hasNewFile) {
-			const lastFile = filesChanged.at(-1);
-			const fileName = lastFile ? lastFile.split("/").pop() : "files";
-			subject = filesChanged.length > 1 ? `add ${filesChanged.length} new files` : `add ${fileName}`;
-		} else if (hasDeletedFile) {
-			subject = "remove obsolete files";
-		} else if (hasDocument) {
-			subject = "update documentation";
-		} else if (hasTest) {
-			subject = "update tests";
-		} else {
-			subject = "update implementation";
-		}
-
-		// ALWAYS apply lowercase (subject-case: lower-case)
-		subject = subject.toLowerCase();
-
-		// Apply subject length rules (subject-max-length: 80, subject-min-length: 3)
-		const subjectMaxLength = context.subject.maxLength || 80;
-		const subjectMinLength = context.subject.minLength || 3;
-
-		// Ensure minimum length first
-		if (subject.length < subjectMinLength) {
-			subject = subject + " with changes";
-		}
-
-		// Then apply max length (header-max-length includes type + scope, so be conservative)
-		if (subject.length > subjectMaxLength) {
-			subject = subject.slice(0, subjectMaxLength);
-		}
-
-		// Remove any trailing periods (subject-full-stop: never)
-		subject = subject.replace(/\.+$/, "");
-
-		// Ensure the complete header doesn't exceed limits (header-max-length: 100)
-		// Format: type(scope): subject
-		const headerLength = type.length + scope.length + subject.length + 4; // 4 for "(", ")", ":", " "
-
-		if (headerLength > 100) {
-			// Reduce subject length to fit
-			const availableForSubject = 100 - type.length - scope.length - 4;
-			subject = subject.slice(0, Math.max(availableForSubject, subjectMinLength));
-		}
-
-		// Final check for header minimum length (header-min-length: 10)
-		if (headerLength < 10) {
-			subject = subject + " changes";
-		}
-
-		// Generate body (optional, but with strict formatting rules)
-		// body-full-stop: always "."
-		// body-max-line-length: 100
-		// body-leading-blank: always (handled by CommitMessage.toString())
-		let body: string | undefined;
-
-		if (filesChanged.length > 0 && filesChanged.length <= 10) {
-			// Only add body for reasonable number of files
-			const filesList = filesChanged
-				.slice(0, 5)
-				.map((f) => `- ${f}`)
-				.join("\n");
-			body = `modified files:\n${filesList}`;
-
-			if (filesChanged.length > 5) {
-				body += `\n- and ${filesChanged.length - 5} more files`;
-			}
-
-			// Add trailing period (body-full-stop: always)
-			if (!body.endsWith(".")) {
-				body += ".";
-			}
-		}
+		const type: string = this.resolveType(context, hasNewFile, hasDocument, hasSource, hasTest);
+		const scopeMaxLength: number = this.extractNumericRuleValue(context.rules, "scope-max-length") ?? DEFAULT_SCOPE_MAX_LENGTH;
+		const scope: string = this.resolveScope(filesChanged, scopeMaxLength);
+		const subjectMinLength: number = context.subject.minLength ?? DEFAULT_SUBJECT_MIN_LENGTH;
+		const subjectMaxLength: number = context.subject.maxLength ?? DEFAULT_SUBJECT_MAX_LENGTH;
+		const subject: string = this.resolveSubject(filesChanged, hasDeletedFile, hasDocument, hasNewFile, hasTest, scope, subjectMaxLength, subjectMinLength, type);
+		const body: string | undefined = this.resolveBody(filesChanged);
 
 		// Create commit message
 		const header: CommitHeader = new CommitHeader(type, subject, scope);
@@ -201,21 +77,36 @@ export class MockLlmService implements ILlmService {
 		return this.isMockEnabled();
 	}
 
+	private extractFileName(filePath: string): string {
+		const filePathSegments: Array<string> = filePath.split("/");
+		const lastSegmentIndex: number = filePathSegments.length - 1;
+		const fileName: string = lastSegmentIndex >= 0 ? (filePathSegments[lastSegmentIndex] ?? "file") : "file";
+
+		return fileName.length > 0 ? fileName : "file";
+	}
+
 	/**
 	 * Extract a numeric value from commitlint rules
 	 * @param {unknown} rules - The commitlint rules
 	 * @param {string} ruleName - The name of the rule to extract
 	 * @returns {number | undefined} The numeric value or undefined
 	 */
-	private extractRuleValue(rules: unknown, ruleName: string): number | undefined {
-		if (!Array.isArray(rules)) {
+	private extractNumericRuleValue(rules: Record<string, unknown> | undefined, ruleName: string): number | undefined {
+		if (!rules) {
 			return undefined;
 		}
 
-		const rule = rules.find((r: any) => Array.isArray(r) && r[0] === ruleName);
+		const rawRule: unknown = rules[ruleName];
 
-		if (rule && Array.isArray(rule) && rule.length > 2 && typeof rule[2] === "number") {
-			return rule[2];
+		if (!Array.isArray(rawRule)) {
+			return undefined;
+		}
+
+		const ruleItems: Array<unknown> = rawRule;
+		const numericValue: unknown = ruleItems[RULE_VALUE_INDEX];
+
+		if (typeof numericValue === "number") {
+			return numericValue;
 		}
 
 		return undefined;
@@ -227,5 +118,146 @@ export class MockLlmService implements ILlmService {
 	 */
 	private isMockEnabled(): boolean {
 		return process.env.MOCK_LLM === "true" || process.env.MOCK_LLM === "1";
+	}
+
+	private normalizeToken(rawToken: string): string {
+		let normalized: string = "";
+
+		for (const character of rawToken) {
+			const isUppercase: boolean = character >= "A" && character <= "Z";
+			const isLowercase: boolean = character >= "a" && character <= "z";
+			const isDigit: boolean = character >= "0" && character <= "9";
+			const isAllowedSymbol: boolean = character === "-" || character === "_";
+
+			if (isUppercase || isLowercase || isDigit || isAllowedSymbol) {
+				normalized += character;
+			} else {
+				normalized += "-";
+			}
+		}
+
+		return normalized;
+	}
+
+	private resolveBody(filesChanged: Array<string>): string | undefined {
+		if (filesChanged.length === 0 || filesChanged.length > MAX_FILES_FOR_BODY) {
+			return undefined;
+		}
+
+		const listedFiles: string = filesChanged
+			.slice(0, MAX_FILES_LISTED_IN_BODY)
+			.map((file: string) => `- ${file}`)
+			.join("\n");
+		let body: string = `modified files:\n${listedFiles}`;
+
+		if (filesChanged.length > MAX_FILES_LISTED_IN_BODY) {
+			const remainingFilesCount: number = filesChanged.length - MAX_FILES_LISTED_IN_BODY;
+			body += `\n- and ${remainingFilesCount} more files`;
+		}
+
+		return `${body}.`;
+	}
+
+	private resolveScope(filesChanged: Array<string>, scopeMaxLength: number): string {
+		const firstFilePath: string = filesChanged[0] ?? "";
+		const pathParts: Array<string> = firstFilePath.split("/");
+		const preferredScopeToken: string = pathParts.length > 1 ? (pathParts[0] ?? DEFAULT_SCOPE) : ((pathParts[0] ?? DEFAULT_SCOPE).split(".")[0] ?? DEFAULT_SCOPE);
+		const normalizedToken: string = this.normalizeToken(preferredScopeToken).toLowerCase();
+		const trimmedToken: string = this.trimDashes(normalizedToken);
+		const boundedScope: string = trimmedToken.length > scopeMaxLength ? trimmedToken.slice(0, scopeMaxLength) : trimmedToken;
+
+		if (boundedScope.length === 0) {
+			return DEFAULT_SCOPE;
+		}
+
+		return boundedScope;
+	}
+
+	private resolveSubject(filesChanged: Array<string>, hasDeletedFile: boolean, hasDocument: boolean, hasNewFile: boolean, hasTest: boolean, scope: string, subjectMaxLength: number, subjectMinLength: number, type: string): string {
+		let subject: string = DEFAULT_SUBJECT;
+
+		if (hasNewFile) {
+			const lastFileIndex: number = filesChanged.length - 1;
+			const lastFilePath: string = lastFileIndex >= 0 ? (filesChanged[lastFileIndex] ?? "") : "";
+			const fileName: string = this.extractFileName(lastFilePath);
+			subject = filesChanged.length > 1 ? `add ${filesChanged.length} new files` : `add ${fileName}`;
+		} else if (hasDeletedFile) {
+			subject = "remove obsolete files";
+		} else if (hasDocument) {
+			subject = "update documentation";
+		} else if (hasTest) {
+			subject = "update tests";
+		}
+
+		subject = this.trimTrailingDots(subject.toLowerCase());
+
+		if (subject.length < subjectMinLength) {
+			subject = `${subject} with changes`;
+		}
+
+		if (subject.length > subjectMaxLength) {
+			subject = subject.slice(0, subjectMaxLength);
+		}
+
+		const calculatedHeaderLength: number = type.length + scope.length + subject.length + HEADER_FORMAT_OVERHEAD;
+
+		if (calculatedHeaderLength > HEADER_MAX_LENGTH) {
+			const availableSubjectLength: number = HEADER_MAX_LENGTH - type.length - scope.length - HEADER_FORMAT_OVERHEAD;
+			const boundedLength: number = Math.max(availableSubjectLength, subjectMinLength);
+			subject = subject.slice(0, boundedLength);
+		}
+
+		if (type.length + scope.length + subject.length + HEADER_FORMAT_OVERHEAD < MIN_HEADER_LENGTH) {
+			subject = `${subject} changes`;
+		}
+
+		return subject;
+	}
+
+	private resolveType(context: ILlmPromptContext, hasNewFile: boolean, hasDocument: boolean, hasSource: boolean, hasTest: boolean): string {
+		let resolvedType: string = DEFAULT_TYPE;
+
+		if (hasNewFile && hasSource) {
+			resolvedType = "feat";
+		} else if (hasDocument) {
+			resolvedType = "docs";
+		} else if (hasTest) {
+			resolvedType = "test";
+		} else if (hasSource) {
+			resolvedType = "fix";
+		}
+
+		const isAllowedType: boolean = context.typeEnum?.includes(resolvedType) ?? true;
+
+		if (!isAllowedType) {
+			return context.typeEnum?.[0] ?? "feat";
+		}
+
+		return resolvedType;
+	}
+
+	private trimDashes(value: string): string {
+		let startIndex: number = 0;
+		let endIndex: number = value.length;
+
+		while (startIndex < endIndex && value[startIndex] === "-") {
+			startIndex += 1;
+		}
+
+		while (endIndex > startIndex && value[endIndex - 1] === "-") {
+			endIndex -= 1;
+		}
+
+		return value.slice(startIndex, endIndex);
+	}
+
+	private trimTrailingDots(value: string): string {
+		let endIndex: number = value.length;
+
+		while (endIndex > 0 && value[endIndex - 1] === ".") {
+			endIndex -= 1;
+		}
+
+		return value.slice(0, endIndex);
 	}
 }
