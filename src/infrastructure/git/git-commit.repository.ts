@@ -1,8 +1,8 @@
 import type { ICommandService } from "../../application/interface/command-service.interface.js";
 import type { ICommitRepository } from "../../application/interface/commit-repository.interface.js";
+import type { ITicketIdParser } from "../../application/interface/ticket-id-parser.interface.js";
 import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-
-import { parseTicketIdFromBranch } from "./parse-ticket-id.helper.js";
+import type { TicketId } from "../../domain/value-object/ticket-id.value-object.js";
 
 /**
  * Git implementation of the commit repository
@@ -10,8 +10,11 @@ import { parseTicketIdFromBranch } from "./parse-ticket-id.helper.js";
 export class GitCommitRepository implements ICommitRepository {
 	private readonly COMMAND_SERVICE: ICommandService;
 
-	constructor(commandService: ICommandService) {
+	private readonly TICKET_ID_PARSER: ITicketIdParser;
+
+	constructor(commandService: ICommandService, ticketIdParser: ITicketIdParser) {
 		this.COMMAND_SERVICE = commandService;
+		this.TICKET_ID_PARSER = ticketIdParser;
 	}
 
 	/**
@@ -74,13 +77,14 @@ export class GitCommitRepository implements ICommitRepository {
 
 	/**
 	 * Get the ticket ID from the current branch name
-	 * Extracts ticket ID in format LETTERS-NUMBERS (e.g., CAS-25, PROJ-123)
+	 * Uses configured ticket source strategy (branch-lint or local pattern)
 	 * @returns {Promise<string | undefined>} Promise resolving to the ticket ID if found, undefined otherwise
 	 */
 	async getTicketIdFromBranch(): Promise<string | undefined> {
 		const branchName: string = await this.getCurrentBranch();
+		const ticketId: TicketId | undefined = await this.TICKET_ID_PARSER.parseFromBranchName(branchName);
 
-		return parseTicketIdFromBranch(branchName);
+		return ticketId?.toString();
 	}
 
 	/**

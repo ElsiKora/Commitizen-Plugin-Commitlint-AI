@@ -1,13 +1,15 @@
+import type { IContainer } from "@elsikora/cladi";
+
 import { createAppContainer } from "./infrastructure/di/container.js";
 import { CommitizenAdapter } from "./presentation/commitizen.adapter.js";
 
 import "dotenv/config";
 
 // Initialize the DI container
-createAppContainer();
+const container: IContainer = createAppContainer();
 
 // Create adapter instance
-const adapter: CommitizenAdapter = new CommitizenAdapter();
+const adapter: CommitizenAdapter = new CommitizenAdapter(container);
 
 /**
  * Commitizen adapter entry point

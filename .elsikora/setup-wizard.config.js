@@ -1,58 +1,44 @@
 export default {
-	ci: {
+	"branch-lint": {
 		isEnabled: true,
-		isNpmPackage: true,
-		moduleProperties: {
-			dependabot: {
-				devBranchName: "dev",
-			},
-			"release-npm": {
-				isPrerelease: true,
-				mainBranch: "main",
-				preReleaseBranch: "dev",
-			},
-		},
-		modules: ["codecommit-sync", "dependabot", "qodana", "release-npm", "snyk"],
-		provider: "GitHub",
+	},
+	builder: {
+		isEnabled: false,
+	},
+	ci: {
+		isEnabled: false,
 	},
 	commitlint: {
-		isEnabled: true,
+		isEnabled: false,
 	},
 	eslint: {
-		features: ["prettier", "typescript", "javascript", "sonar", "unicorn", "perfectionist", "json", "yaml", "checkFile", "packageJson", "node", "regexp", "stylistic"],
-		isEnabled: true,
+		isEnabled: false,
 	},
 	gitignore: {
-		isEnabled: true,
+		isEnabled: false,
 	},
 	ide: {
-		ides: ["intellij-idea"],
-		isEnabled: true,
+		isEnabled: false,
 	},
 	license: {
-		author: "ElsiKora",
-		isEnabled: true,
-		license: "MIT",
-		year: 2025,
+		isEnabled: false,
 	},
 	"lint-staged": {
-		features: ["eslint", "prettier"],
-		isEnabled: true,
+		isEnabled: false,
 	},
 	prettier: {
-		isEnabled: true,
+		isEnabled: false,
 	},
 	"semantic-release": {
-		developBranch: "dev",
-		isBackmergeEnabled: true,
-		isEnabled: true,
-		isPrereleaseEnabled: true,
-		mainBranch: "main",
-		preReleaseBranch: "dev",
-		preReleaseChannel: "beta",
-		repositoryUrl: "https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI",
+		isEnabled: false,
 	},
 	stylelint: {
+		isEnabled: false,
+	},
+	testing: {
+		isEnabled: false,
+	},
+	typescript: {
 		isEnabled: false,
 	},
 };

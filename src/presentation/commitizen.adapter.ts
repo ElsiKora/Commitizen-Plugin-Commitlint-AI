@@ -3,10 +3,11 @@ import type { IContainer } from "@elsikora/cladi";
 
 import type { ICliInterfaceService } from "../application/interface/cli-interface-service.interface.js";
 import type { ICommitRepository } from "../application/interface/commit-repository.interface.js";
-import type { ICommitValidationResult, ICommitValidator } from "../application/interface/commit-validator.interface.js";
+import type { ICommitValidator } from "../application/interface/commit-validator.interface.js";
 import type { IConfigService } from "../application/interface/config-service.interface.js";
 import type { IConfig } from "../application/interface/config.interface.js";
 import type { ILlmPromptContext } from "../application/interface/llm-service.interface.js";
+import type { PromptContextExtractorService } from "../application/service/prompt-context-extractor.service.js";
 import type { ConfigureLLMUseCase } from "../application/use-case/configure-llm.use-case.js";
 import type { EditCommitUseCase } from "../application/use-case/edit-commit.use-case.js";
 import type { GenerateCommitMessageUseCase } from "../application/use-case/generate-commit-message.use-case.js";
@@ -21,11 +22,7 @@ import { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
 import { ECommitMode } from "../domain/enum/commit-mode.enum.js";
 import { addTicketIdToCommitMessage } from "../domain/helper/add-ticket-to-commit.helper.js";
 import { ApiKey } from "../domain/value-object/api-key.value-object.js";
-import { CommitlintValidatorService } from "../infrastructure/commit-validator/commitlint-validator.service.js";
-import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, EditCommitUseCaseToken, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
-
-// Type constants
-const TYPE_ENUM_INDEX: number = 2;
+import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, EditCommitUseCaseToken, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, PromptContextExtractorServiceToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
 
 type TCommit = (message: string) => void;
 type TLoadResult = { prompt?: UserPromptConfig; rules: QualifiedRules };
@@ -36,8 +33,8 @@ type TLoadResult = { prompt?: UserPromptConfig; rules: QualifiedRules };
 export class CommitizenAdapter {
 	private readonly CONTAINER: IContainer;
 
-	constructor() {
-		this.CONTAINER = createAppContainer();
+	constructor(container: IContainer) {
+		this.CONTAINER = container;
 	}
 
 	/**
@@ -59,13 +56,14 @@ export class CommitizenAdapter {
 			const cliInterface: ICliInterfaceService | undefined = this.CONTAINER.get<ICliInterfaceService>(CliInterfaceServiceToken);
 			const commitRepository: ICommitRepository | undefined = this.CONTAINER.get<ICommitRepository>(CommitRepositoryToken);
 			const configService: IConfigService | undefined = this.CONTAINER.get<IConfigService>(ConfigServiceToken);
+			const promptContextExtractor: PromptContextExtractorService | undefined = this.CONTAINER.get<PromptContextExtractorService>(PromptContextExtractorServiceToken);
 
-			if (!configureLLMUseCase || !generateCommitUseCase || !validateCommitUseCase || !manualCommitUseCase || !editCommitUseCase || !cliInterface || !commitRepository || !configService) {
+			if (!configureLLMUseCase || !generateCommitUseCase || !validateCommitUseCase || !manualCommitUseCase || !editCommitUseCase || !cliInterface || !commitRepository || !configService || !promptContextExtractor) {
 				throw new Error("Failed to initialize required services");
 			}
 
 			// Extract context from commitlint config
-			const promptContext: ILlmPromptContext = this.extractLlmPromptContext(rules, prompt);
+			const promptContext: ILlmPromptContext = promptContextExtractor.extractContext(rules, prompt);
 
 			// Add git diff and files to context for AI mode
 			const [diff, files]: [string, Array<string>] = await Promise.all([commitRepository.getStagedDiff(), commitRepository.getStagedFiles()]);
@@ -92,7 +90,7 @@ export class CommitizenAdapter {
 					// Check if we need to prompt for API key after configuration
 					if (llmConfig.isAutoMode() && llmConfig.getApiKey().getValue() === "will-prompt-on-use") {
 						// Ask for API key
-						const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(llmConfig.getProvider());
+						const { hint, prompt }: { hint: string; prompt: string } = promptContextExtractor.getApiKeyPromptInfo(llmConfig.getProvider());
 
 						const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 							if (!value || value.trim().length === 0) {
@@ -120,7 +118,7 @@ export class CommitizenAdapter {
 					cliInterface.warn(`API key not found in ${environmentVariableName} environment variable.`);
 
 					// Ask for API key
-					const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(config.provider);
+					const { hint, prompt }: { hint: string; prompt: string } = promptContextExtractor.getApiKeyPromptInfo(config.provider);
 
 					const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 						if (!value || value.trim().length === 0) {
@@ -144,7 +142,7 @@ export class CommitizenAdapter {
 				// Check if we need to prompt for API key after configuration
 				if (llmConfig.isAutoMode() && llmConfig.getApiKey().getValue() === "will-prompt-on-use") {
 					// Ask for API key
-					const { hint, prompt }: { hint: string; prompt: string } = this.getApiKeyPromptInfo(llmConfig.getProvider());
+					const { hint, prompt }: { hint: string; prompt: string } = promptContextExtractor.getApiKeyPromptInfo(llmConfig.getProvider());
 
 					const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
 						if (!value || value.trim().length === 0) {
@@ -174,12 +172,9 @@ export class CommitizenAdapter {
 				return;
 			}
 
-			// Auto mode - set LLM configuration on validator if it supports it
-			const validator: ICommitValidator = this.CONTAINER.get<ICommitValidator>(CommitValidatorToken) ?? ({} as ICommitValidator);
-
-			if (validator instanceof CommitlintValidatorService) {
-				validator.setLLMConfiguration(llmConfig);
-			}
+			// Auto mode - set LLM configuration on validator if supported
+			const validator: ICommitValidator | undefined = this.CONTAINER.get<ICommitValidator>(CommitValidatorToken);
+			validator?.setLLMConfiguration?.(llmConfig);
 
 			// Auto mode - generate with AI
 			cliInterface.info("Using AI-powered commit mode...");
@@ -206,26 +201,13 @@ export class CommitizenAdapter {
 				// Validate and fix if needed
 				cliInterface.startSpinner("Validating commit message format...");
 
-				// Track validation attempts
-				let lastValidationAttempt: number = 0;
-				const originalValidate: (message: CommitMessage) => Promise<ICommitValidationResult> = validateCommitUseCase.validate.bind(validateCommitUseCase);
-
-				validateCommitUseCase.validate = async (message: CommitMessage): Promise<ICommitValidationResult> => {
-					lastValidationAttempt++;
-
-					if (lastValidationAttempt > 1) {
-						cliInterface.updateSpinner(`Validating commit message format... (attempt ${lastValidationAttempt})`);
+				const validatedMessage: CommitMessage | null = await validateCommitUseCase.execute(generatedMessage, true, llmConfig.getValidationMaxRetries(), promptContext, (validationAttempt: number) => {
+					if (validationAttempt > 1) {
+						cliInterface.updateSpinner(`Validating commit message format... (attempt ${validationAttempt})`);
 					}
-
-					return originalValidate(message);
-				};
-
-				const validatedMessage: CommitMessage | null = await validateCommitUseCase.execute(generatedMessage, true, llmConfig.getValidationMaxRetries(), promptContext);
+				});
 
 				cliInterface.stopSpinner();
-
-				// Restore original validate method
-				validateCommitUseCase.validate = originalValidate;
 
 				if (!validatedMessage) {
 					cliInterface.warn("Could not generate a valid commit message. Switching to manual mode...");
@@ -295,122 +277,6 @@ export class CommitizenAdapter {
 			cliInterface.info("In mock mode, staged files remain in staging area for manual cleanup");
 		} else {
 			commit(message);
-		}
-	}
-
-	/**
-	 * Extract LLM prompt context from commitlint rules and prompts
-	 * @param {QualifiedRules} rules - The commitlint rules
-	 * @param {UserPromptConfig} prompts - The user prompt configuration
-	 * @returns {ILlmPromptContext} The extracted LLM prompt context
-	 */
-	private extractLlmPromptContext(rules: QualifiedRules, prompts: UserPromptConfig): ILlmPromptContext {
-		const context: ILlmPromptContext = {
-			rules: rules, // Pass all commitlint rules to the LLM
-			subject: {},
-		};
-
-		// Extract type information
-		if (rules["type-enum"]) {
-			const types: unknown = rules["type-enum"][TYPE_ENUM_INDEX];
-
-			if (Array.isArray(types)) {
-				context.typeEnum = types as Array<string>;
-			}
-		}
-
-		// Extract type descriptions from prompts
-		if (prompts.questions?.type?.enum) {
-			context.typeDescriptions = {};
-
-			for (const [key, value] of Object.entries(prompts.questions.type.enum)) {
-				if (typeof value === "object" && value && "description" in value && typeof value.description === "string") {
-					interface ITypeEnumValue {
-						description: string;
-						emoji?: string;
-					}
-					const enumValue: ITypeEnumValue = value as ITypeEnumValue;
-					context.typeDescriptions[key] = {
-						description: enumValue.description,
-						emoji: enumValue.emoji,
-					};
-				}
-			}
-		}
-
-		// Extract subject rules
-		if (rules["subject-max-length"]) {
-			const maxLength: unknown = rules["subject-max-length"][TYPE_ENUM_INDEX];
-
-			if (typeof maxLength === "number") {
-				context.subject.maxLength = maxLength;
-			}
-		}
-
-		if (rules["subject-min-length"]) {
-			const minLength: unknown = rules["subject-min-length"][TYPE_ENUM_INDEX];
-
-			if (typeof minLength === "number") {
-				context.subject.minLength = minLength;
-			}
-		}
-
-		// Add descriptions from prompts
-		if (prompts.questions?.type?.description) {
-			context.typeDescription = prompts.questions.type.description;
-		}
-
-		if (prompts.questions?.scope?.description) {
-			context.scopeDescription = prompts.questions.scope.description;
-		}
-
-		if (prompts.questions?.subject?.description) {
-			context.subject.description = prompts.questions.subject.description;
-		}
-
-		if (prompts.questions?.body?.description) {
-			context.body = {
-				description: prompts.questions.body.description,
-			};
-		}
-
-		return context;
-	}
-
-	/**
-	 * Get API key prompt information based on provider
-	 * @param {string} provider - The LLM provider name
-	 * @returns {{ hint: string; prompt: string }} The hint and prompt text for API key input
-	 */
-	private getApiKeyPromptInfo(provider: string): { hint: string; prompt: string } {
-		switch (provider) {
-			case "anthropic": {
-				return { hint: "sk-ant-...", prompt: "Enter your Anthropic API key for this session:" };
-			}
-
-			case "aws-bedrock": {
-				return { hint: "us-east-1|AKIA...|secret...", prompt: "Enter your AWS Bedrock credentials (region|access-key-id|secret-access-key):" };
-			}
-
-			case "azure-openai": {
-				return { hint: "https://your.openai.azure.com|key|deployment", prompt: "Enter your Azure OpenAI credentials (endpoint|api-key|deployment-name):" };
-			}
-
-			case "google": {
-				return { hint: "AIza...", prompt: "Enter your Google API key for this session:" };
-			}
-
-			case "ollama": {
-				return { hint: "localhost:11434", prompt: "Enter your Ollama host (host:port or host:port|custom-model):" };
-			}
-
-			case "openai": {
-				return { hint: "sk-...", prompt: "Enter your OpenAI API key for this session:" };
-			}
-
-			default: {
-				return { hint: "", prompt: "Enter your API key for this session:" };
-			}
 		}
 	}
 }
