@@ -1,4 +1,4 @@
-import type { IContainer } from "@elsikora/cladi";
+import type { IDIContainer, Token } from "@elsikora/cladi";
 
 import type { IBranchLintConfigService } from "../../application/interface/branch-lint-config.interface.js";
 import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
@@ -10,7 +10,7 @@ import type { IFileSystemService } from "../../application/interface/file-system
 import type { ILlmService } from "../../application/interface/llm-service.interface.js";
 import type { ITicketIdParser } from "../../application/interface/ticket-id-parser.interface.js";
 
-import { createContainer } from "@elsikora/cladi";
+import { createDIContainer, createToken } from "@elsikora/cladi";
 
 import { PromptContextExtractorService } from "../../application/service/prompt-context-extractor.service.js";
 import { ConfigureLLMUseCase as ConfigureLLMUseCaseImpl } from "../../application/use-case/configure-llm.use-case.js";
@@ -35,30 +35,30 @@ import { NodeFileSystemService } from "../service/node-file-system.service.js";
 import { PromptsCliInterface } from "../service/prompts-cli-interface.service.js";
 
 // Service tokens
-export const FileSystemServiceToken: symbol = Symbol("FileSystemService");
-export const CliInterfaceServiceToken: symbol = Symbol("CliInterfaceService");
-export const CommandServiceToken: symbol = Symbol("CommandService");
-export const ConfigServiceToken: symbol = Symbol("ConfigService");
-export const BranchLintConfigServiceToken: symbol = Symbol("BranchLintConfigService");
-export const CommitValidatorToken: symbol = Symbol("CommitValidator");
-export const CommitRepositoryToken: symbol = Symbol("CommitRepository");
-export const LLMServicesToken: symbol = Symbol("LLMServices");
-export const PromptContextExtractorServiceToken: symbol = Symbol("PromptContextExtractorService");
-export const TicketIdParserToken: symbol = Symbol("TicketIdParser");
+export const FileSystemServiceToken: Token<IFileSystemService> = createToken<IFileSystemService>("FileSystemService");
+export const CliInterfaceServiceToken: Token<ICliInterfaceService> = createToken<ICliInterfaceService>("CliInterfaceService");
+export const CommandServiceToken: Token<ICommandService> = createToken<ICommandService>("CommandService");
+export const ConfigServiceToken: Token<IConfigService> = createToken<IConfigService>("ConfigService");
+export const BranchLintConfigServiceToken: Token<IBranchLintConfigService> = createToken<IBranchLintConfigService>("BranchLintConfigService");
+export const CommitValidatorToken: Token<ICommitValidator> = createToken<ICommitValidator>("CommitValidator");
+export const CommitRepositoryToken: Token<ICommitRepository> = createToken<ICommitRepository>("CommitRepository");
+export const LLMServicesToken: Token<Array<ILlmService>> = createToken<Array<ILlmService>>("LLMServices");
+export const PromptContextExtractorServiceToken: Token<PromptContextExtractorService> = createToken<PromptContextExtractorService>("PromptContextExtractorService");
+export const TicketIdParserToken: Token<ITicketIdParser> = createToken<ITicketIdParser>("TicketIdParser");
 
 // Use case tokens
-export const GenerateCommitMessageUseCaseToken: symbol = Symbol("GenerateCommitMessageUseCase");
-export const ValidateCommitMessageUseCaseToken: symbol = Symbol("ValidateCommitMessageUseCase");
-export const ConfigureLLMUseCaseToken: symbol = Symbol("ConfigureLLMUseCase");
-export const ManualCommitUseCaseToken: symbol = Symbol("ManualCommitUseCase");
-export const EditCommitUseCaseToken: symbol = Symbol("EditCommitUseCase");
+export const GenerateCommitMessageUseCaseToken: Token<GenerateCommitMessageUseCaseImpl> = createToken<GenerateCommitMessageUseCaseImpl>("GenerateCommitMessageUseCase");
+export const ValidateCommitMessageUseCaseToken: Token<ValidateCommitMessageUseCaseImpl> = createToken<ValidateCommitMessageUseCaseImpl>("ValidateCommitMessageUseCase");
+export const ConfigureLLMUseCaseToken: Token<ConfigureLLMUseCaseImpl> = createToken<ConfigureLLMUseCaseImpl>("ConfigureLLMUseCase");
+export const ManualCommitUseCaseToken: Token<ManualCommitUseCaseImpl> = createToken<ManualCommitUseCaseImpl>("ManualCommitUseCase");
+export const EditCommitUseCaseToken: Token<EditCommitUseCaseImpl> = createToken<EditCommitUseCaseImpl>("EditCommitUseCase");
 
 /**
  * Create and configure the application DI container
- * @returns {IContainer} The configured DI container
+ * @returns {IDIContainer} The configured DI container
  */
-export function createAppContainer(): IContainer {
-	const container: IContainer = createContainer({});
+export function createAppContainer(): IDIContainer {
+	const container: IDIContainer = createDIContainer({});
 
 	const cliInterface: ICliInterfaceService = new PromptsCliInterface();
 	const fileSystem: IFileSystemService = new NodeFileSystemService();
@@ -71,23 +71,23 @@ export function createAppContainer(): IContainer {
 	const validator: ICommitValidator = new CommitlintValidatorService(llmServices);
 	const promptContextExtractor: PromptContextExtractorService = new PromptContextExtractorService();
 
-	container.register(FileSystemServiceToken, fileSystem);
-	container.register(CliInterfaceServiceToken, cliInterface);
-	container.register(ConfigServiceToken, configService);
-	container.register(BranchLintConfigServiceToken, branchLintConfigService);
-	container.register(CommandServiceToken, commandService);
-	container.register(CommitRepositoryToken, commitRepository);
-	container.register(LLMServicesToken, llmServices);
-	container.register(CommitValidatorToken, validator);
-	container.register(PromptContextExtractorServiceToken, promptContextExtractor);
-	container.register(TicketIdParserToken, ticketIdParser);
+	container.register({ provide: FileSystemServiceToken, useValue: fileSystem });
+	container.register({ provide: CliInterfaceServiceToken, useValue: cliInterface });
+	container.register({ provide: ConfigServiceToken, useValue: configService });
+	container.register({ provide: BranchLintConfigServiceToken, useValue: branchLintConfigService });
+	container.register({ provide: CommandServiceToken, useValue: commandService });
+	container.register({ provide: CommitRepositoryToken, useValue: commitRepository });
+	container.register({ provide: LLMServicesToken, useValue: llmServices });
+	container.register({ provide: CommitValidatorToken, useValue: validator });
+	container.register({ provide: PromptContextExtractorServiceToken, useValue: promptContextExtractor });
+	container.register({ provide: TicketIdParserToken, useValue: ticketIdParser });
 
 	// Register use cases
-	container.register(ConfigureLLMUseCaseToken, new ConfigureLLMUseCaseImpl(configService, cliInterface));
-	container.register(GenerateCommitMessageUseCaseToken, new GenerateCommitMessageUseCaseImpl(llmServices));
-	container.register(ValidateCommitMessageUseCaseToken, new ValidateCommitMessageUseCaseImpl(validator));
-	container.register(ManualCommitUseCaseToken, new ManualCommitUseCaseImpl(cliInterface));
-	container.register(EditCommitUseCaseToken, new EditCommitUseCaseImpl(cliInterface, validator, llmServices, commitRepository));
+	container.register({ provide: ConfigureLLMUseCaseToken, useValue: new ConfigureLLMUseCaseImpl(configService, cliInterface) });
+	container.register({ provide: GenerateCommitMessageUseCaseToken, useValue: new GenerateCommitMessageUseCaseImpl(llmServices) });
+	container.register({ provide: ValidateCommitMessageUseCaseToken, useValue: new ValidateCommitMessageUseCaseImpl(validator) });
+	container.register({ provide: ManualCommitUseCaseToken, useValue: new ManualCommitUseCaseImpl(cliInterface) });
+	container.register({ provide: EditCommitUseCaseToken, useValue: new EditCommitUseCaseImpl(cliInterface, validator, llmServices, commitRepository) });
 
 	return container;
 }
