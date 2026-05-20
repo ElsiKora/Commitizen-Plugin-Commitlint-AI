@@ -1,0 +1,15 @@
+---
+description: Commitlint AI clean architecture boundaries
+globs: "**/*.ts"
+alwaysApply: false
+---
+
+# Architecture Boundaries
+
+- `src/domain/**` owns pure contracts, enums, entities, value objects, constants, and errors.
+- `src/domain/**` must not import application, infrastructure, presentation, SDK, Node, or CLI packages.
+- `src/application/**` owns use cases, ports, and application services. It may import domain, but not infrastructure or presentation.
+- `src/infrastructure/**` owns SDK adapters, DI composition, filesystem, environment, config adapters, and provider payload mapping.
+- `src/presentation/**` owns public adapter facades and should stay thin.
+- Provider-specific SDK payload shapes must be built in AI-Core or infrastructure, not in domain/application contracts.
+- Validation that protects public Commitlint AI invariants can live in application services; SDK request validation lives in AI-Core or infrastructure.

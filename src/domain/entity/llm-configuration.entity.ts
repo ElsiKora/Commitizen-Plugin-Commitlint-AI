@@ -1,7 +1,7 @@
 import type { ELLMProvider } from "../enum/llm-provider.enum.js";
 import type { ApiKey } from "../value-object/api-key.value-object.js";
 
-import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES } from "../constant/numeric.constant.js";
+import { NUMERIC_CONSTANT } from "../constant/numeric.constant.js";
 import { ECommitMode } from "../enum/commit-mode.enum.js";
 
 /**
@@ -20,7 +20,7 @@ export class LLMConfiguration {
 
 	private readonly VALIDATION_MAX_RETRIES: number;
 
-	constructor(provider: ELLMProvider, apiKey: ApiKey, mode: ECommitMode, model?: string, maxRetries: number = DEFAULT_MAX_RETRIES, validationMaxRetries: number = DEFAULT_VALIDATION_MAX_RETRIES) {
+	constructor(provider: ELLMProvider, apiKey: ApiKey, mode: ECommitMode, model?: string, maxRetries: number = NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, validationMaxRetries: number = NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES) {
 		this.PROVIDER = provider;
 		this.API_KEY = apiKey;
 		this.MODE = mode;

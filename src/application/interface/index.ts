@@ -1,3 +1,4 @@
+export type * from "./ai-profile-service.interface.js";
 export type * from "./branch-lint-config.interface.js";
 export type * from "./cli-interface-service-select-options.interface.js";
 export type * from "./cli-interface-service.interface.js";

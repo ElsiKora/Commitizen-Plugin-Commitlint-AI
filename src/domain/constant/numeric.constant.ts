@@ -1,41 +1,57 @@
-/**
- * Numeric constants used throughout the application
- */
+const DEFAULT_RETRY_COUNT: number = 3;
+const ELLIPSIS_CHARACTER_COUNT: number = 3;
+const MAXIMUM_RETRY_COUNT: number = 10;
+const MINIMUM_API_KEY_LENGTH: number = 8;
+const MINIMUM_RETRY_COUNT: number = 1;
+const MINIMUM_RULE_LENGTH: number = 2;
+const NOTE_BOX_CONTENT_PADDING_LENGTH: number = 2;
+const NOTE_BOX_PADDING_LENGTH: number = 4;
+const REDACTED_SEGMENT_LENGTH: number = 4;
+const RETRY_DELAY_IN_MILLISECONDS: number = 1000;
+const RULE_CONDITION_POSITION: number = 1;
+const RULE_CONFIGURATION_LENGTH: number = 3;
+const RULE_LEVEL_POSITION: number = 0;
+const RULE_VALUE_POSITION: number = 2;
+const VALIDATION_DISABLED_LEVEL: number = 0;
+const VALIDATION_ERROR_LEVEL: number = 2;
+const VALIDATION_WARNING_LEVEL: number = 1;
 
-// Retry limits
-export const DEFAULT_MAX_RETRIES: number = 3;
-export const DEFAULT_VALIDATION_MAX_RETRIES: number = 3;
-
-// API and formatting limits
-export const MAX_TOKENS: number = 4096;
-export const LLM_TEMPERATURE: number = 0.7;
-export const RETRY_DELAY_MS: number = 1000;
-
-// Array indices for commitlint rules
-export const RULE_LEVEL_INDEX: number = 0;
-export const RULE_CONDITION_INDEX: number = 1;
-export const RULE_VALUE_INDEX: number = 2;
-export const MIN_RULE_LENGTH: number = 2;
-export const RULE_CONFIG_LENGTH: number = 3;
-
-// Validation levels
-export const VALIDATION_LEVEL_DISABLED: number = 0;
-export const VALIDATION_LEVEL_WARNING: number = 1;
-export const VALIDATION_LEVEL_ERROR: number = 2;
-
-// String manipulation
-export const ELLIPSIS_LENGTH: number = 3;
-export const MIN_API_KEY_LENGTH: number = 8;
-export const REDACTED_LENGTH: number = 4;
-
-// UI formatting
-export const NOTE_BOX_PADDING: number = 4;
-export const NOTE_BOX_CONTENT_PADDING: number = 2;
-
-// Numeric limits
-export const MIN_RETRY_COUNT: number = 1;
-export const MAX_RETRY_COUNT: number = 10;
-
-// OpenAI API constants
-export const OPENAI_MAX_TOKENS: number = 2048;
-export const OPENAI_TEMPERATURE: number = 0.7;
+export const NUMERIC_CONSTANT: {
+	readonly DEFAULT_MAX_RETRIES: number;
+	readonly DEFAULT_VALIDATION_MAX_RETRIES: number;
+	readonly ELLIPSIS_LENGTH: number;
+	readonly MAX_RETRY_COUNT: number;
+	readonly MIN_API_KEY_LENGTH: number;
+	readonly MIN_RETRY_COUNT: number;
+	readonly MIN_RULE_LENGTH: number;
+	readonly NOTE_BOX_CONTENT_PADDING: number;
+	readonly NOTE_BOX_PADDING: number;
+	readonly REDACTED_LENGTH: number;
+	readonly RETRY_DELAY_MS: number;
+	readonly RULE_CONDITION_INDEX: number;
+	readonly RULE_CONFIG_LENGTH: number;
+	readonly RULE_LEVEL_INDEX: number;
+	readonly RULE_VALUE_INDEX: number;
+	readonly VALIDATION_LEVEL_DISABLED: number;
+	readonly VALIDATION_LEVEL_ERROR: number;
+	readonly VALIDATION_LEVEL_WARNING: number;
+} = {
+	DEFAULT_MAX_RETRIES: DEFAULT_RETRY_COUNT,
+	DEFAULT_VALIDATION_MAX_RETRIES: DEFAULT_RETRY_COUNT,
+	ELLIPSIS_LENGTH: ELLIPSIS_CHARACTER_COUNT,
+	MAX_RETRY_COUNT: MAXIMUM_RETRY_COUNT,
+	MIN_API_KEY_LENGTH: MINIMUM_API_KEY_LENGTH,
+	MIN_RETRY_COUNT: MINIMUM_RETRY_COUNT,
+	MIN_RULE_LENGTH: MINIMUM_RULE_LENGTH,
+	NOTE_BOX_CONTENT_PADDING: NOTE_BOX_CONTENT_PADDING_LENGTH,
+	NOTE_BOX_PADDING: NOTE_BOX_PADDING_LENGTH,
+	REDACTED_LENGTH: REDACTED_SEGMENT_LENGTH,
+	RETRY_DELAY_MS: RETRY_DELAY_IN_MILLISECONDS,
+	RULE_CONDITION_INDEX: RULE_CONDITION_POSITION,
+	RULE_CONFIG_LENGTH: RULE_CONFIGURATION_LENGTH,
+	RULE_LEVEL_INDEX: RULE_LEVEL_POSITION,
+	RULE_VALUE_INDEX: RULE_VALUE_POSITION,
+	VALIDATION_LEVEL_DISABLED: VALIDATION_DISABLED_LEVEL,
+	VALIDATION_LEVEL_ERROR: VALIDATION_ERROR_LEVEL,
+	VALIDATION_LEVEL_WARNING: VALIDATION_WARNING_LEVEL,
+} as const;

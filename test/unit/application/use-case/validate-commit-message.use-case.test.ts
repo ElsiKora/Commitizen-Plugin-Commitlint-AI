@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { ValidateCommitMessageUseCase } from "../../../../src/application/use-case/validate-commit-message.use-case";
 import { createMockCommitMessage } from "../../../mocks/commit-message.mock";
 import { createMockLlmPromptContext } from "../../../helpers/test-utils";
@@ -9,7 +9,7 @@ describe("ValidateCommitMessageUseCase", () => {
 	let useCase: ValidateCommitMessageUseCase;
 	let mockValidator: ICommitValidator;
 	let mockCommitMessage: CommitMessage;
-	let consoleWriteSpy: any;
+	let statusReporter: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		// Mock validator
@@ -17,9 +17,10 @@ describe("ValidateCommitMessageUseCase", () => {
 			validate: vi.fn(),
 			fix: vi.fn(),
 		};
+		statusReporter = vi.fn();
 
 		// Create use case
-		useCase = new ValidateCommitMessageUseCase(mockValidator, 3);
+		useCase = new ValidateCommitMessageUseCase(mockValidator, 3, statusReporter);
 
 		// Create mock commit message
 		mockCommitMessage = createMockCommitMessage({
@@ -28,15 +29,8 @@ describe("ValidateCommitMessageUseCase", () => {
 			subject: "add login functionality",
 		});
 
-		// Spy on console output
-		consoleWriteSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
-
 		// Clear all mocks
 		vi.clearAllMocks();
-	});
-
-	afterEach(() => {
-		consoleWriteSpy.mockRestore();
 	});
 
 	describe("execute", () => {
@@ -72,8 +66,8 @@ describe("ValidateCommitMessageUseCase", () => {
 			expect(result).toBeNull();
 			expect(mockValidator.validate).toHaveBeenCalledTimes(1);
 			expect(mockValidator.fix).not.toHaveBeenCalled();
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("validation failed"));
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("Type 'feat' is not allowed"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("validation failed"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("Type 'feat' is not allowed"));
 		});
 
 		it("should attempt to fix when validation fails and fix is requested", async () => {
@@ -101,9 +95,9 @@ describe("ValidateCommitMessageUseCase", () => {
 			expect(result).toBe(fixedMessage);
 			expect(mockValidator.validate).toHaveBeenCalledTimes(2);
 			expect(mockValidator.fix).toHaveBeenCalledWith(mockCommitMessage, invalidResult, undefined);
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("Attempting to fix"));
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("Fixed commit message generated"));
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("✓ Commit message fixed after 1 attempt"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("Attempting to fix"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("Fixed commit message generated"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("✓ Commit message fixed after 1 attempt"));
 		});
 
 		it("should respect max retries when fixing", async () => {
@@ -122,7 +116,7 @@ describe("ValidateCommitMessageUseCase", () => {
 			expect(result).toBeNull();
 			expect(mockValidator.validate).toHaveBeenCalledTimes(3); // Initial + 2 retries
 			expect(mockValidator.fix).toHaveBeenCalledTimes(2);
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("validation failed after 2 attempts"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("validation failed after 2 attempts"));
 		});
 
 		it("should pass context to fix method when provided", async () => {
@@ -160,7 +154,7 @@ describe("ValidateCommitMessageUseCase", () => {
 			// Assert
 			expect(result).toBeNull();
 			expect(mockValidator.fix).toHaveBeenCalledTimes(1);
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("Unable to automatically fix"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("Unable to automatically fix"));
 		});
 
 		it("should handle fix errors gracefully", async () => {
@@ -177,7 +171,7 @@ describe("ValidateCommitMessageUseCase", () => {
 
 			// Assert
 			expect(result).toBeNull();
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("Error during fix attempt: Fix service unavailable"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("Error during fix attempt: Fix service unavailable"));
 		});
 
 		it("should fix after multiple attempts", async () => {
@@ -212,7 +206,7 @@ describe("ValidateCommitMessageUseCase", () => {
 			expect(result).toBe(fullyFixedMessage);
 			expect(mockValidator.validate).toHaveBeenCalledTimes(3);
 			expect(mockValidator.fix).toHaveBeenCalledTimes(2);
-			expect(consoleWriteSpy).toHaveBeenCalledWith(expect.stringContaining("✓ Commit message fixed after 2 attempts"));
+			expect(statusReporter).toHaveBeenCalledWith(expect.stringContaining("✓ Commit message fixed after 2 attempts"));
 		});
 	});
 

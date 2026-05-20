@@ -13,17 +13,17 @@ export interface IConfig {
 	/**
 	 * Commit mode (auto, manual)
 	 */
-	mode: ECommitMode;
+	mode?: ECommitMode;
 
 	/**
-	 * Model to use
+	 * Legacy model mirror. New AI runtime profiles are stored by AI-Core.
 	 */
 	model?: string;
 
 	/**
-	 * LLM provider (openai, anthropic)
+	 * Legacy provider mirror. New AI runtime profiles are stored by AI-Core.
 	 */
-	provider: ELLMProvider;
+	provider?: ELLMProvider;
 
 	/**
 	 * Ticket extraction settings.

@@ -1,0 +1,34 @@
+---
+description: Commitlint AI file organization and architecture rules
+globs: **/*.ts
+alwaysApply: true
+---
+
+# Commitlint AI File Organization
+
+Follow the AI-Core architecture discipline in this repository.
+
+## Core Rules
+
+1. One file contains exactly one exported class, interface, type, enum, value object, use case, service, or constant group.
+2. Put each entity kind under its own folder: interfaces in `interface/`, types in `type/`, enums in `enum/`, entities in `entity/`, value objects in `value-object/`, services in `service/`, use cases in `use-case/`.
+3. Do not use string-literal unions for domain choices. Use enums and export one enum per file.
+4. Every directory with source files must have an `index.ts` barrel, including nested grouping directories.
+5. Group files by common prefixes recursively. If two sibling files would be `reasoning-mode.*` and `reasoning-options.*`, create `reasoning/mode.*` and `reasoning/options.*`. Repeat this at every level until sibling names no longer share removable prefixes.
+6. Remove prefix segments represented by directories from file names. Use `reasoning/mode.enum.ts`, not `reasoning/reasoning-mode.enum.ts`.
+7. Keep SDK-specific types out of `src/domain/**` and `src/application/**`; map SDK payloads only in `src/infrastructure/**`.
+8. Preserve clean dependency direction: domain has no app/infrastructure imports; application depends on domain; infrastructure implements ports.
+9. Use project naming: `I*` interfaces, `T*` types, `E*` enums, kebab-case filenames with `.interface.ts`, `.type.ts`, `.enum.ts`, `.service.ts`, `.use-case.ts`.
+10. Use project aliases for new or touched internal imports/exports: `@domain/*`, `@application/*`, `@infrastructure/*`, `@presentation/*`, or `@/*`.
+11. Do not add `.js` extensions in new TypeScript import/export specifiers.
+12. In `index.ts`, use explicit named exports for files. Use `export * from "@.../folder";` only for child folder barrels.
+13. Non-barrel source files export exactly one top-level entity, and the exported name must mirror the owning path plus file stem.
+14. Function-valued top-level constants count as entities too; do not place them beside another exported entity.
+15. Constant files use exactly one exported `*_CONSTANT` object bag; do not mix helper types, functions, classes, or enums into constant files.
+16. Avoid noisy one-off abstractions. Extract only when the symbol carries domain meaning, removes real duplication, or protects an invariant.
+
+## Runtime Options
+
+- Public runtime option contracts must be project-owned or AI-Core-owned types, never provider SDK request types.
+- Provider-specific behavior belongs in `@elsikora/ai-core` or infrastructure adapters, not in domain/application contracts.
+- Existing public adapter methods must remain compatible unless a breaking change is explicitly requested.

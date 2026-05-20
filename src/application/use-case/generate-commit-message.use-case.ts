@@ -2,7 +2,7 @@ import type { CommitMessage } from "../../domain/entity/commit-message.entity.js
 import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import type { ILlmPromptContext, ILlmService } from "../interface/llm-service.interface.js";
 
-import { RETRY_DELAY_MS } from "../../domain/constant/numeric.constant.js";
+import { NUMERIC_CONSTANT } from "../../domain/constant/numeric.constant.js";
 
 /**
  * Use case for generating commit messages
@@ -45,7 +45,7 @@ export class GenerateCommitMessageUseCase {
 				}
 
 				// Wait before retrying
-				await new Promise<void>((resolve: () => void) => setTimeout(resolve, RETRY_DELAY_MS));
+				await new Promise<void>((resolve: () => void) => setTimeout(resolve, NUMERIC_CONSTANT.RETRY_DELAY_MS));
 			}
 		}
 

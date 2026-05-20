@@ -8,7 +8,7 @@ import type { LLMConfiguration } from "../../domain/entity/llm-configuration.ent
 import lint from "@commitlint/lint";
 import load from "@commitlint/load";
 
-import { ELLIPSIS_LENGTH } from "../../domain/constant/numeric.constant.js";
+import { NUMERIC_CONSTANT } from "../../domain/constant/numeric.constant.js";
 import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
 import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
 
@@ -134,7 +134,7 @@ export class CommitlintValidatorService implements ICommitValidator {
 						// Try to shorten the subject
 						const overhead: number = currentLength - maxLength;
 						const subject: string = header.getSubject();
-						const shortenedSubject: string = subject.slice(0, Math.max(0, subject.length - overhead - ELLIPSIS_LENGTH)) + "...";
+						const shortenedSubject: string = subject.slice(0, Math.max(0, subject.length - overhead - NUMERIC_CONSTANT.ELLIPSIS_LENGTH)) + "...";
 						const newHeader: CommitHeader = new CommitHeader(header.getType(), shortenedSubject, header.getScope());
 						fixedMessage = fixedMessage.withHeader(newHeader);
 					}
