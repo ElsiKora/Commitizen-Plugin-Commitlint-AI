@@ -1,3 +1,5 @@
+## [2.5.2](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.1...v2.5.2) (2026-05-20)
+
 ## [2.5.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.0...v2.5.1) (2026-05-20)
 
 ### Bug Fixes
