@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.0...v2.5.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **di:** require cladi version with new api ([91db172](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/91db1720bf6d21cc4fd52c9b1808fd7264ce7c08))
+
 # [2.5.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.4.0...v2.5.0) (2026-02-18)
 
 ### Features
