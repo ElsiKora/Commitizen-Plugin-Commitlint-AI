@@ -1,5 +1,5 @@
 import type { QualifiedRules, UserPromptConfig } from "@commitlint/types";
-import type { IContainer } from "@elsikora/cladi";
+import type { IDIContainer } from "@elsikora/cladi";
 
 import type { ICliInterfaceService } from "../application/interface/cli-interface-service.interface.js";
 import type { ICommitRepository } from "../application/interface/commit-repository.interface.js";
@@ -31,9 +31,9 @@ type TLoadResult = { prompt?: UserPromptConfig; rules: QualifiedRules };
  * Main adapter for Commitizen integration
  */
 export class CommitizenAdapter {
-	private readonly CONTAINER: IContainer;
+	private readonly CONTAINER: IDIContainer;
 
-	constructor(container: IContainer) {
+	constructor(container: IDIContainer) {
 		this.CONTAINER = container;
 	}
 
@@ -48,15 +48,15 @@ export class CommitizenAdapter {
 
 		try {
 			// Get use cases from container
-			const configureLLMUseCase: ConfigureLLMUseCase | undefined = this.CONTAINER.get<ConfigureLLMUseCase>(ConfigureLLMUseCaseToken);
-			const generateCommitUseCase: GenerateCommitMessageUseCase | undefined = this.CONTAINER.get<GenerateCommitMessageUseCase>(GenerateCommitMessageUseCaseToken);
-			const validateCommitUseCase: undefined | ValidateCommitMessageUseCase = this.CONTAINER.get<ValidateCommitMessageUseCase>(ValidateCommitMessageUseCaseToken);
-			const manualCommitUseCase: ManualCommitUseCase | undefined = this.CONTAINER.get<ManualCommitUseCase>(ManualCommitUseCaseToken);
-			const editCommitUseCase: EditCommitUseCase | undefined = this.CONTAINER.get<EditCommitUseCase>(EditCommitUseCaseToken);
-			const cliInterface: ICliInterfaceService | undefined = this.CONTAINER.get<ICliInterfaceService>(CliInterfaceServiceToken);
-			const commitRepository: ICommitRepository | undefined = this.CONTAINER.get<ICommitRepository>(CommitRepositoryToken);
-			const configService: IConfigService | undefined = this.CONTAINER.get<IConfigService>(ConfigServiceToken);
-			const promptContextExtractor: PromptContextExtractorService | undefined = this.CONTAINER.get<PromptContextExtractorService>(PromptContextExtractorServiceToken);
+			const configureLLMUseCase: ConfigureLLMUseCase = this.CONTAINER.resolve(ConfigureLLMUseCaseToken);
+			const generateCommitUseCase: GenerateCommitMessageUseCase = this.CONTAINER.resolve(GenerateCommitMessageUseCaseToken);
+			const validateCommitUseCase: ValidateCommitMessageUseCase = this.CONTAINER.resolve(ValidateCommitMessageUseCaseToken);
+			const manualCommitUseCase: ManualCommitUseCase = this.CONTAINER.resolve(ManualCommitUseCaseToken);
+			const editCommitUseCase: EditCommitUseCase = this.CONTAINER.resolve(EditCommitUseCaseToken);
+			const cliInterface: ICliInterfaceService = this.CONTAINER.resolve(CliInterfaceServiceToken);
+			const commitRepository: ICommitRepository = this.CONTAINER.resolve(CommitRepositoryToken);
+			const configService: IConfigService = this.CONTAINER.resolve(ConfigServiceToken);
+			const promptContextExtractor: PromptContextExtractorService = this.CONTAINER.resolve(PromptContextExtractorServiceToken);
 
 			if (!configureLLMUseCase || !generateCommitUseCase || !validateCommitUseCase || !manualCommitUseCase || !editCommitUseCase || !cliInterface || !commitRepository || !configService || !promptContextExtractor) {
 				throw new Error("Failed to initialize required services");
@@ -173,7 +173,7 @@ export class CommitizenAdapter {
 			}
 
 			// Auto mode - set LLM configuration on validator if supported
-			const validator: ICommitValidator | undefined = this.CONTAINER.get<ICommitValidator>(CommitValidatorToken);
+			const validator: ICommitValidator = this.CONTAINER.resolve(CommitValidatorToken);
 			validator?.setLLMConfiguration?.(llmConfig);
 
 			// Auto mode - generate with AI
