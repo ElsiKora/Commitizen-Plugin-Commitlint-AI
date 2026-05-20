@@ -86,7 +86,7 @@ export class CosmicConfigService implements IConfigService {
 			return this.cachedConfig;
 		}
 
-		return {} as IConfig;
+		return {};
 	}
 
 	/**
@@ -113,7 +113,7 @@ export class CosmicConfigService implements IConfigService {
 			await this.set(merged);
 		} catch (error) {
 			console.error("Error merging config:", error);
-			await this.set(partial as IConfig);
+			await this.set(partial);
 		}
 	}
 

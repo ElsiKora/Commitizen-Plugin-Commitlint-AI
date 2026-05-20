@@ -295,27 +295,27 @@ rm -rf .elsikora/ai-core.config.*
 
 ## 🛣 Roadmap
 
-| Task / Feature                                     | Status         |
-| -------------------------------------------------- | -------------- |
-| Core AI-powered commit generation                  | ✅ Done        |
-| Multi-provider support through AI-Core             | ✅ Done        |
-| Commitlint rule integration                        | ✅ Done        |
-| Clean architecture implementation                  | ✅ Done        |
-| Automatic validation and fixing                    | ✅ Done        |
-| Environment variable support                       | ✅ Done        |
-| Cosmiconfig integration                            | ✅ Done        |
-| Interactive mode switching                         | ✅ Done        |
-| Breaking change detection                          | ✅ Done        |
-| AWS Bedrock and Azure OpenAI support               | ✅ Done        |
-| Local Ollama model support                         | ✅ Done        |
-| Custom prompt templates                            | 🚧 In Progress |
-| Multi-language commit messages                     | 🚧 In Progress |
-| Git hook integration                               | 🚧 In Progress |
-| VS Code extension                                  | 🚧 In Progress |
-| Team collaboration features                        | 🚧 In Progress |
-| Commit message analytics                           | 🚧 In Progress |
-| GitHub Copilot integration                         | 🚧 In Progress |
-| Performance optimizations for monorepos            | 🚧 In Progress |
+| Task / Feature                          | Status         |
+| --------------------------------------- | -------------- |
+| Core AI-powered commit generation       | ✅ Done        |
+| Multi-provider support through AI-Core  | ✅ Done        |
+| Commitlint rule integration             | ✅ Done        |
+| Clean architecture implementation       | ✅ Done        |
+| Automatic validation and fixing         | ✅ Done        |
+| Environment variable support            | ✅ Done        |
+| Cosmiconfig integration                 | ✅ Done        |
+| Interactive mode switching              | ✅ Done        |
+| Breaking change detection               | ✅ Done        |
+| AWS Bedrock and Azure OpenAI support    | ✅ Done        |
+| Local Ollama model support              | ✅ Done        |
+| Custom prompt templates                 | 🚧 In Progress |
+| Multi-language commit messages          | 🚧 In Progress |
+| Git hook integration                    | 🚧 In Progress |
+| VS Code extension                       | 🚧 In Progress |
+| Team collaboration features             | 🚧 In Progress |
+| Commit message analytics                | 🚧 In Progress |
+| GitHub Copilot integration              | 🚧 In Progress |
+| Performance optimizations for monorepos | 🚧 In Progress |
 
 ## ❓ FAQ
 

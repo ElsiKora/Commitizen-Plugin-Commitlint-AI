@@ -1,12 +1,13 @@
 import type { ILlmPromptContext, ILlmService } from "@application/interface/llm-service.interface";
 import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
-import type { AiCoreAdapter, IGenerateResult, IProviderOption, TAiCoreModuleId } from "@elsikora/ai-core";
+import type { AiCoreAdapter, IGenerateResult, IProviderOption } from "@elsikora/ai-core";
 
 import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
 import { CommitMessage } from "@domain/entity/commit-message.entity";
+import { ELLMProvider } from "@domain/enum/llm-provider.enum";
 import { CommitBody } from "@domain/value-object/commit-body.value-object";
 import { CommitHeader } from "@domain/value-object/commit-header.value-object";
-import { EGenerateMode, ELLMMessageRole } from "@elsikora/ai-core";
+import { ELLMProvider as EAiCoreLLMProvider, EGenerateMode, ELLMMessageRole } from "@elsikora/ai-core";
 
 /**
  * Commit message LLM service backed by the unified AI-Core runtime.
@@ -14,11 +15,11 @@ import { EGenerateMode, ELLMMessageRole } from "@elsikora/ai-core";
 export class AiCoreLlmService implements ILlmService {
 	private readonly AI_CORE_ADAPTER: AiCoreAdapter;
 
-	private readonly MODULE_ID: TAiCoreModuleId;
+	private readonly MODULE_ID: string;
 
 	constructor(aiCoreAdapter: AiCoreAdapter, moduleId: string) {
 		this.AI_CORE_ADAPTER = aiCoreAdapter;
-		this.MODULE_ID = moduleId as TAiCoreModuleId;
+		this.MODULE_ID = moduleId;
 	}
 
 	async generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage> {
@@ -42,7 +43,9 @@ export class AiCoreLlmService implements ILlmService {
 	}
 
 	supports(configuration: LLMConfiguration): boolean {
-		return this.AI_CORE_ADAPTER.getProviderOptions().some((option: IProviderOption): boolean => String(option.value) === String(configuration.getProvider()));
+		const provider: EAiCoreLLMProvider = this.toAiCoreProvider(configuration.getProvider());
+
+		return this.AI_CORE_ADAPTER.getProviderOptions().some((option: IProviderOption): boolean => option.value === provider);
 	}
 
 	private buildBodyFormattingRules(context: ILlmPromptContext): string {
@@ -368,6 +371,42 @@ export class AiCoreLlmService implements ILlmService {
 				if (conditionString && value !== undefined) {
 					formattedRules.push(`${ruleName}: ${conditionString} ${JSON.stringify(value)}`);
 				}
+			}
+		}
+	}
+
+	private toAiCoreProvider(provider: ELLMProvider): EAiCoreLLMProvider {
+		switch (provider) {
+			case ELLMProvider.ANTHROPIC: {
+				return EAiCoreLLMProvider.ANTHROPIC;
+			}
+
+			case ELLMProvider.AWS_BEDROCK: {
+				return EAiCoreLLMProvider.AWS_BEDROCK;
+			}
+
+			case ELLMProvider.AZURE_OPENAI: {
+				return EAiCoreLLMProvider.AZURE_OPENAI;
+			}
+
+			case ELLMProvider.CEREBRAS: {
+				return EAiCoreLLMProvider.CEREBRAS;
+			}
+
+			case ELLMProvider.GOOGLE: {
+				return EAiCoreLLMProvider.GOOGLE;
+			}
+
+			case ELLMProvider.OLLAMA: {
+				return EAiCoreLLMProvider.OLLAMA;
+			}
+
+			case ELLMProvider.OPENAI: {
+				return EAiCoreLLMProvider.OPENAI;
+			}
+
+			case ELLMProvider.VERCEL_AI_GATEWAY: {
+				return EAiCoreLLMProvider.VERCEL_AI_GATEWAY;
 			}
 		}
 	}
