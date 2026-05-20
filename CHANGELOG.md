@@ -1,22 +1,26 @@
-# [2.5.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.4.0...v2.5.0) (2026-02-18)
-
-
-### Features
-
-* **ticket-id:** add automatic ticket id extraction from branch names ([e039111](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/e0391116574d6ae9eb8ee1f8a4669f9c469d8ce2))
-
-# [2.4.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.3.0...v2.4.0) (2026-02-16)
+## [2.5.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.0...v2.5.1) (2026-05-20)
 
 
 ### Bug Fixes
 
-* **ticket id:** change ticket id parsing to all letter cases ([8bccd96](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/8bccd961ee4b99cbd96229e823e9b68dcaeb1632))
-* **ticket id:** change ticket id parsing to all letter cases ([c862ca0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/c862ca0cc5e0c01e957db8fa1ec99a50cb6de67e))
+* **di:** require cladi version with new api ([91db172](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/91db1720bf6d21cc4fd52c9b1808fd7264ce7c08))
 
+# [2.5.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.4.0...v2.5.0) (2026-02-18)
 
 ### Features
 
-* **commit:** add automatic ticket id extraction from branch name ([fcb7644](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/fcb76444ac2895df705b8bde1f36cba5a8da71e1))
+- **ticket-id:** add automatic ticket id extraction from branch names ([e039111](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/e0391116574d6ae9eb8ee1f8a4669f9c469d8ce2))
+
+# [2.4.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.3.0...v2.4.0) (2026-02-16)
+
+### Bug Fixes
+
+- **ticket id:** change ticket id parsing to all letter cases ([8bccd96](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/8bccd961ee4b99cbd96229e823e9b68dcaeb1632))
+- **ticket id:** change ticket id parsing to all letter cases ([c862ca0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/c862ca0cc5e0c01e957db8fa1ec99a50cb6de67e))
+
+### Features
+
+- **commit:** add automatic ticket id extraction from branch name ([fcb7644](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/fcb76444ac2895df705b8bde1f36cba5a8da71e1))
 
 # [2.3.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.2.0...v2.3.0) (2026-02-16)
 
