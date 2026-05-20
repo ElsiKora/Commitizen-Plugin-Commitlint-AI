@@ -49,5 +49,4 @@ describe("AiCoreLlmService", () => {
 		expect(generate.mock.calls[0]?.[0]).not.toHaveProperty("retries");
 		expect(generate.mock.calls[0]?.[0]).not.toHaveProperty("temperature");
 	});
-
 });
