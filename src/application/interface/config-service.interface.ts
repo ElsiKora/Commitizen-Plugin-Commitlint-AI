@@ -1,5 +1,4 @@
 import type { IConfig } from "./config.interface.js";
-import type { IFileSystemService } from "./file-system-service.interface.js";
 
 /**
  * Interface for managing application configuration.
@@ -11,11 +10,6 @@ export interface IConfigService {
 	 * @returns Promise resolving to true if the configuration exists, false otherwise
 	 */
 	exists(): Promise<boolean>;
-
-	/**
-	 * File system service for file operations.
-	 */
-	FILE_SYSTEM_SERVICE: IFileSystemService;
 
 	/**
 	 * Retrieves the current configuration.

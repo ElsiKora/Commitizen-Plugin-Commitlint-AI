@@ -1,28 +1,17 @@
 import type { QualifiedRules, UserPromptConfig } from "@commitlint/types";
-import type { IDIContainer } from "@elsikora/cladi";
 
 import type { ICliInterfaceService } from "../application/interface/cli-interface-service.interface.js";
-import type { ICommitRepository } from "../application/interface/commit-repository.interface.js";
-import type { ICommitValidator } from "../application/interface/commit-validator.interface.js";
-import type { IConfigService } from "../application/interface/config-service.interface.js";
 import type { IConfig } from "../application/interface/config.interface.js";
 import type { ILlmPromptContext } from "../application/interface/llm-service.interface.js";
-import type { PromptContextExtractorService } from "../application/service/prompt-context-extractor.service.js";
-import type { ConfigureLLMUseCase } from "../application/use-case/configure-llm.use-case.js";
-import type { EditCommitUseCase } from "../application/use-case/edit-commit.use-case.js";
-import type { GenerateCommitMessageUseCase } from "../application/use-case/generate-commit-message.use-case.js";
-import type { ManualCommitUseCase } from "../application/use-case/manual-commit.use-case.js";
-import type { ValidateCommitMessageUseCase } from "../application/use-case/validate-commit-message.use-case.js";
 import type { CommitMessage } from "../domain/entity/commit-message.entity.js";
+import type { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
+
+import type { ICommitizenAdapterDependencies } from "./interface/commitizen-adapter-dependencies.interface.js";
 
 import load from "@commitlint/load";
 
-import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES } from "../domain/constant/numeric.constant.js";
-import { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
 import { ECommitMode } from "../domain/enum/commit-mode.enum.js";
 import { addTicketIdToCommitMessage } from "../domain/helper/add-ticket-to-commit.helper.js";
-import { ApiKey } from "../domain/value-object/api-key.value-object.js";
-import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, EditCommitUseCaseToken, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, PromptContextExtractorServiceToken, ValidateCommitMessageUseCaseToken } from "../infrastructure/di/container.js";
 
 type TCommit = (message: string) => void;
 type TLoadResult = { prompt?: UserPromptConfig; rules: QualifiedRules };
@@ -31,10 +20,10 @@ type TLoadResult = { prompt?: UserPromptConfig; rules: QualifiedRules };
  * Main adapter for Commitizen integration
  */
 export class CommitizenAdapter {
-	private readonly CONTAINER: IDIContainer;
+	private readonly DEPENDENCIES: ICommitizenAdapterDependencies;
 
-	constructor(container: IDIContainer) {
-		this.CONTAINER = container;
+	constructor(dependencies: ICommitizenAdapterDependencies) {
+		this.DEPENDENCIES = dependencies;
 	}
 
 	/**
@@ -47,20 +36,7 @@ export class CommitizenAdapter {
 		const { prompt = {}, rules }: TLoadResult = loadResult;
 
 		try {
-			// Get use cases from container
-			const configureLLMUseCase: ConfigureLLMUseCase = this.CONTAINER.resolve(ConfigureLLMUseCaseToken);
-			const generateCommitUseCase: GenerateCommitMessageUseCase = this.CONTAINER.resolve(GenerateCommitMessageUseCaseToken);
-			const validateCommitUseCase: ValidateCommitMessageUseCase = this.CONTAINER.resolve(ValidateCommitMessageUseCaseToken);
-			const manualCommitUseCase: ManualCommitUseCase = this.CONTAINER.resolve(ManualCommitUseCaseToken);
-			const editCommitUseCase: EditCommitUseCase = this.CONTAINER.resolve(EditCommitUseCaseToken);
-			const cliInterface: ICliInterfaceService = this.CONTAINER.resolve(CliInterfaceServiceToken);
-			const commitRepository: ICommitRepository = this.CONTAINER.resolve(CommitRepositoryToken);
-			const configService: IConfigService = this.CONTAINER.resolve(ConfigServiceToken);
-			const promptContextExtractor: PromptContextExtractorService = this.CONTAINER.resolve(PromptContextExtractorServiceToken);
-
-			if (!configureLLMUseCase || !generateCommitUseCase || !validateCommitUseCase || !manualCommitUseCase || !editCommitUseCase || !cliInterface || !commitRepository || !configService || !promptContextExtractor) {
-				throw new Error("Failed to initialize required services");
-			}
+			const { cliInterface, commitRepository, configService, configureLLMUseCase, editCommitUseCase, generateCommitUseCase, manualCommitUseCase, promptContextExtractor, validateCommitUseCase, validator }: ICommitizenAdapterDependencies = this.DEPENDENCIES;
 
 			// Extract context from commitlint config
 			const promptContext: ILlmPromptContext = promptContextExtractor.extractContext(rules, prompt);
@@ -72,90 +48,29 @@ export class CommitizenAdapter {
 			promptContext.files = files.join("\n");
 
 			// Get or configure LLM
-			let llmConfig: LLMConfiguration | null = await configureLLMUseCase.getCurrentConfiguration();
+			let llmConfig: LLMConfiguration | null = null;
 			const isConfigExists: boolean = await configService.exists();
 
-			if (isConfigExists) {
+			if (this.isMockMode()) {
+				llmConfig = await configureLLMUseCase.getMockConfiguration();
+			} else if (isConfigExists) {
 				// Configuration exists - load it first to show details
 				const config: IConfig = await configService.get();
 
 				// Ask if they want to use existing configuration
-				const modeInfo: string = config.mode === ECommitMode.AUTO ? `${config.mode} mode, ${config.provider} provider` : `${config.mode} mode`;
+				const modeInfo: string = config.mode === ECommitMode.AUTO ? `${config.mode} mode, AI-Core profile` : `${config.mode ?? "unconfigured"} mode`;
 				const isUseExisting: boolean = await cliInterface.confirm(`Found existing configuration (${modeInfo}). Use it?`, true);
 
-				if (!isUseExisting) {
+				if (isUseExisting) {
+					llmConfig = await configureLLMUseCase.getCurrentConfiguration();
+				} else {
 					cliInterface.info("Let's reconfigure...");
 					llmConfig = await configureLLMUseCase.configureInteractively();
-
-					// Check if we need to prompt for API key after configuration
-					if (llmConfig.isAutoMode() && llmConfig.getApiKey().getValue() === "will-prompt-on-use") {
-						// Ask for API key
-						const { hint, prompt }: { hint: string; prompt: string } = promptContextExtractor.getApiKeyPromptInfo(llmConfig.getProvider());
-
-						const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
-							if (!value || value.trim().length === 0) {
-								return "API key is required";
-							}
-
-							// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
-							return;
-						});
-
-						// Create new configuration with the provided API key
-						llmConfig = new LLMConfiguration(llmConfig.getProvider(), new ApiKey(credentialValue), llmConfig.getMode(), llmConfig.getModel(), llmConfig.getMaxRetries(), llmConfig.getValidationMaxRetries());
-					}
-				} else if (config.mode === ECommitMode.AUTO && !llmConfig) {
-					// User wants to use existing config but API key is missing
-					const environmentVariableNames: Record<string, string> = {
-						anthropic: "ANTHROPIC_API_KEY",
-						"aws-bedrock": "AWS_BEDROCK_API_KEY",
-						"azure-openai": "AZURE_OPENAI_API_KEY",
-						google: "GOOGLE_API_KEY",
-						ollama: "OLLAMA_API_KEY",
-						openai: "OPENAI_API_KEY",
-					};
-					const environmentVariableName: string = environmentVariableNames[config.provider] ?? "";
-					cliInterface.warn(`API key not found in ${environmentVariableName} environment variable.`);
-
-					// Ask for API key
-					const { hint, prompt }: { hint: string; prompt: string } = promptContextExtractor.getApiKeyPromptInfo(config.provider);
-
-					const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
-						if (!value || value.trim().length === 0) {
-							return "API key is required";
-						}
-
-						// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
-						return;
-					});
-
-					// Create new configuration with the provided API key
-					const maxRetries: number = config.maxRetries ?? DEFAULT_MAX_RETRIES;
-					const validationMaxRetries: number = config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES;
-					llmConfig = new LLMConfiguration(config.provider, new ApiKey(credentialValue), config.mode, config.model, maxRetries, validationMaxRetries);
 				}
 			} else {
 				// No configuration at all
 				cliInterface.info("No configuration found. Let's set it up!");
 				llmConfig = await configureLLMUseCase.configureInteractively();
-
-				// Check if we need to prompt for API key after configuration
-				if (llmConfig.isAutoMode() && llmConfig.getApiKey().getValue() === "will-prompt-on-use") {
-					// Ask for API key
-					const { hint, prompt }: { hint: string; prompt: string } = promptContextExtractor.getApiKeyPromptInfo(llmConfig.getProvider());
-
-					const credentialValue: string = await cliInterface.text(prompt, hint, "", (value: string) => {
-						if (!value || value.trim().length === 0) {
-							return "API key is required";
-						}
-
-						// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
-						return;
-					});
-
-					// Create new configuration with the provided API key
-					llmConfig = new LLMConfiguration(llmConfig.getProvider(), new ApiKey(credentialValue), llmConfig.getMode(), llmConfig.getModel(), llmConfig.getMaxRetries(), llmConfig.getValidationMaxRetries());
-				}
 			}
 
 			// Configuration should exist at this point
@@ -173,7 +88,6 @@ export class CommitizenAdapter {
 			}
 
 			// Auto mode - set LLM configuration on validator if supported
-			const validator: ICommitValidator = this.CONTAINER.resolve(CommitValidatorToken);
 			validator?.setLLMConfiguration?.(llmConfig);
 
 			// Auto mode - generate with AI
@@ -269,14 +183,16 @@ export class CommitizenAdapter {
 	 * @param {ICliInterfaceService} cliInterface - CLI interface for user interaction
 	 */
 	private executeCommit(commit: TCommit, message: string, cliInterface: ICliInterfaceService): void {
-		const isMockMode: boolean = process.env.MOCK_LLM === "true" || process.env.MOCK_LLM === "1";
-
-		if (isMockMode) {
+		if (this.isMockMode()) {
 			cliInterface.success("🎭 Mock mode: Commit NOT executed (MOCK_LLM=true)");
 			cliInterface.note("Final commit message that would be used:", message);
 			cliInterface.info("In mock mode, staged files remain in staging area for manual cleanup");
 		} else {
 			commit(message);
 		}
+	}
+
+	private isMockMode(): boolean {
+		return process.env.MOCK_LLM === "true" || process.env.MOCK_LLM === "1";
 	}
 }

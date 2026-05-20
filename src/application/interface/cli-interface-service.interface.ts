@@ -71,6 +71,15 @@ export interface ICliInterfaceService {
 	note(title: string, message: string): void;
 
 	/**
+	 * Displays a masked password prompt to the user.
+	 * @param message - The message to display to the user
+	 * @param initialValue - Optional initial value for the input field
+	 * @param validate - Optional validation function for the input
+	 * @returns Promise that resolves to the user's password text
+	 */
+	password(message: string, initialValue?: string, validate?: (value: string) => Error | string | undefined): Promise<string>;
+
+	/**
 	 * Displays a single select prompt to the user.
 	 * @param message - The message to display to the user
 	 * @param options - Array of options to select from

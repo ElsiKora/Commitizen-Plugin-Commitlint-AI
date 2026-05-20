@@ -19,7 +19,6 @@ describe("BranchTicketIdParser", () => {
 		};
 		configService = {
 			exists: vi.fn(),
-			FILE_SYSTEM_SERVICE: {} as never,
 			get: vi.fn(),
 			getProperty: vi.fn(),
 			merge: vi.fn(),

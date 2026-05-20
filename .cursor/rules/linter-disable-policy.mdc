@@ -1,0 +1,13 @@
+---
+description: Commitlint AI linter disable policy
+alwaysApply: true
+---
+
+# Linter Disable Policy
+
+- Do not add file-level or block-level `eslint-disable` directives.
+- Existing file-level disables must be removed or narrowed when touched.
+- Line-level disables are a last resort. First try clearer code, smaller types, local constants, kind folders, or better ownership placement.
+- External-contract object keys from SDKs may require exceptions, but keep the exception local to the affected line and document the exact rule and reason.
+- Never use broad forms such as `eslint-disable-next-line` without a rule name, broad `eslint-disable`, or multiple unrelated rules together.
+- Remove unused disables immediately.

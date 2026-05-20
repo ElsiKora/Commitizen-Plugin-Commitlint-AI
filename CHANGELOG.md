@@ -1,4 +1,13 @@
-## [2.5.2](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.1...v2.5.2) (2026-05-20)
+## Unreleased
+
+### Code Refactoring
+
+- **ai:** migrate provider runtime and model catalog to `@elsikora/ai-core`
+
+### BREAKING CHANGES
+
+- **ai:** Provider/model profiles now live in `.elsikora/ai-core.config.js` under the `commitlint-plugin-commitlint-ai` module. `.elsikora/commitlint-ai.config.js` keeps Commitizen mode, retry, and ticket settings only.
+
 
 ## [2.5.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.0...v2.5.1) (2026-05-20)
 
@@ -6,13 +15,13 @@
 
 - **di:** require cladi version with new api ([91db172](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/91db1720bf6d21cc4fd52c9b1808fd7264ce7c08))
 
-# [2.5.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.4.0...v2.5.0) (2026-02-18)
+## [2.5.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.4.0...v2.5.0) (2026-02-18)
 
 ### Features
 
 - **ticket-id:** add automatic ticket id extraction from branch names ([e039111](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/e0391116574d6ae9eb8ee1f8a4669f9c469d8ce2))
 
-# [2.4.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.3.0...v2.4.0) (2026-02-16)
+## [2.4.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.3.0...v2.4.0) (2026-02-16)
 
 ### Bug Fixes
 
@@ -23,13 +32,13 @@
 
 - **commit:** add automatic ticket id extraction from branch name ([fcb7644](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/fcb76444ac2895df705b8bde1f36cba5a8da71e1))
 
-# [2.3.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.2.0...v2.3.0) (2026-02-16)
+## [2.3.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.2.0...v2.3.0) (2026-02-16)
 
 ### Features
 
 - **commit:** add automatic ticket id extraction from branch name ([33252ca](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/33252ca512bbb3f8cdad6d7f0839d1e0697af83e))
 
-# [2.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.1...v2.2.0) (2026-02-14)
+## [2.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.1...v2.2.0) (2026-02-14)
 
 ### Features
 
@@ -38,7 +47,7 @@
 
 ## [2.1.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.1.0...v2.1.1) (2026-01-15)
 
-# [2.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.1...v2.1.0) (2025-12-17)
+## [2.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.1...v2.1.0) (2025-12-17)
 
 ### Features
 
@@ -46,7 +55,7 @@
 
 ## [2.0.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.0.0...v2.0.1) (2025-06-04)
 
-# [2.0.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.2.0...v2.0.0) (2025-05-25)
+## [2.0.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.2.0...v2.0.0) (2025-05-25)
 
 ### Code Refactoring
 
@@ -123,19 +132,19 @@ Key changes:
 - Updated AI model configurations (Anthropic and OpenAI models)
 - Fixed various linting issues and improved type safety.
 
-# [1.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.1.0...v1.2.0) (2025-04-17)
+## [1.2.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.1.0...v1.2.0) (2025-04-17)
 
 ### Features
 
 - **commit:** add interactive commit message editor for rejected ai suggestions ([67c7fab](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/67c7fabb2eb99d305ab29c7dba60d7abb741300f))
 
-# [1.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.0.0...v1.1.0) (2025-04-16)
+## [1.1.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v1.0.0...v1.1.0) (2025-04-16)
 
 ### Features
 
 - **commit-flow:** add option to switch between manual and ai commit modes ([fd8d653](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/fd8d653f9f8933dcddcb9305b43759519067c70d))
 
-# 1.0.0 (2025-03-03)
+## 1.0.0 (2025-03-03)
 
 ### Features
 

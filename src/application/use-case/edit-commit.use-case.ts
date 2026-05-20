@@ -1,3 +1,4 @@
+import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
 import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
 import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
 import type { ICommitRepository } from "../interface/commit-repository.interface.js";
@@ -6,7 +7,6 @@ import type { ICommitValidator } from "../interface/commit-validator.interface.j
 import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
 import type { ILlmService } from "../interface/llm-service.interface.js";
 
-import { CommitMessage } from "../../domain/entity/commit-message.entity.js";
 import { addTicketIdToCommitMessage } from "../../domain/helper/add-ticket-to-commit.helper.js";
 import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
 import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
@@ -113,7 +113,7 @@ export class EditCommitUseCase {
 					return commitMessage;
 				}
 
-				return this.handleRegenerate(context, llmConfig);
+				return this.handleRegenerate(commitMessage, context, llmConfig);
 			}
 
 			case "toggleBreaking": {
@@ -244,11 +244,12 @@ export class EditCommitUseCase {
 
 	/**
 	 * Handle AI regeneration of commit message
+	 * @param {CommitMessage} commitMessage - The current commit message before regeneration.
 	 * @param {ILlmPromptContext} context - The LLM prompt context
 	 * @param {LLMConfiguration} llmConfig - The LLM configuration
 	 * @returns {Promise<CommitMessage>} Promise resolving to the regenerated commit message
 	 */
-	private async handleRegenerate(context: ILlmPromptContext, llmConfig: LLMConfiguration): Promise<CommitMessage> {
+	private async handleRegenerate(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig: LLMConfiguration): Promise<CommitMessage> {
 		this.CLI_INTERFACE.startSpinner("🔄 Regenerating commit message with AI...");
 
 		try {
@@ -300,11 +301,11 @@ export class EditCommitUseCase {
 			const isRetryRequested: boolean = await this.CLI_INTERFACE.confirm("Would you like to try regenerating again?", false);
 
 			if (isRetryRequested) {
-				return await this.handleRegenerate(context, llmConfig);
+				return await this.handleRegenerate(commitMessage, context, llmConfig);
 			}
 
 			// Return to edit menu with original message
-			return await this.execute(new CommitMessage(new CommitHeader(context.typeEnum?.[0] ?? "feat", "fix: update"), new CommitBody()), context, llmConfig);
+			return await this.execute(commitMessage, context, llmConfig);
 		}
 	}
 

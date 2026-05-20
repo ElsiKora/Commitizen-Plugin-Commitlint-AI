@@ -1,6 +1,6 @@
 import type { IDIContainer } from "@elsikora/cladi";
 
-import { createAppContainer } from "./infrastructure/di/container.js";
+import { CliInterfaceServiceToken, CommitRepositoryToken, CommitValidatorToken, ConfigServiceToken, ConfigureLLMUseCaseToken, createAppContainer, EditCommitUseCaseToken, GenerateCommitMessageUseCaseToken, ManualCommitUseCaseToken, PromptContextExtractorServiceToken, ValidateCommitMessageUseCaseToken } from "./infrastructure/di/container.js";
 import { CommitizenAdapter } from "./presentation/commitizen.adapter.js";
 
 import "dotenv/config";
@@ -9,7 +9,18 @@ import "dotenv/config";
 const container: IDIContainer = createAppContainer();
 
 // Create adapter instance
-const adapter: CommitizenAdapter = new CommitizenAdapter(container);
+const adapter: CommitizenAdapter = new CommitizenAdapter({
+	cliInterface: container.resolve(CliInterfaceServiceToken),
+	commitRepository: container.resolve(CommitRepositoryToken),
+	configService: container.resolve(ConfigServiceToken),
+	configureLLMUseCase: container.resolve(ConfigureLLMUseCaseToken),
+	editCommitUseCase: container.resolve(EditCommitUseCaseToken),
+	generateCommitUseCase: container.resolve(GenerateCommitMessageUseCaseToken),
+	manualCommitUseCase: container.resolve(ManualCommitUseCaseToken),
+	promptContextExtractor: container.resolve(PromptContextExtractorServiceToken),
+	validateCommitUseCase: container.resolve(ValidateCommitMessageUseCaseToken),
+	validator: container.resolve(CommitValidatorToken),
+});
 
 /**
  * Commitizen adapter entry point

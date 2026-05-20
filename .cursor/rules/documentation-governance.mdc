@@ -1,0 +1,12 @@
+---
+description: Commitlint AI documentation and verification governance
+alwaysApply: true
+---
+
+# Documentation Governance
+
+- Treat README and `docs/**` updates as part of meaningful public API, runtime behavior, provider integration, or architecture changes.
+- When adding public request/profile fields, update README or docs with at least one usage example.
+- When deferring known provider limitations, document them in docs instead of hiding them in code comments.
+- Verification notes in final responses must include the exact commands run and whether they passed.
+- Run the relevant documentation or README validation command when this repository defines one.

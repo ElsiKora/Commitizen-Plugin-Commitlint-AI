@@ -1,5 +1,6 @@
 import type { IDIContainer, Token } from "@elsikora/cladi";
 
+import type { IAiProfileService } from "../../application/interface/ai-profile-service.interface.js";
 import type { IBranchLintConfigService } from "../../application/interface/branch-lint-config.interface.js";
 import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
 import type { ICommandService } from "../../application/interface/command-service.interface.js";
@@ -10,8 +11,10 @@ import type { IFileSystemService } from "../../application/interface/file-system
 import type { ILlmService } from "../../application/interface/llm-service.interface.js";
 import type { ITicketIdParser } from "../../application/interface/ticket-id-parser.interface.js";
 
+import { AiCoreAdapter } from "@elsikora/ai-core";
 import { createDIContainer, createToken } from "@elsikora/cladi";
 
+import { COMMITIZEN_AI_MODULE_CONSTANT } from "../../application/constant/ai-core-module.constant.js";
 import { PromptContextExtractorService } from "../../application/service/prompt-context-extractor.service.js";
 import { ConfigureLLMUseCase as ConfigureLLMUseCaseImpl } from "../../application/use-case/configure-llm.use-case.js";
 import { EditCommitUseCase as EditCommitUseCaseImpl } from "../../application/use-case/edit-commit.use-case.js";
@@ -21,13 +24,10 @@ import { ValidateCommitMessageUseCase as ValidateCommitMessageUseCaseImpl } from
 import { CommitlintValidatorService } from "../commit-validator/commitlint-validator.service.js";
 import { BranchTicketIdParser } from "../git/branch-ticket-id.parser.js";
 import { GitCommitRepository } from "../git/git-commit.repository.js";
-import { AnthropicLlmService } from "../llm/anthropic-llm.service.js";
-import { AWSBedrockLlmService } from "../llm/aws-bedrock-llm.service.js";
-import { AzureOpenAILlmService } from "../llm/azure-openai-llm.service.js";
-import { GoogleLlmService } from "../llm/google-llm.service.js";
+import { AiCoreLlmService } from "../llm/ai-core-llm.service.js";
 import { MockLlmService } from "../llm/mock-llm.service.js";
-import { OllamaLlmService } from "../llm/ollama-llm.service.js";
-import { OpenAILlmService } from "../llm/openai-llm.service.js";
+import { AiCoreCliInterfaceService } from "../service/ai-core-cli-interface.service.js";
+import { AiCoreProfileService } from "../service/ai-core-profile.service.js";
 import { CosmicBranchLintConfigService } from "../service/cosmic-branch-lint-config.service.js";
 import { CosmicConfigService } from "../service/cosmic-config.service.js";
 import { NodeCommandService } from "../service/node-command.service.js";
@@ -43,6 +43,7 @@ export const BranchLintConfigServiceToken: Token<IBranchLintConfigService> = cre
 export const CommitValidatorToken: Token<ICommitValidator> = createToken<ICommitValidator>("CommitValidator");
 export const CommitRepositoryToken: Token<ICommitRepository> = createToken<ICommitRepository>("CommitRepository");
 export const LLMServicesToken: Token<Array<ILlmService>> = createToken<Array<ILlmService>>("LLMServices");
+export const AiProfileServiceToken: Token<IAiProfileService> = createToken<IAiProfileService>("AiProfileService");
 export const PromptContextExtractorServiceToken: Token<PromptContextExtractorService> = createToken<PromptContextExtractorService>("PromptContextExtractorService");
 export const TicketIdParserToken: Token<ITicketIdParser> = createToken<ITicketIdParser>("TicketIdParser");
 
@@ -61,13 +62,15 @@ export function createAppContainer(): IDIContainer {
 	const container: IDIContainer = createDIContainer({});
 
 	const cliInterface: ICliInterfaceService = new PromptsCliInterface();
+	const aiCoreAdapter: AiCoreAdapter = AiCoreAdapter.create({ cliInterface: new AiCoreCliInterfaceService(cliInterface) });
+	const aiProfileService: IAiProfileService = new AiCoreProfileService(aiCoreAdapter);
 	const fileSystem: IFileSystemService = new NodeFileSystemService();
 	const commandService: ICommandService = new NodeCommandService(cliInterface);
 	const configService: IConfigService = new CosmicConfigService(fileSystem);
 	const branchLintConfigService: IBranchLintConfigService = new CosmicBranchLintConfigService();
 	const ticketIdParser: ITicketIdParser = new BranchTicketIdParser(configService, branchLintConfigService);
 	const commitRepository: ICommitRepository = new GitCommitRepository(commandService, ticketIdParser);
-	const llmServices: Array<ILlmService> = [new MockLlmService(), new OpenAILlmService(), new AnthropicLlmService(), new GoogleLlmService(), new AzureOpenAILlmService(), new AWSBedrockLlmService(), new OllamaLlmService()];
+	const llmServices: Array<ILlmService> = [new MockLlmService(), new AiCoreLlmService(aiCoreAdapter, COMMITIZEN_AI_MODULE_CONSTANT.ID)];
 	const validator: ICommitValidator = new CommitlintValidatorService(llmServices);
 	const promptContextExtractor: PromptContextExtractorService = new PromptContextExtractorService();
 
@@ -78,14 +81,20 @@ export function createAppContainer(): IDIContainer {
 	container.register({ provide: CommandServiceToken, useValue: commandService });
 	container.register({ provide: CommitRepositoryToken, useValue: commitRepository });
 	container.register({ provide: LLMServicesToken, useValue: llmServices });
+	container.register({ provide: AiProfileServiceToken, useValue: aiProfileService });
 	container.register({ provide: CommitValidatorToken, useValue: validator });
 	container.register({ provide: PromptContextExtractorServiceToken, useValue: promptContextExtractor });
 	container.register({ provide: TicketIdParserToken, useValue: ticketIdParser });
 
 	// Register use cases
-	container.register({ provide: ConfigureLLMUseCaseToken, useValue: new ConfigureLLMUseCaseImpl(configService, cliInterface) });
+	container.register({ provide: ConfigureLLMUseCaseToken, useValue: new ConfigureLLMUseCaseImpl(configService, cliInterface, aiProfileService) });
 	container.register({ provide: GenerateCommitMessageUseCaseToken, useValue: new GenerateCommitMessageUseCaseImpl(llmServices) });
-	container.register({ provide: ValidateCommitMessageUseCaseToken, useValue: new ValidateCommitMessageUseCaseImpl(validator) });
+	container.register({
+		provide: ValidateCommitMessageUseCaseToken,
+		useValue: new ValidateCommitMessageUseCaseImpl(validator, undefined, (message: string): void => {
+			cliInterface.log(message);
+		}),
+	});
 	container.register({ provide: ManualCommitUseCaseToken, useValue: new ManualCommitUseCaseImpl(cliInterface) });
 	container.register({ provide: EditCommitUseCaseToken, useValue: new EditCommitUseCaseImpl(cliInterface, validator, llmServices, commitRepository) });
 

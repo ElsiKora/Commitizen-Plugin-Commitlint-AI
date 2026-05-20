@@ -3,6 +3,8 @@ import type { IFileSystemService } from "../../application/interface/file-system
 import fs from "node:fs/promises";
 import path from "node:path";
 
+type TNodeBufferEncoding = "ascii" | "base64" | "base64url" | "binary" | "hex" | "latin1" | "ucs-2" | "ucs2" | "utf16le" | "utf8";
+
 /**
  * Implementation of the file system service using Node.js fs/promises API.
  * Provides methods for managing files and directories.
@@ -88,9 +90,9 @@ export class NodeFileSystemService implements IFileSystemService {
 	 * @param {string} encoding - The encoding to use when reading the file, defaults to "utf8"
 	 * @returns {Promise<string>} Promise that resolves to the file contents as a string
 	 */
-	// eslint-disable-next-line @elsikora/javascript/no-undef
-	async readFile(filePath: string, encoding: BufferEncoding = "utf8"): Promise<string> {
-		return await fs.readFile(filePath, { encoding });
+
+	async readFile(filePath: string, encoding: string = "utf8"): Promise<string> {
+		return await fs.readFile(filePath, { encoding: encoding as TNodeBufferEncoding });
 	}
 
 	/**
@@ -100,10 +102,10 @@ export class NodeFileSystemService implements IFileSystemService {
 	 * @param {string} encoding - The encoding to use when writing the file, defaults to "utf8"
 	 * @returns {Promise<void>} Promise that resolves when the file is written
 	 */
-	// eslint-disable-next-line @elsikora/javascript/no-undef
-	async writeFile(filePath: string, content: string, encoding: BufferEncoding = "utf8"): Promise<void> {
+
+	async writeFile(filePath: string, content: string, encoding: string = "utf8"): Promise<void> {
 		// eslint-disable-next-line @elsikora/typescript/naming-convention
 		await fs.mkdir(path.dirname(filePath), { recursive: true });
-		await fs.writeFile(filePath, content, { encoding });
+		await fs.writeFile(filePath, content, { encoding: encoding as TNodeBufferEncoding });
 	}
 }
