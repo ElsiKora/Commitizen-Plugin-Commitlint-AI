@@ -1,12 +1,11 @@
-import type { IBranchLintConfigService } from "../../../../src/application/interface/branch-lint-config.interface";
-import type { IConfigService } from "../../../../src/application/interface/config-service.interface";
-import type { TicketId } from "../../../../src/domain/value-object/ticket-id.value-object";
+import type { IBranchLintConfigService } from "@application/interface/branch-lint-config.interface";
+import type { IConfigService } from "@application/interface/config-service.interface";
+import type { TicketId } from "@domain/value-object/ticket-id.value-object";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ECommitMode } from "../../../../src/domain/enum/commit-mode.enum";
-import { ELLMProvider } from "../../../../src/domain/enum/llm-provider.enum";
-import { BranchTicketIdParser } from "../../../../src/infrastructure/git/branch-ticket-id.parser";
+import { ECommitMode } from "@domain/enum/commit-mode.enum";
+import { BranchTicketIdParser } from "@infrastructure/git/branch-ticket-id.parser";
 
 describe("BranchTicketIdParser", () => {
 	let branchLintConfigService: IBranchLintConfigService;
@@ -19,7 +18,6 @@ describe("BranchTicketIdParser", () => {
 		};
 		configService = {
 			exists: vi.fn(),
-			FILE_SYSTEM_SERVICE: {} as never,
 			get: vi.fn(),
 			getProperty: vi.fn(),
 			merge: vi.fn(),
@@ -32,7 +30,6 @@ describe("BranchTicketIdParser", () => {
 	it("parses ticket by local regex pattern mode", async () => {
 		vi.mocked(configService.get).mockResolvedValue({
 			mode: ECommitMode.MANUAL,
-			provider: ELLMProvider.OPENAI,
 			ticket: {
 				normalization: "upper",
 				pattern: "[a-z]{2,}-[0-9]+",
@@ -49,7 +46,6 @@ describe("BranchTicketIdParser", () => {
 	it("returns undefined when source is none", async () => {
 		vi.mocked(configService.get).mockResolvedValue({
 			mode: ECommitMode.MANUAL,
-			provider: ELLMProvider.OPENAI,
 			ticket: {
 				source: "none",
 			},
@@ -63,7 +59,6 @@ describe("BranchTicketIdParser", () => {
 	it("uses branch-lint template and extracts ticket placeholder only", async () => {
 		vi.mocked(configService.get).mockResolvedValue({
 			mode: ECommitMode.MANUAL,
-			provider: ELLMProvider.OPENAI,
 			ticket: {
 				missingBranchLintBehavior: "fallback",
 				normalization: "preserve",
@@ -92,7 +87,6 @@ describe("BranchTicketIdParser", () => {
 	it("falls back to local regex when branch-lint config is missing", async () => {
 		vi.mocked(configService.get).mockResolvedValue({
 			mode: ECommitMode.MANUAL,
-			provider: ELLMProvider.OPENAI,
 			ticket: {
 				missingBranchLintBehavior: "fallback",
 				normalization: "lower",
@@ -111,7 +105,6 @@ describe("BranchTicketIdParser", () => {
 	it("throws when branch-lint is required but config is missing", async () => {
 		vi.mocked(configService.get).mockResolvedValue({
 			mode: ECommitMode.MANUAL,
-			provider: ELLMProvider.OPENAI,
 			ticket: {
 				missingBranchLintBehavior: "error",
 				source: "branch-lint",

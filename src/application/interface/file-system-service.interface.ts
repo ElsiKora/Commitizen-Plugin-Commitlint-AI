@@ -53,8 +53,7 @@ export interface IFileSystemService {
 	 * @param encoding - The encoding to use when reading the file, defaults to "utf8"
 	 * @returns Promise that resolves to the file contents as a string
 	 */
-	// eslint-disable-next-line @elsikora/javascript/no-undef
-	readFile(path: string, encoding?: BufferEncoding): Promise<string>;
+	readFile(path: string, encoding?: string): Promise<string>;
 
 	/**
 	 * Writes content to a file, creating the file and parent directories if they don't exist.
@@ -63,6 +62,5 @@ export interface IFileSystemService {
 	 * @param encoding - The encoding to use when writing the file, defaults to "utf8"
 	 * @returns Promise that resolves when the file is written
 	 */
-	// eslint-disable-next-line @elsikora/javascript/no-undef
-	writeFile(path: string, content: string, encoding?: BufferEncoding): Promise<void>;
+	writeFile(path: string, content: string, encoding?: string): Promise<void>;
 }

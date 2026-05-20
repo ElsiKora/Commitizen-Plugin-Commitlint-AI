@@ -1,16 +1,15 @@
-import type { ICliInterfaceService } from "../../../../src/application/interface/cli-interface-service.interface";
-import type { ICommitRepository } from "../../../../src/application/interface/commit-repository.interface";
-import type { ICommitValidationResult, ICommitValidator } from "../../../../src/application/interface/commit-validator.interface";
-import type { ILlmPromptContext, ILlmService } from "../../../../src/application/interface/llm-service.interface";
-import type { CommitMessage } from "../../../../src/domain/entity/commit-message.entity";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
+import type { ICommitRepository } from "@application/interface/commit-repository.interface";
+import type { ICommitValidationResult, ICommitValidator } from "@application/interface/commit-validator.interface";
+import type { ILlmPromptContext, ILlmService } from "@application/interface/llm-service.interface";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EditCommitUseCase } from "../../../../src/application/use-case/edit-commit.use-case";
-import { LLMConfiguration } from "../../../../src/domain/entity/llm-configuration.entity";
-import { ECommitMode } from "../../../../src/domain/enum/commit-mode.enum";
-import { ELLMProvider } from "../../../../src/domain/enum/llm-provider.enum";
-import { ApiKey } from "../../../../src/domain/value-object/api-key.value-object";
+import { EditCommitUseCase } from "@application/use-case/edit-commit.use-case";
+import { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
+import { ECommitMode } from "@domain/enum/commit-mode.enum";
+import { ApiKey } from "@domain/value-object/api-key.value-object";
 import { createMockCommitMessage } from "../../../mocks/commit-message.mock";
 
 const SUBJECT_MAX_LENGTH: number = 80;
@@ -60,10 +59,9 @@ describe("EditCommitUseCase", () => {
 		};
 		llmService = {
 			generateCommitMessage: vi.fn().mockResolvedValue(createMockCommitMessage({ scope: "auth", subject: "generated message", type: "feat" })),
-			supports: vi.fn(() => true),
 		};
 
-		useCase = new EditCommitUseCase(cli, validator, [llmService], repository);
+		useCase = new EditCommitUseCase(cli, validator, llmService, repository);
 		context = {
 			subject: {
 				description: "Describe subject",
@@ -90,7 +88,7 @@ describe("EditCommitUseCase", () => {
 
 	it("adds ticket reference after regenerate when ticket is detected", async () => {
 		const message: CommitMessage = createMockCommitMessage({ scope: "core", subject: "old message", type: "feat" });
-		const llmConfig: LLMConfiguration = new LLMConfiguration(ELLMProvider.OPENAI, new ApiKey("test"), ECommitMode.AUTO, "gpt-4o");
+		const llmConfig: LLMConfiguration = new LLMConfiguration(new ApiKey("test"), ECommitMode.AUTO);
 		vi.mocked(cli.select).mockResolvedValueOnce("regenerate").mockResolvedValueOnce("confirm");
 		vi.mocked(repository.getTicketIdFromBranch).mockResolvedValue("CAS-25");
 

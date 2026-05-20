@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { CommitMessage } from "../../../../src/domain/entity/commit-message.entity";
-import { addTicketIdToCommitMessage } from "../../../../src/domain/helper/add-ticket-to-commit.helper";
-import { CommitBody } from "../../../../src/domain/value-object/commit-body.value-object";
-import { CommitHeader } from "../../../../src/domain/value-object/commit-header.value-object";
+import { CommitMessage } from "@domain/entity/commit-message.entity";
+import { addTicketIdToCommitMessage } from "@domain/helper/add-ticket-to-commit.helper";
+import { CommitBody } from "@domain/value-object/commit-body.value-object";
+import { CommitHeader } from "@domain/value-object/commit-header.value-object";
 
 describe("addTicketIdToCommitMessage", () => {
 	it("adds ticket reference when footer is empty", () => {

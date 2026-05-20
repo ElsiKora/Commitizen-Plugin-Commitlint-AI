@@ -1,12 +1,13 @@
 /* eslint-disable @elsikora/sonar/no-duplicate-string,@elsikora/unicorn/no-process-exit */
-import type { ICliInterfaceServiceSelectOptions } from "../../application/interface/cli-interface-service-select-options.interface.js";
-import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
+import type { ICliInterfaceServiceSelectOptions } from "@application/interface/cli-interface-service-select-options.interface";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
 
 import chalk from "chalk";
 // @ts-ignore
 import ora from "ora";
 import prompts from "prompts";
 
+type TPromptInputValidator = (value: string) => Error | string | undefined;
 type TSpinner = {
 	isSpinning?: boolean;
 	start(): TSpinner;
@@ -232,6 +233,50 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	}
 
 	/**
+	 * Displays a masked password prompt to the user.
+	 * @param {string} message - The message to display to the user
+	 * @param {string} initialValue - Optional initial value for the input field
+	 * @param {(value: string) => Error | string | undefined} validate - Optional validation function for the input
+	 * @returns {Promise<string>} Promise that resolves to the user's password text
+	 */
+	async password(message: string, initialValue?: string, validate?: TPromptInputValidator): Promise<string> {
+		const promptsValidate: prompts.PromptObject["validate"] | undefined = validate
+			? // eslint-disable-next-line @elsikora/sonar/function-return-type -- prompts expects true for valid input and a string for validation errors.
+				(value: string): boolean | string => {
+					const result: Error | string | undefined = validate(value);
+
+					if (result === undefined) return true;
+
+					if (typeof result === "string") return result;
+
+					if (result instanceof Error) return result.message;
+
+					return "Invalid input";
+				}
+			: undefined;
+
+		try {
+			const response: prompts.Answers<string> = await prompts({
+				initial: initialValue,
+				message,
+				name: "value",
+				type: "password",
+				validate: promptsValidate,
+			});
+
+			if (response.value === undefined) {
+				this.error("Operation cancelled by user");
+				process.exit(0);
+			}
+
+			return response.value as string;
+		} catch {
+			this.error("Operation cancelled by user");
+			process.exit(0);
+		}
+	}
+
+	/**
 	 * Displays a single select prompt to the user.
 	 * @param {string} message - The message to display to the user
 	 * @param {Array<ICliInterfaceServiceSelectOptions>} options - Array of options to select from
@@ -306,11 +351,11 @@ export class PromptsCliInterface implements ICliInterfaceService {
 	 * @param {(value: string) => Error | string | undefined} validate - Optional validation function for the input
 	 * @returns {Promise<string>} Promise that resolves to the user's input text
 	 */
-	async text(message: string, _placeholder?: string, initialValue?: string, validate?: (value: string) => Error | string | undefined): Promise<string> {
+	async text(message: string, _placeholder?: string, initialValue?: string, validate?: TPromptInputValidator): Promise<string> {
 		// Convert the validate function to match prompts' expected format
-		const promptsValidate: ((value: string) => boolean | string) | undefined = validate
-			? // eslint-disable-next-line @elsikora/typescript/explicit-function-return-type
-				(value: string) => {
+		const promptsValidate: prompts.PromptObject["validate"] | undefined = validate
+			? // eslint-disable-next-line @elsikora/sonar/function-return-type -- prompts expects true for valid input and a string for validation errors.
+				(value: string): boolean | string => {
 					const result: Error | string | undefined = validate(value);
 
 					if (result === undefined) return true;

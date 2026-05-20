@@ -1,5 +1,4 @@
-import type { ECommitMode } from "../../domain/enum/commit-mode.enum.js";
-import type { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
+import type { ECommitMode } from "@domain/enum/commit-mode.enum";
 
 /**
  * Main configuration interface
@@ -13,17 +12,7 @@ export interface IConfig {
 	/**
 	 * Commit mode (auto, manual)
 	 */
-	mode: ECommitMode;
-
-	/**
-	 * Model to use
-	 */
-	model?: string;
-
-	/**
-	 * LLM provider (openai, anthropic)
-	 */
-	provider: ELLMProvider;
+	mode?: ECommitMode;
 
 	/**
 	 * Ticket extraction settings.

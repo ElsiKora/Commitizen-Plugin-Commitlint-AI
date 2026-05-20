@@ -9,11 +9,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	resolve: {
 		alias: {
-			"../../../../bin": path.resolve(__dirname, "./bin"),
-			"../../../../src": path.resolve(__dirname, "./src"),
-			"../../bin": path.resolve(__dirname, "./bin"),
-			"./helpers/e2e-utils": path.resolve(__dirname, "./test/e2e/helpers/e2e-utils"),
 			"@": path.resolve(__dirname, "./src"),
+			"@application": path.resolve(__dirname, "./src/application"),
+			"@domain": path.resolve(__dirname, "./src/domain"),
+			"@infrastructure": path.resolve(__dirname, "./src/infrastructure"),
+			"@presentation": path.resolve(__dirname, "./src/presentation"),
 			bin: path.resolve(__dirname, "./bin"),
 			src: path.resolve(__dirname, "./src"),
 			test: path.resolve(__dirname, "./test"),

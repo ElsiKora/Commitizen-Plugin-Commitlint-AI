@@ -1,11 +1,11 @@
-import type { IBranchLintConfig, IBranchLintConfigService, TBranchLintSubjectPattern } from "../../application/interface/branch-lint-config.interface.js";
-import type { IConfigService } from "../../application/interface/config-service.interface.js";
-import type { IConfig, ITicketConfig, TTicketMissingBranchLintBehavior, TTicketNormalization, TTicketSource } from "../../application/interface/config.interface.js";
-import type { ITicketIdParser } from "../../application/interface/ticket-id-parser.interface.js";
-import type { TicketId } from "../../domain/value-object/ticket-id.value-object.js";
+import type { IBranchLintConfig, IBranchLintConfigService, TBranchLintSubjectPattern } from "@application/interface/branch-lint-config.interface";
+import type { IConfigService } from "@application/interface/config-service.interface";
+import type { IConfig, ITicketConfig, TTicketMissingBranchLintBehavior, TTicketNormalization, TTicketSource } from "@application/interface/config.interface";
+import type { ITicketIdParser } from "@application/interface/ticket-id-parser.interface";
+import type { TicketId } from "@domain/value-object/ticket-id.value-object";
 
-import { BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE, BRANCH_LINT_DEFAULT_TICKET_PATTERN_SOURCE, DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR, DEFAULT_TICKET_NORMALIZATION, DEFAULT_TICKET_PATTERN_FLAGS, DEFAULT_TICKET_PATTERN_SOURCE, DEFAULT_TICKET_SOURCE } from "../../domain/constant/ticket.constant.js";
-import { TicketId as TicketIdValueObject } from "../../domain/value-object/ticket-id.value-object.js";
+import { TICKET_CONSTANT } from "@domain/constant/ticket.constant";
+import { TicketId as TicketIdValueObject } from "@domain/value-object/ticket-id.value-object";
 
 const DELIMITER_CLASS: string = String.raw`[\/_.-]`;
 const DELIMITED_MATCH_GROUP_INDEX: number = 2;
@@ -406,7 +406,7 @@ function resolveMissingBranchLintBehavior(behavior: TTicketMissingBranchLintBeha
 		return behavior;
 	}
 
-	return DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR as TTicketMissingBranchLintBehavior;
+	return TICKET_CONSTANT.DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR as TTicketMissingBranchLintBehavior;
 }
 
 /**
@@ -421,7 +421,7 @@ function resolveNormalization(normalization: TTicketNormalization | undefined): 
 		return normalization;
 	}
 
-	return DEFAULT_TICKET_NORMALIZATION as TTicketNormalization;
+	return TICKET_CONSTANT.DEFAULT_TICKET_NORMALIZATION as TTicketNormalization;
 }
 
 /**
@@ -436,7 +436,7 @@ function resolvePattern(pattern: string | undefined): string {
 		return normalizedPattern;
 	}
 
-	return DEFAULT_TICKET_PATTERN_SOURCE;
+	return TICKET_CONSTANT.DEFAULT_TICKET_PATTERN_SOURCE;
 }
 
 /**
@@ -446,12 +446,12 @@ function resolvePattern(pattern: string | undefined): string {
  */
 function resolvePatternFlags(patternFlags: string | undefined): string {
 	if (typeof patternFlags !== "string") {
-		return DEFAULT_TICKET_PATTERN_FLAGS;
+		return TICKET_CONSTANT.DEFAULT_TICKET_PATTERN_FLAGS;
 	}
 
 	const normalizedFlags: string = normalizeRegexFlags(patternFlags.trim());
 
-	return normalizedFlags.length > 0 ? normalizedFlags : DEFAULT_TICKET_PATTERN_FLAGS;
+	return normalizedFlags.length > 0 ? normalizedFlags : TICKET_CONSTANT.DEFAULT_TICKET_PATTERN_FLAGS;
 }
 
 /**
@@ -476,14 +476,14 @@ function resolvePlaceholderPatternSource(placeholderName: string, config: IBranc
 	}
 
 	if (placeholderName === "ticket") {
-		return BRANCH_LINT_DEFAULT_TICKET_PATTERN_SOURCE;
+		return TICKET_CONSTANT.BRANCH_LINT_DEFAULT_TICKET_PATTERN_SOURCE;
 	}
 
 	if (typeof subjectPattern === "string" && subjectPattern.trim().length > 0) {
 		return subjectPattern.trim();
 	}
 
-	return BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE;
+	return TICKET_CONSTANT.BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE;
 }
 
 /**
@@ -498,7 +498,7 @@ function resolveSource(source: TTicketSource | undefined): TTicketSource {
 		return source;
 	}
 
-	return DEFAULT_TICKET_SOURCE as TTicketSource;
+	return TICKET_CONSTANT.DEFAULT_TICKET_SOURCE as TTicketSource;
 }
 
 /**
@@ -528,7 +528,7 @@ function resolveTypePatternSource(config: IBranchLintConfig): string {
 	const branchTypes: Array<string> = extractBranchTypes(config.branches);
 
 	if (branchTypes.length === 0) {
-		return BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE;
+		return TICKET_CONSTANT.BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE;
 	}
 
 	return branchTypes.map((branchType: string) => escapeRegex(branchType)).join("|");

@@ -1,5 +1,5 @@
-/** @type {Awaited<typeof import('./lib/index.js')>['prompter']} */
+/** @type {Awaited<typeof import('./dist/esm/index.js')>['prompter']} */
 
 exports.prompter = async (...arguments_) => {
-	(await import("./dist/esm/index.js")).prompter(...arguments_);
+	return (await import("./dist/esm/index.js")).prompter(...arguments_);
 };

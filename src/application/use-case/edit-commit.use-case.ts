@@ -1,15 +1,13 @@
-import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
-import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
-import type { ICommitRepository } from "../interface/commit-repository.interface.js";
-import type { ICommitValidationResult } from "../interface/commit-validator.interface.js";
-import type { ICommitValidator } from "../interface/commit-validator.interface.js";
-import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
-import type { ILlmService } from "../interface/llm-service.interface.js";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
+import type { ICommitRepository } from "@application/interface/commit-repository.interface";
+import type { ICommitValidationResult, ICommitValidator } from "@application/interface/commit-validator.interface";
+import type { ILlmPromptContext, ILlmService } from "@application/interface/llm-service.interface";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
 
-import { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import { addTicketIdToCommitMessage } from "../../domain/helper/add-ticket-to-commit.helper.js";
-import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
-import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
+import { addTicketIdToCommitMessage } from "@domain/helper/add-ticket-to-commit.helper";
+import { CommitBody } from "@domain/value-object/commit-body.value-object";
+import { CommitHeader } from "@domain/value-object/commit-header.value-object";
 
 /**
  * Use case for editing existing commit messages with point editing capabilities
@@ -19,14 +17,14 @@ export class EditCommitUseCase {
 
 	private readonly COMMIT_REPOSITORY: ICommitRepository;
 
-	private readonly LLM_SERVICES: Array<ILlmService>;
+	private readonly LLM_SERVICE: ILlmService;
 
 	private readonly VALIDATOR: ICommitValidator;
 
-	constructor(cliInterface: ICliInterfaceService, validator: ICommitValidator, llmServices: Array<ILlmService>, commitRepository: ICommitRepository) {
+	constructor(cliInterface: ICliInterfaceService, validator: ICommitValidator, llmService: ILlmService, commitRepository: ICommitRepository) {
 		this.CLI_INTERFACE = cliInterface;
 		this.VALIDATOR = validator;
-		this.LLM_SERVICES = llmServices;
+		this.LLM_SERVICE = llmService;
 		this.COMMIT_REPOSITORY = commitRepository;
 	}
 
@@ -113,7 +111,7 @@ export class EditCommitUseCase {
 					return commitMessage;
 				}
 
-				return this.handleRegenerate(context, llmConfig);
+				return this.handleRegenerate(commitMessage, context, llmConfig);
 			}
 
 			case "toggleBreaking": {
@@ -244,21 +242,16 @@ export class EditCommitUseCase {
 
 	/**
 	 * Handle AI regeneration of commit message
+	 * @param {CommitMessage} commitMessage - The current commit message before regeneration.
 	 * @param {ILlmPromptContext} context - The LLM prompt context
 	 * @param {LLMConfiguration} llmConfig - The LLM configuration
 	 * @returns {Promise<CommitMessage>} Promise resolving to the regenerated commit message
 	 */
-	private async handleRegenerate(context: ILlmPromptContext, llmConfig: LLMConfiguration): Promise<CommitMessage> {
+	private async handleRegenerate(commitMessage: CommitMessage, context: ILlmPromptContext, llmConfig: LLMConfiguration): Promise<CommitMessage> {
 		this.CLI_INTERFACE.startSpinner("🔄 Regenerating commit message with AI...");
 
 		try {
-			const service: ILlmService | undefined = this.LLM_SERVICES.find((llmService: ILlmService) => llmService.supports(llmConfig));
-
-			if (!service) {
-				throw new Error(`No LLM service found for provider: ${llmConfig.getProvider()}`);
-			}
-
-			const newCommitMessage: CommitMessage = await service.generateCommitMessage(context, llmConfig);
+			const newCommitMessage: CommitMessage = await this.LLM_SERVICE.generateCommitMessage(context, llmConfig);
 
 			this.CLI_INTERFACE.stopSpinner();
 
@@ -300,11 +293,11 @@ export class EditCommitUseCase {
 			const isRetryRequested: boolean = await this.CLI_INTERFACE.confirm("Would you like to try regenerating again?", false);
 
 			if (isRetryRequested) {
-				return await this.handleRegenerate(context, llmConfig);
+				return await this.handleRegenerate(commitMessage, context, llmConfig);
 			}
 
 			// Return to edit menu with original message
-			return await this.execute(new CommitMessage(new CommitHeader(context.typeEnum?.[0] ?? "feat", "fix: update"), new CommitBody()), context, llmConfig);
+			return await this.execute(commitMessage, context, llmConfig);
 		}
 	}
 

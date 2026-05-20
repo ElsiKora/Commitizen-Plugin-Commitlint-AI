@@ -1,39 +1,36 @@
-import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
-import type { IConfigService } from "../interface/config-service.interface.js";
-import type { IConfig, ITicketConfig, TTicketMissingBranchLintBehavior, TTicketNormalization, TTicketSource } from "../interface/config.interface.js";
+import type { IAiProfileService } from "@application/interface/ai-profile-service.interface";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
+import type { IConfigService } from "@application/interface/config-service.interface";
+import type { IConfig, ITicketConfig, TTicketMissingBranchLintBehavior, TTicketNormalization, TTicketSource } from "@application/interface/config.interface";
 
-import { DEFAULT_MAX_RETRIES, DEFAULT_VALIDATION_MAX_RETRIES, MAX_RETRY_COUNT, MIN_RETRY_COUNT } from "../../domain/constant/numeric.constant.js";
-import { DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR, DEFAULT_TICKET_NORMALIZATION, DEFAULT_TICKET_PATTERN_FLAGS, DEFAULT_TICKET_PATTERN_SOURCE, DEFAULT_TICKET_SOURCE } from "../../domain/constant/ticket.constant.js";
-import { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
-import { EAnthropicModel } from "../../domain/enum/anthropic-model.enum.js";
-import { EAWSBedrockModel } from "../../domain/enum/aws-bedrock-model.enum.js";
-import { EAzureOpenAIModel } from "../../domain/enum/azure-openai-model.enum.js";
-import { ECommitMode } from "../../domain/enum/commit-mode.enum.js";
-import { EGoogleModel } from "../../domain/enum/google-model.enum.js";
-import { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
-import { EOllamaModel } from "../../domain/enum/ollama-model.enum.js";
-import { EOpenAIModel } from "../../domain/enum/openai-model.enum.js";
-import { ApiKey } from "../../domain/value-object/api-key.value-object.js";
+import { COMMITIZEN_AI_MODULE_CONSTANT } from "@application/constant/ai-core-module.constant";
+import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
+import { TICKET_CONSTANT } from "@domain/constant/ticket.constant";
+import { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
+import { ECommitMode } from "@domain/enum/commit-mode.enum";
+import { ApiKey } from "@domain/value-object/api-key.value-object";
 
 /**
- * Use case for configuring LLM settings
+ * Use case for configuring LLM settings.
  */
 export class ConfigureLLMUseCase {
+	private readonly AI_PROFILE_SERVICE: IAiProfileService;
+
 	private readonly CLI_INTERFACE: ICliInterfaceService;
 
 	private readonly CONFIG_SERVICE: IConfigService;
 
-	constructor(configService: IConfigService, cliInterface: ICliInterfaceService) {
+	constructor(configService: IConfigService, cliInterface: ICliInterfaceService, aiProfileService: IAiProfileService) {
 		this.CONFIG_SERVICE = configService;
 		this.CLI_INTERFACE = cliInterface;
+		this.AI_PROFILE_SERVICE = aiProfileService;
 	}
 
 	/**
-	 * Configure LLM settings interactively
-	 * @returns {Promise<LLMConfiguration>} Promise resolving to the new configuration
+	 * Configure LLM settings interactively.
+	 * @returns {Promise<LLMConfiguration>} Promise resolving to the new configuration.
 	 */
 	async configureInteractively(): Promise<LLMConfiguration> {
-		// First, select mode
 		const mode: ECommitMode = await this.CLI_INTERFACE.select<ECommitMode>(
 			"Select commit mode:",
 			[
@@ -43,401 +40,53 @@ export class ConfigureLLMUseCase {
 			ECommitMode.AUTO,
 		);
 
-		// If manual mode, create a minimal configuration
 		if (mode === ECommitMode.MANUAL) {
-			// Create configuration with dummy values for manual mode
-			const configuration: LLMConfiguration = new LLMConfiguration(
-				"openai" as ELLMProvider, // Default provider (won't be used)
-				new ApiKey("manual-mode"), // Dummy API key
-				mode,
-				undefined, // No model needed for manual mode
-				DEFAULT_MAX_RETRIES, // Default max retries
-				DEFAULT_VALIDATION_MAX_RETRIES, // Default validation max retries
-			);
-
-			// Save configuration
+			const configuration: LLMConfiguration = this.createManualConfiguration();
 			await this.saveConfiguration(configuration);
 
 			return configuration;
 		}
 
-		// Auto mode - ask for LLM details
-		this.CLI_INTERFACE.info("Setting up AI-powered commit mode...");
+		this.CLI_INTERFACE.info("Setting up AI-powered commit mode through AI-Core...");
 
-		// Select provider
-		const provider: ELLMProvider = await this.CLI_INTERFACE.select<ELLMProvider>("Select your LLM provider:", [
-			{ label: "OpenAI (GPT-5, GPT-4o)", value: ELLMProvider.OPENAI },
-			{ label: "Anthropic (Claude)", value: ELLMProvider.ANTHROPIC },
-			{ label: "Google (Gemini)", value: ELLMProvider.GOOGLE },
-			{ label: "Azure OpenAI", value: ELLMProvider.AZURE_OPENAI },
-			{ label: "AWS Bedrock", value: ELLMProvider.AWS_BEDROCK },
-			{ label: "Ollama (Local)", value: ELLMProvider.OLLAMA },
-		]);
-
-		// Select model based on provider
-		let model: string;
-
-		switch (provider) {
-			case ELLMProvider.ANTHROPIC: {
-				model = await this.CLI_INTERFACE.select<string>(
-					"Select Anthropic model:",
-					[
-						{ label: "Claude Opus 4.5 (Latest, most capable)", value: EAnthropicModel.CLAUDE_OPUS_4_5 },
-						{ label: "Claude Sonnet 4.5 (Latest, balanced)", value: EAnthropicModel.CLAUDE_SONNET_4_5 },
-						{ label: "Claude Haiku 4.5 (Latest, fastest)", value: EAnthropicModel.CLAUDE_HAIKU_4_5 },
-						{ label: "Claude Opus 4", value: EAnthropicModel.CLAUDE_OPUS_4 },
-						{ label: "Claude Sonnet 4", value: EAnthropicModel.CLAUDE_SONNET_4 },
-						{ label: "Claude 3.7 Sonnet (Extended thinking)", value: EAnthropicModel.CLAUDE_3_7_SONNET },
-						{ label: "Claude 3.5 Sonnet", value: EAnthropicModel.CLAUDE_3_5_SONNET },
-						{ label: "Claude 3.5 Haiku (Fast)", value: EAnthropicModel.CLAUDE_3_5_HAIKU },
-					],
-					EAnthropicModel.CLAUDE_SONNET_4_5,
-				);
-
-				break;
-			}
-
-			case ELLMProvider.AWS_BEDROCK: {
-				model = await this.CLI_INTERFACE.select<string>(
-					"Select AWS Bedrock model:",
-					[
-						{ label: "Claude Opus 4.5 (Latest, most capable)", value: EAWSBedrockModel.CLAUDE_OPUS_4_5 },
-						{ label: "Claude Sonnet 4.5 (Latest, balanced)", value: EAWSBedrockModel.CLAUDE_SONNET_4_5 },
-						{ label: "Claude Haiku 4.5 (Latest, fastest)", value: EAWSBedrockModel.CLAUDE_HAIKU_4_5 },
-						{ label: "Claude Opus 4", value: EAWSBedrockModel.CLAUDE_OPUS_4 },
-						{ label: "Claude Sonnet 4", value: EAWSBedrockModel.CLAUDE_SONNET_4 },
-						{ label: "Claude 3.5 Sonnet v2", value: EAWSBedrockModel.CLAUDE_3_5_SONNET_V2 },
-						{ label: "Amazon Nova Pro", value: EAWSBedrockModel.NOVA_PRO },
-						{ label: "DeepSeek R1 (Advanced reasoning)", value: EAWSBedrockModel.DEEPSEEK_R1 },
-						{ label: "Llama 3.2 90B", value: EAWSBedrockModel.LLAMA_3_2_90B },
-						{ label: "Mistral Large", value: EAWSBedrockModel.MISTRAL_LARGE_2_24_11 },
-					],
-					EAWSBedrockModel.CLAUDE_SONNET_4_5,
-				);
-
-				break;
-			}
-
-			case ELLMProvider.AZURE_OPENAI: {
-				model = await this.CLI_INTERFACE.select<string>(
-					"Select Azure OpenAI model:",
-					[
-						{ label: "GPT-5.2 (Latest, most capable)", value: EAzureOpenAIModel.GPT_5_2 },
-						{ label: "GPT-5.2 Pro (Enhanced performance)", value: EAzureOpenAIModel.GPT_5_2_PRO },
-						{ label: "GPT-5.1", value: EAzureOpenAIModel.GPT_5_1 },
-						{ label: "GPT-5", value: EAzureOpenAIModel.GPT_5 },
-						{ label: "GPT-5 Mini (Fast)", value: EAzureOpenAIModel.GPT_5_MINI },
-						{ label: "GPT-5 Nano (Fastest)", value: EAzureOpenAIModel.GPT_5_NANO },
-						{ label: "GPT-4o", value: EAzureOpenAIModel.GPT_4O },
-						{ label: "GPT-4o Mini", value: EAzureOpenAIModel.GPT_4O_MINI },
-						{ label: "O3 (Enhanced reasoning)", value: EAzureOpenAIModel.O3 },
-						{ label: "O4 Mini (Fast reasoning)", value: EAzureOpenAIModel.O4_MINI },
-					],
-					EAzureOpenAIModel.GPT_5_2,
-				);
-
-				break;
-			}
-
-			case ELLMProvider.GOOGLE: {
-				model = await this.CLI_INTERFACE.select<string>(
-					"Select Google model:",
-					[
-						{ label: "Gemini 3 Pro Preview (Latest)", value: EGoogleModel.GEMINI_3_PRO_PREVIEW },
-						{ label: "Gemini 2.5 Pro (Most capable)", value: EGoogleModel.GEMINI_2_5_PRO },
-						{ label: "Gemini 2.5 Flash (Fast)", value: EGoogleModel.GEMINI_2_5_FLASH },
-						{ label: "Gemini 2.5 Flash Lite (Lightweight)", value: EGoogleModel.GEMINI_2_5_FLASH_LITE },
-						{ label: "Gemini 2.0 Flash", value: EGoogleModel.GEMINI_2_0_FLASH },
-						{ label: "Gemini 2.0 Flash Lite", value: EGoogleModel.GEMINI_2_0_FLASH_LITE },
-						{ label: "Gemini 1.5 Pro (Stable)", value: EGoogleModel.GEMINI_1_5_PRO },
-						{ label: "Gemini 1.5 Flash (Fast, stable)", value: EGoogleModel.GEMINI_1_5_FLASH },
-					],
-					EGoogleModel.GEMINI_2_5_FLASH,
-				);
-
-				break;
-			}
-
-			case ELLMProvider.OLLAMA: {
-				model = await this.CLI_INTERFACE.select<string>(
-					"Select Ollama model:",
-					[
-						{ label: "Llama 4 (Latest)", value: EOllamaModel.LLAMA4 },
-						{ label: "Llama 3.3", value: EOllamaModel.LLAMA3_3 },
-						{ label: "Llama 3.2", value: EOllamaModel.LLAMA3_2 },
-						{ label: "Llama 3.1", value: EOllamaModel.LLAMA3_1 },
-						{ label: "Qwen 3 (Latest Alibaba)", value: EOllamaModel.QWEN3 },
-						{ label: "Qwen 3 Coder (Code-focused)", value: EOllamaModel.QWEN3_CODER },
-						{ label: "Phi 4 (Microsoft)", value: EOllamaModel.PHI4 },
-						{ label: "Gemma 3 (Google)", value: EOllamaModel.GEMMA3 },
-						{ label: "Mixtral (Mistral)", value: EOllamaModel.MIXTRAL },
-						{ label: "CodeLlama", value: EOllamaModel.CODELLAMA },
-						{ label: "Custom Model", value: EOllamaModel.CUSTOM },
-					],
-					EOllamaModel.LLAMA3_3,
-				);
-
-				break;
-			}
-
-			case ELLMProvider.OPENAI: {
-				model = await this.CLI_INTERFACE.select<string>(
-					"Select OpenAI model:",
-					[
-						{ label: "GPT-5.2 (Latest, most capable)", value: EOpenAIModel.GPT_5_2 },
-						{ label: "GPT-5.2 Pro (Enhanced performance)", value: EOpenAIModel.GPT_5_2_PRO },
-						{ label: "GPT-5.1", value: EOpenAIModel.GPT_5_1 },
-						{ label: "GPT-5", value: EOpenAIModel.GPT_5 },
-						{ label: "GPT-5 Mini (Fast)", value: EOpenAIModel.GPT_5_MINI },
-						{ label: "GPT-5 Nano (Fastest)", value: EOpenAIModel.GPT_5_NANO },
-						{ label: "GPT-4o", value: EOpenAIModel.GPT_4O },
-						{ label: "GPT-4o Mini (Faster, cheaper)", value: EOpenAIModel.GPT_4O_MINI },
-						{ label: "O3 (Enhanced reasoning)", value: EOpenAIModel.O3 },
-						{ label: "O4 Mini (Fast reasoning)", value: EOpenAIModel.O4_MINI },
-						{ label: "GPT-3.5 Turbo (Legacy)", value: EOpenAIModel.GPT_35_TURBO },
-					],
-					EOpenAIModel.GPT_5_2,
-				);
-
-				break;
-			}
-
-			default: {
-				// This ensures exhaustiveness - TypeScript will error if a case is missing
-				const exhaustiveCheck: never = provider;
-
-				throw new Error(`Unsupported provider: ${String(exhaustiveCheck)}`);
-			}
-		}
-
-		// Get API key
-		let credentialValue: string;
-
-		// Check environment variables first
-		const environmentVariableNames: Record<string, string> = {
-			anthropic: "ANTHROPIC_API_KEY",
-			"aws-bedrock": "AWS_BEDROCK_API_KEY",
-			"azure-openai": "AZURE_OPENAI_API_KEY",
-			google: "GOOGLE_API_KEY",
-			ollama: "OLLAMA_API_KEY",
-			openai: "OPENAI_API_KEY",
-		};
-
-		const environmentVariableName: string = environmentVariableNames[provider] ?? "";
-		const environmentApiKey: string | undefined = process.env[environmentVariableName];
-
-		if (environmentApiKey && environmentApiKey.trim().length > 0) {
-			this.CLI_INTERFACE.success(`Found API key in environment variable: ${environmentVariableName}`);
-			credentialValue = environmentApiKey;
-		} else {
-			// Inform user about environment variable and format requirements
-			let keyFormatInfo: string = "";
-
-			switch (provider) {
-				case ELLMProvider.ANTHROPIC: {
-					// Standard API key format - no special format info needed
-					// keyFormatInfo is already initialized as empty string
-					break;
-				}
-
-				case ELLMProvider.AWS_BEDROCK: {
-					keyFormatInfo = " (format: region|access-key-id|secret-access-key)";
-
-					break;
-				}
-
-				case ELLMProvider.AZURE_OPENAI: {
-					keyFormatInfo = " (format: endpoint|api-key|deployment-name)";
-
-					break;
-				}
-
-				case ELLMProvider.GOOGLE: {
-					// Standard API key format - no special format info needed
-					// keyFormatInfo is already initialized as empty string
-					break;
-				}
-
-				case ELLMProvider.OLLAMA: {
-					keyFormatInfo = " (format: host:port or host:port|custom-model)";
-
-					break;
-				}
-
-				case ELLMProvider.OPENAI: {
-					// Standard API key format - no special format info needed
-					// keyFormatInfo is already initialized as empty string
-					break;
-				}
-
-				default: {
-					// This ensures exhaustiveness - TypeScript will error if a case is missing
-					const exhaustiveCheck: never = provider;
-
-					throw new Error(`Unsupported provider: ${String(exhaustiveCheck)}`);
-				}
-			}
-
-			this.CLI_INTERFACE.info(`API key will be read from ${environmentVariableName} environment variable${keyFormatInfo} or prompted each time.`);
-			// Use dummy value for configuration
-			credentialValue = "will-prompt-on-use";
-		}
-
-		// Ask for retry configuration (advanced settings)
-		const shouldConfigureAdvanced: boolean = await this.CLI_INTERFACE.confirm("Would you like to configure advanced settings (retry counts)?", false);
-
-		let maxRetries: number = DEFAULT_MAX_RETRIES;
-		let validationMaxRetries: number = DEFAULT_VALIDATION_MAX_RETRIES;
-
-		if (shouldConfigureAdvanced) {
-			const retriesString: string = await this.CLI_INTERFACE.text("Max retries for AI generation (default: 3):", "3", "3", (value: string) => {
-				const parsedNumber: number = Number.parseInt(value, 10);
-
-				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
-					return "Please enter a number between 1 and 10";
-				}
-
-				// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
-				return;
-			});
-			maxRetries = Number.parseInt(retriesString, 10);
-
-			const validationRetriesString: string = await this.CLI_INTERFACE.text("Max retries for validation fixes (default: 3):", "3", "3", (value: string) => {
-				const parsedNumber: number = Number.parseInt(value, 10);
-
-				if (Number.isNaN(parsedNumber) || parsedNumber < MIN_RETRY_COUNT || parsedNumber > MAX_RETRY_COUNT) {
-					return "Please enter a number between 1 and 10";
-				}
-
-				// eslint-disable-next-line @elsikora/sonar/no-redundant-jump
-				return;
-			});
-			validationMaxRetries = Number.parseInt(validationRetriesString, 10);
-		}
-
-		// Create configuration
-		// Create configuration - will save without API key
-		const configuration: LLMConfiguration = new LLMConfiguration(provider, new ApiKey(credentialValue), mode, model, maxRetries, validationMaxRetries);
-
-		// Save configuration (without API key)
+		const configuration: LLMConfiguration = await this.AI_PROFILE_SERVICE.configure(COMMITIZEN_AI_MODULE_CONSTANT.ID, mode);
 		await this.saveConfiguration(configuration);
 
 		this.CLI_INTERFACE.success("Configuration saved successfully!");
 
-		// If we have an environment API key, return config with it
-		// Otherwise, return config with dummy key (will prompt later)
 		return configuration;
 	}
 
 	/**
-	 * Get the current LLM configuration
-	 * @returns {Promise<LLMConfiguration | null>} Promise resolving to the current configuration or null if not configured
+	 * Get the current LLM configuration.
+	 * @returns {Promise<LLMConfiguration | null>} Promise resolving to the current configuration or null if not configured.
 	 */
 	async getCurrentConfiguration(): Promise<LLMConfiguration | null> {
+		const config: IConfig = await this.getConfigWithDefaults();
+
+		if (!config.mode) {
+			return null;
+		}
+
+		if (config.mode === ECommitMode.MANUAL) {
+			return this.createManualConfiguration(config);
+		}
+
+		const configuration: LLMConfiguration = await this.AI_PROFILE_SERVICE.ensure(COMMITIZEN_AI_MODULE_CONSTANT.ID, config.mode);
+		await this.saveConfiguration(configuration);
+
+		return configuration;
+	}
+
+	async getMockConfiguration(): Promise<LLMConfiguration> {
 		const config: IConfig = await this.CONFIG_SERVICE.get();
 
-		if (!config.provider || !config.mode) {
-			return null;
-		}
-
-		// Add backward compatibility - set default retry values if missing
-		let isConfigUpdated: boolean = false;
-
-		if (config.maxRetries === undefined) {
-			config.maxRetries = DEFAULT_MAX_RETRIES;
-			isConfigUpdated = true;
-		}
-
-		if (config.validationMaxRetries === undefined) {
-			config.validationMaxRetries = DEFAULT_VALIDATION_MAX_RETRIES;
-			isConfigUpdated = true;
-		}
-
-		if (!config.ticket) {
-			config.ticket = getDefaultTicketConfig();
-			isConfigUpdated = true;
-		}
-
-		// Save updated config if we added defaults
-		if (isConfigUpdated) {
-			await this.CONFIG_SERVICE.set(config);
-		}
-
-		// Migrate deprecated models
-		let migratedModel: string | undefined = config.model;
-
-		if (migratedModel) {
-			// Map old models to new ones
-			const modelMigrations: Record<string, string> = {
-				// Anthropic migrations
-				"claude-2.0": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-2.1": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-3-5-haiku-20241022": EAnthropicModel.CLAUDE_3_5_HAIKU,
-				"claude-3-5-sonnet-20241022": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-3-haiku-20240307": EAnthropicModel.CLAUDE_3_5_HAIKU,
-				"claude-3-sonnet-20240229": EAnthropicModel.CLAUDE_3_5_SONNET,
-				"claude-opus-4-20250514": EAnthropicModel.CLAUDE_OPUS_4_5,
-				"claude-sonnet-4-20250514": EAnthropicModel.CLAUDE_SONNET_4_5,
-				// OpenAI migrations
-				"gpt-3.5-turbo": EOpenAIModel.GPT_35_TURBO,
-				"gpt-4": EOpenAIModel.GPT_4O,
-				"gpt-4-0125-preview": EOpenAIModel.GPT_4_TURBO,
-				"gpt-4-0613": EOpenAIModel.GPT_4O,
-				"gpt-4-1106-preview": EOpenAIModel.GPT_4_TURBO,
-				"gpt-4-32k": EOpenAIModel.GPT_4O,
-				"gpt-4-32k-0613": EOpenAIModel.GPT_4O,
-				"gpt-4-turbo-preview": EOpenAIModel.GPT_4_TURBO,
-				"gpt-4.1": EOpenAIModel.GPT_5,
-				"gpt-4.1-mini": EOpenAIModel.GPT_5_MINI,
-				"gpt-4.1-nano": EOpenAIModel.GPT_5_NANO,
-				"gpt-4o": EOpenAIModel.GPT_4O,
-				"gpt-4o-2024-05-13": EOpenAIModel.GPT_4O,
-				"gpt-4o-2024-08-06": EOpenAIModel.GPT_4O,
-				"gpt-4o-2024-11-20": EOpenAIModel.GPT_4O,
-				"gpt-4o-mini": EOpenAIModel.GPT_4O_MINI,
-				"o1-preview": EOpenAIModel.O1,
-			};
-
-			if (modelMigrations[migratedModel]) {
-				const oldModel: string = migratedModel;
-				migratedModel = modelMigrations[migratedModel];
-
-				// Save the migrated configuration
-				await this.CONFIG_SERVICE.setProperty("model", migratedModel);
-
-				this.CLI_INTERFACE.warn(`Migrated deprecated model ${oldModel} to ${migratedModel}`);
-			}
-		}
-
-		// For manual mode, return configuration with dummy API key
-		if (config.mode === ECommitMode.MANUAL) {
-			return new LLMConfiguration(config.provider, new ApiKey("manual-mode"), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES);
-		}
-
-		// For auto mode, check environment variables
-		const environmentVariableNames: Record<string, string> = {
-			anthropic: "ANTHROPIC_API_KEY",
-			"aws-bedrock": "AWS_BEDROCK_API_KEY",
-			"azure-openai": "AZURE_OPENAI_API_KEY",
-			google: "GOOGLE_API_KEY",
-			ollama: "OLLAMA_API_KEY",
-			openai: "OPENAI_API_KEY",
-		};
-
-		const environmentVariableName: string = environmentVariableNames[config.provider] ?? "";
-		const environmentApiKey: string | undefined = process.env[environmentVariableName];
-
-		// If no API key in environment, return null (will prompt later)
-		if (!environmentApiKey || environmentApiKey.trim().length === 0) {
-			return null;
-		}
-
-		return new LLMConfiguration(config.provider, new ApiKey(environmentApiKey), config.mode, migratedModel, config.maxRetries ?? DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? DEFAULT_VALIDATION_MAX_RETRIES);
+		return new LLMConfiguration(new ApiKey("mock-mode"), config.mode ?? ECommitMode.AUTO, config.maxRetries ?? NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES);
 	}
 
 	/**
-	 * Check if the current configuration needs LLM details
-	 * @returns {Promise<boolean>} Promise resolving to true if LLM details are needed
+	 * Check if the current configuration needs LLM details.
+	 * @returns {Promise<boolean>} Promise resolving to true if LLM details are needed.
 	 */
 	async needsLLMDetails(): Promise<boolean> {
 		const config: IConfig = await this.CONFIG_SERVICE.get();
@@ -446,27 +95,13 @@ export class ConfigureLLMUseCase {
 			return false;
 		}
 
-		// For auto mode, check if API key is in environment
-		const environmentVariableNames: Record<string, string> = {
-			anthropic: "ANTHROPIC_API_KEY",
-			"aws-bedrock": "AWS_BEDROCK_API_KEY",
-			"azure-openai": "AZURE_OPENAI_API_KEY",
-			google: "GOOGLE_API_KEY",
-			ollama: "OLLAMA_API_KEY",
-			openai: "OPENAI_API_KEY",
-		};
-
-		const environmentVariableName: string = environmentVariableNames[config.provider] ?? "";
-		const environmentApiKey: string | undefined = process.env[environmentVariableName];
-
-		// Need details if no API key in environment
-		return !environmentApiKey || environmentApiKey.trim().length === 0;
+		return !(await this.AI_PROFILE_SERVICE.isReady(COMMITIZEN_AI_MODULE_CONSTANT.ID));
 	}
 
 	/**
-	 * Save LLM configuration
-	 * @param {LLMConfiguration} configuration - The configuration to save
-	 * @returns {Promise<void>} Promise that resolves when configuration is saved
+	 * Save LLM configuration.
+	 * @param {LLMConfiguration} configuration - The configuration to save.
+	 * @returns {Promise<void>} Promise that resolves when configuration is saved.
 	 */
 	async saveConfiguration(configuration: LLMConfiguration): Promise<void> {
 		const existingConfig: IConfig = await this.CONFIG_SERVICE.get();
@@ -474,8 +109,6 @@ export class ConfigureLLMUseCase {
 		const config: IConfig = {
 			maxRetries: configuration.getMaxRetries(),
 			mode: configuration.getMode(),
-			model: configuration.getModel(),
-			provider: configuration.getProvider(),
 			ticket: existingConfig.ticket ?? getDefaultTicketConfig(),
 			validationMaxRetries: configuration.getValidationMaxRetries(),
 		};
@@ -484,9 +117,9 @@ export class ConfigureLLMUseCase {
 	}
 
 	/**
-	 * Update the commit mode
-	 * @param {ECommitMode} mode - The new commit mode
-	 * @returns {Promise<LLMConfiguration | null>} Promise resolving to the updated configuration
+	 * Update the commit mode.
+	 * @param {ECommitMode} mode - The new mode.
+	 * @returns {Promise<LLMConfiguration | null>} Promise resolving to the updated configuration.
 	 */
 	async updateMode(mode: ECommitMode): Promise<LLMConfiguration | null> {
 		const current: LLMConfiguration | null = await this.getCurrentConfiguration();
@@ -500,6 +133,36 @@ export class ConfigureLLMUseCase {
 
 		return updated;
 	}
+
+	private createManualConfiguration(config?: IConfig): LLMConfiguration {
+		return new LLMConfiguration(new ApiKey("manual-mode"), ECommitMode.MANUAL, config?.maxRetries ?? NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, config?.validationMaxRetries ?? NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES);
+	}
+
+	private async getConfigWithDefaults(): Promise<IConfig> {
+		const config: IConfig = await this.CONFIG_SERVICE.get();
+		let isConfigUpdated: boolean = false;
+
+		if (config.maxRetries === undefined) {
+			config.maxRetries = NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES;
+			isConfigUpdated = true;
+		}
+
+		if (config.validationMaxRetries === undefined) {
+			config.validationMaxRetries = NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES;
+			isConfigUpdated = true;
+		}
+
+		if (!config.ticket) {
+			config.ticket = getDefaultTicketConfig();
+			isConfigUpdated = true;
+		}
+
+		if (isConfigUpdated) {
+			await this.CONFIG_SERVICE.set(config);
+		}
+
+		return config;
+	}
 }
 
 /**
@@ -508,10 +171,10 @@ export class ConfigureLLMUseCase {
  */
 function getDefaultTicketConfig(): ITicketConfig {
 	return {
-		missingBranchLintBehavior: DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR as TTicketMissingBranchLintBehavior,
-		normalization: DEFAULT_TICKET_NORMALIZATION as TTicketNormalization,
-		pattern: DEFAULT_TICKET_PATTERN_SOURCE,
-		patternFlags: DEFAULT_TICKET_PATTERN_FLAGS,
-		source: DEFAULT_TICKET_SOURCE as TTicketSource,
+		missingBranchLintBehavior: TICKET_CONSTANT.DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR as TTicketMissingBranchLintBehavior,
+		normalization: TICKET_CONSTANT.DEFAULT_TICKET_NORMALIZATION as TTicketNormalization,
+		pattern: TICKET_CONSTANT.DEFAULT_TICKET_PATTERN_SOURCE,
+		patternFlags: TICKET_CONSTANT.DEFAULT_TICKET_PATTERN_FLAGS,
+		source: TICKET_CONSTANT.DEFAULT_TICKET_SOURCE as TTicketSource,
 	};
 }

@@ -1,8 +1,8 @@
-import type { ICommandService } from "../../application/interface/command-service.interface.js";
-import type { ICommitRepository } from "../../application/interface/commit-repository.interface.js";
-import type { ITicketIdParser } from "../../application/interface/ticket-id-parser.interface.js";
-import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import type { TicketId } from "../../domain/value-object/ticket-id.value-object.js";
+import type { ICommandService } from "@application/interface/command-service.interface";
+import type { ICommitRepository } from "@application/interface/commit-repository.interface";
+import type { ITicketIdParser } from "@application/interface/ticket-id-parser.interface";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+import type { TicketId } from "@domain/value-object/ticket-id.value-object";
 
 /**
  * Git implementation of the commit repository

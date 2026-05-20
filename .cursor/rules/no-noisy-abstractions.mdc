@@ -1,0 +1,18 @@
+---
+description: Avoid noisy micro-abstractions in Commitlint AI TypeScript code
+globs: **/*.ts
+alwaysApply: false
+---
+
+# No Noisy Micro-Abstractions
+
+Do not extract local-only helpers, constants, maps, or wrapper classes just to name a one-off detail.
+
+Prefer inline code when the abstraction:
+
+- is used once in one small code path;
+- only restates an obvious enum or key mapping;
+- exists only to satisfy style preferences;
+- makes the reader jump away from the behavior to understand simple logic.
+
+Extract only when it carries project meaning, removes meaningful duplication, or makes a non-trivial invariant explicit.

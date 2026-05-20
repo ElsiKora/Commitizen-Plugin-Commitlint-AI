@@ -1,27 +1,25 @@
+import type { ICommitValidationResult, ICommitValidator } from "@application/interface/commit-validator.interface";
+import type { ILlmPromptContext, ILlmService } from "@application/interface/llm-service.interface";
 import type { LintOutcome, QualifiedRules } from "@commitlint/types";
-
-import type { ICommitValidationResult, ICommitValidator } from "../../application/interface/commit-validator.interface.js";
-import type { ILlmPromptContext, ILlmService } from "../../application/interface/llm-service.interface.js";
-import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
 
 import lint from "@commitlint/lint";
 import load from "@commitlint/load";
-
-import { ELLIPSIS_LENGTH } from "../../domain/constant/numeric.constant.js";
-import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
-import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
+import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
+import { CommitBody } from "@domain/value-object/commit-body.value-object";
+import { CommitHeader } from "@domain/value-object/commit-header.value-object";
 
 /**
  * Commitlint implementation of the commit validator
  */
 export class CommitlintValidatorService implements ICommitValidator {
-	private readonly LLM_SERVICES?: Array<ILlmService>;
+	private readonly LLM_SERVICE?: ILlmService;
 
 	private llmConfiguration?: LLMConfiguration;
 
-	constructor(llmServices?: Array<ILlmService>) {
-		this.LLM_SERVICES = llmServices;
+	constructor(llmService?: ILlmService) {
+		this.LLM_SERVICE = llmService;
 	}
 
 	/**
@@ -36,54 +34,46 @@ export class CommitlintValidatorService implements ICommitValidator {
 			return message;
 		}
 
-		// If we have context and LLM services, use LLM to regenerate
-		if (context && this.LLM_SERVICES && this.llmConfiguration) {
-			const service: ILlmService | undefined = this.LLM_SERVICES.find((s: ILlmService) => {
-				const config: LLMConfiguration | undefined = this.llmConfiguration;
+		// If we have context and an LLM service, use LLM to regenerate
+		if (context && this.LLM_SERVICE && this.llmConfiguration) {
+			process.stdout.write("Using LLM to intelligently fix validation errors...\n");
 
-				return config ? s.supports(config) : false;
-			});
+			try {
+				// Create a minimal context for fixing - no need to send diff again
+				const fixContext: ILlmPromptContext = {
+					body: context.body,
+					// Explicitly exclude diff and files
+					diff: undefined,
+					files: undefined,
+					rules: {
+						...(typeof context.rules === "object" && !Array.isArray(context.rules) ? context.rules : {}),
+						instructions: "Fix the commit message to comply with the validation rules. Do not change the meaning or content, only fix the format to pass validation.",
+						previousAttempt: message.toString(),
+						validationErrors: validationResult.errors,
+					},
+					scopeDescription: context.scopeDescription,
+					subject: context.subject,
+					typeDescription: context.typeDescription,
+					typeDescriptions: context.typeDescriptions,
+					typeEnum: context.typeEnum,
+				};
 
-			if (service) {
-				process.stdout.write("Using LLM to intelligently fix validation errors...\n");
+				// Generate a new commit message with the minimal context
+				const fixedMessage: CommitMessage = await this.LLM_SERVICE.generateCommitMessage(fixContext, this.llmConfiguration);
 
-				try {
-					// Create a minimal context for fixing - no need to send diff again
-					const fixContext: ILlmPromptContext = {
-						body: context.body,
-						// Explicitly exclude diff and files
-						diff: undefined,
-						files: undefined,
-						rules: {
-							...(typeof context.rules === "object" && !Array.isArray(context.rules) ? context.rules : {}),
-							instructions: "Fix the commit message to comply with the validation rules. Do not change the meaning or content, only fix the format to pass validation.",
-							previousAttempt: message.toString(),
-							validationErrors: validationResult.errors,
-						},
-						scopeDescription: context.scopeDescription,
-						subject: context.subject,
-						typeDescription: context.typeDescription,
-						typeDescriptions: context.typeDescriptions,
-						typeEnum: context.typeEnum,
-					};
+				// Validate the new message
+				const fixedValidation: ICommitValidationResult = await this.validate(fixedMessage);
 
-					// Generate a new commit message with the minimal context
-					const fixedMessage: CommitMessage = await service.generateCommitMessage(fixContext, this.llmConfiguration);
+				if (fixedValidation.isValid) {
+					process.stdout.write("LLM fix successful!\n");
 
-					// Validate the new message
-					const fixedValidation: ICommitValidationResult = await this.validate(fixedMessage);
-
-					if (fixedValidation.isValid) {
-						process.stdout.write("LLM fix successful!\n");
-
-						return fixedMessage;
-					} else {
-						process.stdout.write("LLM fix still has validation errors, falling back to simple fixes\n");
-					}
-				} catch (error) {
-					process.stderr.write(`Failed to fix commit message with LLM: ${error instanceof Error ? error.message : String(error)}\n`);
-					// Fall through to simple fixes
+					return fixedMessage;
+				} else {
+					process.stdout.write("LLM fix still has validation errors, falling back to simple fixes\n");
 				}
+			} catch (error) {
+				process.stderr.write(`Failed to fix commit message with LLM: ${error instanceof Error ? error.message : String(error)}\n`);
+				// Fall through to simple fixes
 			}
 		}
 
@@ -134,7 +124,7 @@ export class CommitlintValidatorService implements ICommitValidator {
 						// Try to shorten the subject
 						const overhead: number = currentLength - maxLength;
 						const subject: string = header.getSubject();
-						const shortenedSubject: string = subject.slice(0, Math.max(0, subject.length - overhead - ELLIPSIS_LENGTH)) + "...";
+						const shortenedSubject: string = subject.slice(0, Math.max(0, subject.length - overhead - NUMERIC_CONSTANT.ELLIPSIS_LENGTH)) + "...";
 						const newHeader: CommitHeader = new CommitHeader(header.getType(), shortenedSubject, header.getScope());
 						fixedMessage = fixedMessage.withHeader(newHeader);
 					}

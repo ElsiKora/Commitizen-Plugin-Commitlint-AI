@@ -1,23 +1,24 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { GenerateCommitMessageUseCase } from "../../../../src/application/use-case/generate-commit-message.use-case";
-import { MockLlmService } from "../../../mocks/llm-service.mock";
-import { createMockCommitMessage } from "../../../mocks/commit-message.mock";
+import type { ILlmService } from "@application/interface/llm-service.interface";
+import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { GenerateCommitMessageUseCase } from "@application/use-case/generate-commit-message.use-case";
 import { createMockLLMConfiguration, createMockLlmPromptContext } from "../../../helpers/test-utils";
+import { createMockCommitMessage } from "../../../mocks/commit-message.mock";
 
 describe("GenerateCommitMessageUseCase", () => {
 	let useCase: GenerateCommitMessageUseCase;
-	let mockOpenAiService: MockLlmService;
-	let mockAnthropicService: MockLlmService;
-	let mockConfiguration: any;
+	let llmService: ILlmService;
+	let mockConfiguration: LLMConfiguration;
 	let mockContext: ReturnType<typeof createMockLlmPromptContext>;
 
 	beforeEach(() => {
-		// Create mock services
-		mockOpenAiService = new MockLlmService("openai");
-		mockAnthropicService = new MockLlmService("anthropic");
+		llmService = {
+			generateCommitMessage: vi.fn(),
+		};
 
-		// Create use case with mock services
-		useCase = new GenerateCommitMessageUseCase([mockOpenAiService, mockAnthropicService]);
+		useCase = new GenerateCommitMessageUseCase(llmService);
 
 		// Create mock configuration and context
 		mockConfiguration = createMockLLMConfiguration();
@@ -35,32 +36,20 @@ describe("GenerateCommitMessageUseCase", () => {
 				scope: "auth",
 				subject: "add OAuth2 authentication",
 			});
-			mockOpenAiService.generateCommitMessage.mockResolvedValue(expectedCommitMessage);
+			vi.mocked(llmService.generateCommitMessage).mockResolvedValue(expectedCommitMessage);
 
 			// Act
 			const result = await useCase.execute(mockContext, mockConfiguration);
 
 			// Assert
-			expect(mockOpenAiService.supports).toHaveBeenCalledWith(mockConfiguration);
-			expect(mockOpenAiService.generateCommitMessage).toHaveBeenCalledWith(mockContext, mockConfiguration);
+			expect(llmService.generateCommitMessage).toHaveBeenCalledWith(mockContext, mockConfiguration);
 			expect(result).toBe(expectedCommitMessage);
-		});
-
-		it("should throw error when no service supports the provider", async () => {
-			// Arrange
-			mockConfiguration.getProvider.mockReturnValue("unsupported-provider");
-
-			// Act & Assert
-			await expect(useCase.execute(mockContext, mockConfiguration)).rejects.toThrow("No LLM service found for provider: unsupported-provider");
 		});
 
 		it("should retry on failure up to max retries", async () => {
 			// Arrange
-			const maxRetries = 3;
-			mockConfiguration.getMaxRetries.mockReturnValue(maxRetries);
-
 			// Fail twice, then succeed
-			mockOpenAiService.generateCommitMessage.mockRejectedValueOnce(new Error("API Error 1")).mockRejectedValueOnce(new Error("API Error 2")).mockResolvedValueOnce(createMockCommitMessage());
+			vi.mocked(llmService.generateCommitMessage).mockRejectedValueOnce(new Error("API Error 1")).mockRejectedValueOnce(new Error("API Error 2")).mockResolvedValueOnce(createMockCommitMessage());
 
 			const onRetry = vi.fn();
 
@@ -68,7 +57,7 @@ describe("GenerateCommitMessageUseCase", () => {
 			const result = await useCase.execute(mockContext, mockConfiguration, onRetry);
 
 			// Assert
-			expect(mockOpenAiService.generateCommitMessage).toHaveBeenCalledTimes(3);
+			expect(llmService.generateCommitMessage).toHaveBeenCalledTimes(3);
 			expect(onRetry).toHaveBeenCalledTimes(2);
 			expect(onRetry).toHaveBeenCalledWith(1, 3, expect.any(Error));
 			expect(onRetry).toHaveBeenCalledWith(2, 3, expect.any(Error));
@@ -77,47 +66,26 @@ describe("GenerateCommitMessageUseCase", () => {
 
 		it("should throw error after max retries are exhausted", async () => {
 			// Arrange
-			const maxRetries = 2;
-			mockConfiguration.getMaxRetries.mockReturnValue(maxRetries);
+			const configuration: LLMConfiguration = createMockLLMConfiguration({ maxRetries: 2 });
 
-			mockOpenAiService.generateCommitMessage.mockRejectedValue(new Error("Persistent API Error"));
+			vi.mocked(llmService.generateCommitMessage).mockRejectedValue(new Error("Persistent API Error"));
 
 			// Act & Assert
-			await expect(useCase.execute(mockContext, mockConfiguration)).rejects.toThrow("Failed to generate commit message after 2 attempts: Persistent API Error");
+			await expect(useCase.execute(mockContext, configuration)).rejects.toThrow("Failed to generate commit message after 2 attempts: Persistent API Error");
 
-			expect(mockOpenAiService.generateCommitMessage).toHaveBeenCalledTimes(maxRetries);
-		});
-
-		it("should use anthropic service when provider is anthropic", async () => {
-			// Arrange
-			mockConfiguration.getProvider.mockReturnValue("anthropic");
-			const expectedCommitMessage = createMockCommitMessage({
-				type: "fix",
-				subject: "resolve memory leak in cache service",
-			});
-			mockAnthropicService.generateCommitMessage.mockResolvedValue(expectedCommitMessage);
-
-			// Act
-			const result = await useCase.execute(mockContext, mockConfiguration);
-
-			// Assert
-			expect(mockAnthropicService.supports).toHaveBeenCalledWith(mockConfiguration);
-			expect(mockAnthropicService.generateCommitMessage).toHaveBeenCalledWith(mockContext, mockConfiguration);
-			expect(mockOpenAiService.generateCommitMessage).not.toHaveBeenCalled();
-			expect(result).toBe(expectedCommitMessage);
+			expect(llmService.generateCommitMessage).toHaveBeenCalledTimes(2);
 		});
 
 		it("should wait between retries", async () => {
 			// Arrange
-			const maxRetries = 2;
-			mockConfiguration.getMaxRetries.mockReturnValue(maxRetries);
+			const configuration: LLMConfiguration = createMockLLMConfiguration({ maxRetries: 2 });
 
-			mockOpenAiService.generateCommitMessage.mockRejectedValueOnce(new Error("API Error")).mockResolvedValueOnce(createMockCommitMessage());
+			vi.mocked(llmService.generateCommitMessage).mockRejectedValueOnce(new Error("API Error")).mockResolvedValueOnce(createMockCommitMessage());
 
 			const startTime = Date.now();
 
 			// Act
-			await useCase.execute(mockContext, mockConfiguration);
+			await useCase.execute(mockContext, configuration);
 
 			const endTime = Date.now();
 
@@ -128,24 +96,16 @@ describe("GenerateCommitMessageUseCase", () => {
 	});
 
 	describe("edge cases", () => {
-		it("should handle empty service list", async () => {
-			// Arrange
-			const emptyUseCase = new GenerateCommitMessageUseCase([]);
-
-			// Act & Assert
-			await expect(emptyUseCase.execute(mockContext, mockConfiguration)).rejects.toThrow("No LLM service found for provider: openai");
-		});
-
 		it("should handle undefined onRetry callback", async () => {
 			// Arrange
-			mockOpenAiService.generateCommitMessage.mockRejectedValueOnce(new Error("API Error")).mockResolvedValueOnce(createMockCommitMessage());
+			vi.mocked(llmService.generateCommitMessage).mockRejectedValueOnce(new Error("API Error")).mockResolvedValueOnce(createMockCommitMessage());
 
 			// Act - should not throw
 			const result = await useCase.execute(mockContext, mockConfiguration);
 
 			// Assert
 			expect(result).toBeDefined();
-			expect(mockOpenAiService.generateCommitMessage).toHaveBeenCalledTimes(2);
+			expect(llmService.generateCommitMessage).toHaveBeenCalledTimes(2);
 		});
 	});
 });

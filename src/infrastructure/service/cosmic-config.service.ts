@@ -1,16 +1,14 @@
 /* eslint-disable @elsikora/typescript/no-magic-numbers */
+import type { IConfigService } from "@application/interface/config-service.interface";
+import type { IConfig } from "@application/interface/config.interface";
+import type { IFileSystemService } from "@application/interface/file-system-service.interface";
 import type { PublicExplorer } from "cosmiconfig";
 
-import type { IConfigService } from "../../application/interface/config-service.interface.js";
-import type { IConfig } from "../../application/interface/config.interface.js";
-import type { IFileSystemService } from "../../application/interface/file-system-service.interface.js";
-
+import { CONFIG_FILE_DIRECTORY } from "@application/constant/config-file-directory.constant";
+import { CONFIG_MODULE_NAME } from "@application/constant/config-module-name.constant";
 import { cosmiconfig } from "cosmiconfig";
 import { stringify } from "javascript-stringify";
 import yaml from "yaml";
-
-import { CONFIG_FILE_DIRECTORY } from "../../application/constant/config-file-directory.constant.js";
-import { CONFIG_MODULE_NAME } from "../../application/constant/config-module-name.constant.js";
 
 /**
  * Implementation of ConfigService that uses cosmiconfig for configuration management.
@@ -86,7 +84,7 @@ export class CosmicConfigService implements IConfigService {
 			return this.cachedConfig;
 		}
 
-		return {} as IConfig;
+		return {};
 	}
 
 	/**
@@ -113,7 +111,7 @@ export class CosmicConfigService implements IConfigService {
 			await this.set(merged);
 		} catch (error) {
 			console.error("Error merging config:", error);
-			await this.set(partial as IConfig);
+			await this.set(partial);
 		}
 	}
 

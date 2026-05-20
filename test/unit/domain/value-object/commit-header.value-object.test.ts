@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CommitHeader } from "../../../../src/domain/value-object/commit-header.value-object";
+import { CommitHeader } from "@domain/value-object/commit-header.value-object";
 
 describe("CommitHeader", () => {
 	describe("constructor", () => {

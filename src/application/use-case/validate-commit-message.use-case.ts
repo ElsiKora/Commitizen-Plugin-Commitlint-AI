@@ -1,20 +1,23 @@
-import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import type { ICommitValidationResult, ICommitValidator } from "../interface/commit-validator.interface.js";
-import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
+import type { ICommitValidationResult, ICommitValidator } from "@application/interface/commit-validator.interface";
+import type { ILlmPromptContext } from "@application/interface/llm-service.interface";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
 
-import { DEFAULT_VALIDATION_MAX_RETRIES } from "../../domain/constant/numeric.constant.js";
+import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
 
 /**
  * Use case for validating and fixing commit messages
  */
 export class ValidateCommitMessageUseCase {
-	private readonly DEFAULT_MAX_RETRIES: number = DEFAULT_VALIDATION_MAX_RETRIES;
+	private readonly DEFAULT_MAX_RETRIES: number = NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES;
+
+	private readonly STATUS_REPORTER: ((message: string) => void) | undefined;
 
 	private readonly VALIDATOR: ICommitValidator;
 
-	constructor(validator: ICommitValidator, defaultMaxRetries: number = DEFAULT_VALIDATION_MAX_RETRIES) {
+	constructor(validator: ICommitValidator, defaultMaxRetries: number = NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES, statusReporter?: (message: string) => void) {
 		this.VALIDATOR = validator;
 		this.DEFAULT_MAX_RETRIES = defaultMaxRetries;
+		this.STATUS_REPORTER = statusReporter;
 	}
 
 	/**
@@ -39,7 +42,7 @@ export class ValidateCommitMessageUseCase {
 
 			if (validationResult.isValid) {
 				if (attempts > 0) {
-					process.stdout.write(`✓ Commit message fixed after ${attempts} attempt${attempts > 1 ? "s" : ""}\n`);
+					this.reportStatus(`✓ Commit message fixed after ${attempts} attempt${attempts > 1 ? "s" : ""}`);
 				}
 
 				return currentMessage;
@@ -48,10 +51,10 @@ export class ValidateCommitMessageUseCase {
 			// If we shouldn't attempt fix or we've exhausted all retries
 			if (!shouldAttemptFix || attempts >= retryLimit) {
 				if (validationResult.errors && validationResult.errors.length > 0) {
-					process.stdout.write(`✗ Commit message validation failed after ${attempts} attempts:\n`);
+					this.reportStatus(`✗ Commit message validation failed after ${attempts} attempts:`);
 
 					for (const error of validationResult.errors) {
-						process.stdout.write(`  - ${error}\n`);
+						this.reportStatus(`  - ${error}`);
 					}
 				}
 
@@ -60,27 +63,27 @@ export class ValidateCommitMessageUseCase {
 
 			// Attempt to fix
 			attempts++;
-			process.stdout.write(`Attempting to fix commit message (attempt ${attempts}/${retryLimit})...\n`);
+			this.reportStatus(`Attempting to fix commit message (attempt ${attempts}/${retryLimit})...`);
 
 			try {
 				const fixedMessage: CommitMessage | null = await this.VALIDATOR.fix(currentMessage, validationResult, context);
 
 				if (!fixedMessage) {
-					process.stdout.write("Unable to automatically fix the commit message\n");
+					this.reportStatus("Unable to automatically fix the commit message");
 
 					return null;
 				}
 
-				process.stdout.write("Fixed commit message generated\n");
+				this.reportStatus("Fixed commit message generated");
 				currentMessage = fixedMessage;
 			} catch (error) {
-				process.stdout.write(`Error during fix attempt: ${error instanceof Error ? error.message : String(error)}\n`);
+				this.reportStatus(`Error during fix attempt: ${error instanceof Error ? error.message : String(error)}`);
 
 				return null;
 			}
 		}
 
-		process.stdout.write(`Unable to generate valid commit message after ${retryLimit} attempts\n`);
+		this.reportStatus(`Unable to generate valid commit message after ${retryLimit} attempts`);
 
 		return null;
 	}
@@ -92,5 +95,9 @@ export class ValidateCommitMessageUseCase {
 	 */
 	async validate(message: CommitMessage): Promise<ICommitValidationResult> {
 		return this.VALIDATOR.validate(message);
+	}
+
+	private reportStatus(message: string): void {
+		this.STATUS_REPORTER?.(message);
 	}
 }

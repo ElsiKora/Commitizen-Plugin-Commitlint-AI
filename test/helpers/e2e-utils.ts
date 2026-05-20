@@ -48,12 +48,30 @@ export async function stageFiles(repoPath: string, files: Record<string, string>
  * Creates a test environment configuration
  */
 export async function createTestEnv(repoPath: string, provider: string, apiKey: string): Promise<void> {
-	const envContent = `
-COMMITIZEN_AI_PROVIDER=${provider}
-COMMITIZEN_AI_API_KEY=${apiKey}
-COMMITIZEN_AI_MODEL=test-model
-COMMITIZEN_AI_AUTO_COMMIT=false
+	const environmentVariableNameByProvider: Record<string, string> = {
+		anthropic: "ANTHROPIC_API_KEY",
+		"aws-bedrock": "AWS_BEDROCK_API_KEY",
+		"azure-openai": "AZURE_OPENAI_API_KEY",
+		cerebras: "CEREBRAS_API_KEY",
+		google: "GOOGLE_API_KEY",
+		ollama: "OLLAMA_API_KEY",
+		openai: "OPENAI_API_KEY",
+		"vercel-ai-gateway": "AI_GATEWAY_API_KEY",
+	};
+	const envContent = `${environmentVariableNameByProvider[provider] ?? "OPENAI_API_KEY"}=${apiKey}`;
+	const aiCoreConfigDirectoryPath = path.join(repoPath, ".elsikora");
+	const aiCoreConfigContent = `export default {
+	modules: {
+		"commitlint-plugin-commitlint-ai": {
+			model: "test-model",
+			provider: "${provider}",
+		},
+	},
+};
 `;
+
+	await fs.mkdir(aiCoreConfigDirectoryPath, { recursive: true });
+	await fs.writeFile(path.join(aiCoreConfigDirectoryPath, "ai-core.config.js"), aiCoreConfigContent);
 	await fs.writeFile(path.join(repoPath, ".env"), envContent.trim());
 }
 

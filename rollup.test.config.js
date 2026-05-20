@@ -2,41 +2,7 @@ import typescript from "@rollup/plugin-typescript";
 import dtsPathAlias from "rollup-plugin-dts-path-alias";
 import generatePackageJson from "rollup-plugin-generate-package-json";
 
-const external = [
-	"@aws-sdk/client-bedrock-runtime",
-	"@google/generative-ai",
-	"@anthropic-ai/claude-code",
-	"@anthropic-ai/sdk",
-	"@commitlint/ensure",
-	"@commitlint/lint",
-	"@commitlint/load",
-	"@commitlint/types",
-	"@elsikora/cladi",
-	"@rollup/plugin-typescript",
-	"chalk",
-	"cosmiconfig",
-	"dotenv",
-	"dotenv/config",
-	"javascript-stringify",
-	"lodash.isplainobject",
-	"openai",
-	"ora",
-	"prompts",
-	"rollup",
-	"word-wrap",
-	"yaml",
-	"commitizen",
-	"node:fs",
-	"node:path",
-	"node:util",
-	"node:child_process",
-	"fs",
-	"path",
-	"util",
-	"child_process",
-	/^@commitlint\/.+/,
-	/^node:.+/,
-];
+const external = ["@commitlint/ensure", "@commitlint/lint", "@commitlint/load", "@commitlint/types", "@elsikora/ai-core", "@elsikora/cladi", "@rollup/plugin-typescript", "chalk", "cosmiconfig", "dotenv", "dotenv/config", "javascript-stringify", "lodash.isplainobject", "ora", "prompts", "rollup", "word-wrap", "yaml", "commitizen", "node:fs", "node:path", "node:util", "node:child_process", "fs", "path", "util", "child_process", /^@commitlint\/.+/, /^node:.+/];
 
 export default [
 	{

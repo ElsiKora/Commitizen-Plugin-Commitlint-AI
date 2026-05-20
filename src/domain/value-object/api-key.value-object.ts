@@ -1,4 +1,4 @@
-import { MIN_API_KEY_LENGTH, REDACTED_LENGTH } from "../constant/numeric.constant.js";
+import { NUMERIC_CONSTANT } from "../constant/numeric.constant.js";
 
 /**
  * Value object representing an API key
@@ -36,7 +36,7 @@ export class ApiKey {
 	 */
 	isValid(): boolean {
 		// Basic validation - just check it's not a placeholder
-		return this.VALUE.length > MIN_API_KEY_LENGTH && !this.VALUE.includes("your-api-key");
+		return this.VALUE.length > NUMERIC_CONSTANT.MIN_API_KEY_LENGTH && !this.VALUE.includes("your-api-key");
 	}
 
 	/**
@@ -44,8 +44,8 @@ export class ApiKey {
 	 * @returns {string} Redacted API key
 	 */
 	toRedacted(): string {
-		if (this.VALUE.length <= REDACTED_LENGTH) return "****";
+		if (this.VALUE.length <= NUMERIC_CONSTANT.REDACTED_LENGTH) return "****";
 
-		return this.VALUE.slice(0, REDACTED_LENGTH) + "..." + this.VALUE.slice(-REDACTED_LENGTH);
+		return this.VALUE.slice(0, NUMERIC_CONSTANT.REDACTED_LENGTH) + "..." + this.VALUE.slice(-NUMERIC_CONSTANT.REDACTED_LENGTH);
 	}
 }

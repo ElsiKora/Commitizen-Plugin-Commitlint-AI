@@ -1,9 +1,21 @@
-export const BRANCH_LINT_CONFIG_MODULE_NAME: string = "git-branch-lint";
-export const BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE: string = "[a-z0-9-]+";
-export const BRANCH_LINT_DEFAULT_TICKET_PATTERN_SOURCE: string = "[a-z]{2,}-[0-9]+";
-export const BRANCH_LINT_PACKAGE_PROPERTY: string = "elsikora.git-branch-lint";
-export const DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR: string = "fallback";
-export const DEFAULT_TICKET_NORMALIZATION: string = "preserve";
-export const DEFAULT_TICKET_PATTERN_FLAGS: string = "i";
-export const DEFAULT_TICKET_PATTERN_SOURCE: string = "[a-z]{2,}-[0-9]+";
-export const DEFAULT_TICKET_SOURCE: string = "auto";
+export const TICKET_CONSTANT: {
+	readonly BRANCH_LINT_CONFIG_MODULE_NAME: string;
+	readonly BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE: string;
+	readonly BRANCH_LINT_DEFAULT_TICKET_PATTERN_SOURCE: string;
+	readonly BRANCH_LINT_PACKAGE_PROPERTY: string;
+	readonly DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR: string;
+	readonly DEFAULT_TICKET_NORMALIZATION: string;
+	readonly DEFAULT_TICKET_PATTERN_FLAGS: string;
+	readonly DEFAULT_TICKET_PATTERN_SOURCE: string;
+	readonly DEFAULT_TICKET_SOURCE: string;
+} = {
+	BRANCH_LINT_CONFIG_MODULE_NAME: "git-branch-lint",
+	BRANCH_LINT_DEFAULT_SUBJECT_PATTERN_SOURCE: "[a-z0-9-]+",
+	BRANCH_LINT_DEFAULT_TICKET_PATTERN_SOURCE: "[a-z]{2,}-[0-9]+",
+	BRANCH_LINT_PACKAGE_PROPERTY: "elsikora.git-branch-lint",
+	DEFAULT_TICKET_MISSING_BRANCH_LINT_BEHAVIOR: "fallback",
+	DEFAULT_TICKET_NORMALIZATION: "preserve",
+	DEFAULT_TICKET_PATTERN_FLAGS: "i",
+	DEFAULT_TICKET_PATTERN_SOURCE: "[a-z]{2,}-[0-9]+",
+	DEFAULT_TICKET_SOURCE: "auto",
+} as const;
