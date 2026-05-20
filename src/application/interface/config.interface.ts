@@ -1,5 +1,4 @@
-import type { ECommitMode } from "../../domain/enum/commit-mode.enum.js";
-import type { ELLMProvider } from "../../domain/enum/llm-provider.enum.js";
+import type { ECommitMode } from "@domain/enum/commit-mode.enum";
 
 /**
  * Main configuration interface
@@ -14,16 +13,6 @@ export interface IConfig {
 	 * Commit mode (auto, manual)
 	 */
 	mode?: ECommitMode;
-
-	/**
-	 * Legacy model mirror. New AI runtime profiles are stored by AI-Core.
-	 */
-	model?: string;
-
-	/**
-	 * Legacy provider mirror. New AI runtime profiles are stored by AI-Core.
-	 */
-	provider?: ELLMProvider;
 
 	/**
 	 * Ticket extraction settings.

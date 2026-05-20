@@ -1,9 +1,9 @@
-import type { ILlmPromptContext, ILlmService } from "../../application/interface/llm-service.interface.js";
-import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
+import type { ILlmPromptContext, ILlmService } from "@application/interface/llm-service.interface";
+import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
 
-import { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
-import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
+import { CommitMessage } from "@domain/entity/commit-message.entity";
+import { CommitBody } from "@domain/value-object/commit-body.value-object";
+import { CommitHeader } from "@domain/value-object/commit-header.value-object";
 
 const SIMULATED_DELAY_MS: number = 500;
 const DEFAULT_SCOPE: string = "core";
@@ -31,7 +31,7 @@ export class MockLlmService implements ILlmService {
 	 * @returns {Promise<CommitMessage>} Promise resolving to the generated commit message
 	 */
 	async generateCommitMessage(context: ILlmPromptContext, _configuration: LLMConfiguration): Promise<CommitMessage> {
-		process.stdout.write("🎭 Using MOCK LLM provider (no real API calls)\n");
+		process.stdout.write("🎭 Using MOCK LLM runtime (no real API calls)\n");
 
 		// Simulate API delay
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, SIMULATED_DELAY_MS));
@@ -67,16 +67,6 @@ export class MockLlmService implements ILlmService {
 		return commitMessage;
 	}
 
-	/**
-	 * Check if the service supports the given configuration
-	 * Mock service supports all providers when MOCK_LLM is enabled
-	 * @param {LLMConfiguration} _configuration - The LLM configuration (unused)
-	 * @returns {boolean} True if mock mode is enabled
-	 */
-	supports(_configuration: LLMConfiguration): boolean {
-		return this.isMockEnabled();
-	}
-
 	private extractFileName(filePath: string): string {
 		const filePathSegments: Array<string> = filePath.split("/");
 		const lastSegmentIndex: number = filePathSegments.length - 1;
@@ -110,14 +100,6 @@ export class MockLlmService implements ILlmService {
 		}
 
 		return undefined;
-	}
-
-	/**
-	 * Check if mock mode is enabled via environment variable
-	 * @returns {boolean} True if MOCK_LLM environment variable is set to "true" or "1"
-	 */
-	private isMockEnabled(): boolean {
-		return process.env.MOCK_LLM === "true" || process.env.MOCK_LLM === "1";
 	}
 
 	private normalizeToken(rawToken: string): string {

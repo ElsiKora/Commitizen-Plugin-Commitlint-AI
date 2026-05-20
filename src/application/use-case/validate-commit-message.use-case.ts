@@ -1,8 +1,8 @@
-import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import type { ICommitValidationResult, ICommitValidator } from "../interface/commit-validator.interface.js";
-import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
+import type { ICommitValidationResult, ICommitValidator } from "@application/interface/commit-validator.interface";
+import type { ILlmPromptContext } from "@application/interface/llm-service.interface";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
 
-import { NUMERIC_CONSTANT } from "../../domain/constant/numeric.constant.js";
+import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
 
 /**
  * Use case for validating and fixing commit messages

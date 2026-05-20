@@ -1,11 +1,11 @@
-import type { IBranchLintConfig, IBranchLintConfigService, TBranchLintSubjectPattern } from "../../application/interface/branch-lint-config.interface.js";
-import type { IConfigService } from "../../application/interface/config-service.interface.js";
-import type { IConfig, ITicketConfig, TTicketMissingBranchLintBehavior, TTicketNormalization, TTicketSource } from "../../application/interface/config.interface.js";
-import type { ITicketIdParser } from "../../application/interface/ticket-id-parser.interface.js";
-import type { TicketId } from "../../domain/value-object/ticket-id.value-object.js";
+import type { IBranchLintConfig, IBranchLintConfigService, TBranchLintSubjectPattern } from "@application/interface/branch-lint-config.interface";
+import type { IConfigService } from "@application/interface/config-service.interface";
+import type { IConfig, ITicketConfig, TTicketMissingBranchLintBehavior, TTicketNormalization, TTicketSource } from "@application/interface/config.interface";
+import type { ITicketIdParser } from "@application/interface/ticket-id-parser.interface";
+import type { TicketId } from "@domain/value-object/ticket-id.value-object";
 
-import { TICKET_CONSTANT } from "../../domain/constant/ticket.constant.js";
-import { TicketId as TicketIdValueObject } from "../../domain/value-object/ticket-id.value-object.js";
+import { TICKET_CONSTANT } from "@domain/constant/ticket.constant";
+import { TicketId as TicketIdValueObject } from "@domain/value-object/ticket-id.value-object";
 
 const DELIMITER_CLASS: string = String.raw`[\/_.-]`;
 const DELIMITED_MATCH_GROUP_INDEX: number = 2;

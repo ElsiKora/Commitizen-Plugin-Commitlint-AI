@@ -1,14 +1,14 @@
 import type { Mock } from "vitest";
 
-import type { ICommandService } from "../../../../src/application/interface/command-service.interface";
-import type { ITicketIdParser } from "../../../../src/application/interface/ticket-id-parser.interface";
-import type { CommitMessage } from "../../../../src/domain/entity/commit-message.entity";
-import type { TicketId } from "../../../../src/domain/value-object/ticket-id.value-object";
+import type { ICommandService } from "@application/interface/command-service.interface";
+import type { ITicketIdParser } from "@application/interface/ticket-id-parser.interface";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+import type { TicketId } from "@domain/value-object/ticket-id.value-object";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { TicketId as TicketIdValueObject } from "../../../../src/domain/value-object/ticket-id.value-object";
-import { GitCommitRepository } from "../../../../src/infrastructure/git/git-commit.repository";
+import { TicketId as TicketIdValueObject } from "@domain/value-object/ticket-id.value-object";
+import { GitCommitRepository } from "@infrastructure/git/git-commit.repository";
 import { createMockCommitMessage } from "../../../mocks/commit-message.mock";
 
 const LARGE_DIFF_LENGTH: number = 4000;

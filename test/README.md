@@ -97,7 +97,7 @@ npm run test:all
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { MyClass } from "../../../src/domain/my-class";
+import { MyClass } from "@domain/my-class";
 
 describe("MyClass", () => {
 	let instance: MyClass;

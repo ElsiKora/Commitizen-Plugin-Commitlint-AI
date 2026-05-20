@@ -1,4 +1,4 @@
-import type { TicketId } from "../../domain/value-object/ticket-id.value-object.js";
+import type { TicketId } from "@domain/value-object/ticket-id.value-object";
 
 /**
  * Interface for parsing ticket identifiers from branch names.

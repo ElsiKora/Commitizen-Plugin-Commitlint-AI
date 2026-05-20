@@ -1,8 +1,8 @@
-import type { ICliInterfaceService } from "../../../../src/application/interface/cli-interface-service.interface";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { AiCoreCliInterfaceService } from "../../../../src/infrastructure/service/ai-core-cli-interface.service";
+import { AiCoreCliInterfaceService } from "@infrastructure/service/ai-core-cli-interface.service";
 
 function createCliInterface(): ICliInterfaceService {
 	return {

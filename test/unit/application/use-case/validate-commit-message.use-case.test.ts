@@ -1,9 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { ValidateCommitMessageUseCase } from "../../../../src/application/use-case/validate-commit-message.use-case";
+import type { ICommitValidationResult, ICommitValidator } from "@application/interface/commit-validator.interface";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { ValidateCommitMessageUseCase } from "@application/use-case/validate-commit-message.use-case";
 import { createMockCommitMessage } from "../../../mocks/commit-message.mock";
 import { createMockLlmPromptContext } from "../../../helpers/test-utils";
-import type { ICommitValidator, ICommitValidationResult } from "../../../../src/application/interface/commit-validator.interface";
-import type { CommitMessage } from "../../../../src/domain/entity/commit-message.entity";
 
 describe("ValidateCommitMessageUseCase", () => {
 	let useCase: ValidateCommitMessageUseCase;

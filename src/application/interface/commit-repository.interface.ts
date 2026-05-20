@@ -1,4 +1,4 @@
-import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
 
 /**
  * Interface for commit repository operations

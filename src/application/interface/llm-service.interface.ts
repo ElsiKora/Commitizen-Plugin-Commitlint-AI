@@ -1,5 +1,5 @@
-import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
 
 /**
  * Context for generating commit messages
@@ -33,11 +33,4 @@ export interface ILlmService {
 	 * @returns Promise resolving to the generated commit message
 	 */
 	generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage>;
-
-	/**
-	 * Check if the service supports the given configuration
-	 * @param configuration - The LLM configuration to check
-	 * @returns True if the service supports the configuration
-	 */
-	supports(configuration: LLMConfiguration): boolean;
 }

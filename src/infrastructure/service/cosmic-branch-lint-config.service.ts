@@ -1,11 +1,9 @@
+import type { IBranchLintConfig, IBranchLintConfigService } from "@application/interface/branch-lint-config.interface";
 import type { PublicExplorer } from "cosmiconfig";
 
-import type { IBranchLintConfig, IBranchLintConfigService } from "../../application/interface/branch-lint-config.interface.js";
-
+import { CONFIG_FILE_DIRECTORY } from "@application/constant/config-file-directory.constant";
+import { TICKET_CONSTANT } from "@domain/constant/ticket.constant";
 import { cosmiconfig } from "cosmiconfig";
-
-import { CONFIG_FILE_DIRECTORY } from "../../application/constant/config-file-directory.constant.js";
-import { TICKET_CONSTANT } from "../../domain/constant/ticket.constant.js";
 
 /**
  * Reads git-branch-lint configuration using cosmiconfig.

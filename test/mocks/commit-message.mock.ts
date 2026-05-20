@@ -1,6 +1,6 @@
-import { CommitMessage } from "../../src/domain/entity/commit-message.entity";
-import { CommitHeader } from "../../src/domain/value-object/commit-header.value-object";
-import { CommitBody } from "../../src/domain/value-object/commit-body.value-object";
+import { CommitMessage } from "@domain/entity/commit-message.entity";
+import { CommitBody } from "@domain/value-object/commit-body.value-object";
+import { CommitHeader } from "@domain/value-object/commit-header.value-object";
 
 /**
  * Creates a mock CommitMessage with default or custom values

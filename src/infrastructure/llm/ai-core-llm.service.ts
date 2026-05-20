@@ -1,13 +1,12 @@
 import type { ILlmPromptContext, ILlmService } from "@application/interface/llm-service.interface";
 import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
-import type { AiCoreAdapter, IGenerateResult, IProviderOption } from "@elsikora/ai-core";
+import type { AiCoreAdapter, IGenerateResult } from "@elsikora/ai-core";
 
 import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
 import { CommitMessage } from "@domain/entity/commit-message.entity";
-import { ELLMProvider } from "@domain/enum/llm-provider.enum";
 import { CommitBody } from "@domain/value-object/commit-body.value-object";
 import { CommitHeader } from "@domain/value-object/commit-header.value-object";
-import { ELLMProvider as EAiCoreLLMProvider, EGenerateMode, ELLMMessageRole } from "@elsikora/ai-core";
+import { EGenerateMode, ELLMMessageRole } from "@elsikora/ai-core";
 
 /**
  * Commit message LLM service backed by the unified AI-Core runtime.
@@ -40,12 +39,6 @@ export class AiCoreLlmService implements ILlmService {
 		});
 
 		return this.parseCommitMessage(result.text);
-	}
-
-	supports(configuration: LLMConfiguration): boolean {
-		const provider: EAiCoreLLMProvider = this.toAiCoreProvider(configuration.getProvider());
-
-		return this.AI_CORE_ADAPTER.getProviderOptions().some((option: IProviderOption): boolean => option.value === provider);
 	}
 
 	private buildBodyFormattingRules(context: ILlmPromptContext): string {
@@ -371,42 +364,6 @@ export class AiCoreLlmService implements ILlmService {
 				if (conditionString && value !== undefined) {
 					formattedRules.push(`${ruleName}: ${conditionString} ${JSON.stringify(value)}`);
 				}
-			}
-		}
-	}
-
-	private toAiCoreProvider(provider: ELLMProvider): EAiCoreLLMProvider {
-		switch (provider) {
-			case ELLMProvider.ANTHROPIC: {
-				return EAiCoreLLMProvider.ANTHROPIC;
-			}
-
-			case ELLMProvider.AWS_BEDROCK: {
-				return EAiCoreLLMProvider.AWS_BEDROCK;
-			}
-
-			case ELLMProvider.AZURE_OPENAI: {
-				return EAiCoreLLMProvider.AZURE_OPENAI;
-			}
-
-			case ELLMProvider.CEREBRAS: {
-				return EAiCoreLLMProvider.CEREBRAS;
-			}
-
-			case ELLMProvider.GOOGLE: {
-				return EAiCoreLLMProvider.GOOGLE;
-			}
-
-			case ELLMProvider.OLLAMA: {
-				return EAiCoreLLMProvider.OLLAMA;
-			}
-
-			case ELLMProvider.OPENAI: {
-				return EAiCoreLLMProvider.OPENAI;
-			}
-
-			case ELLMProvider.VERCEL_AI_GATEWAY: {
-				return EAiCoreLLMProvider.VERCEL_AI_GATEWAY;
 			}
 		}
 	}

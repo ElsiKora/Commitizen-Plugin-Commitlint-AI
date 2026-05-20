@@ -1,6 +1,5 @@
+import type { ILlmPromptContext } from "@application/interface/llm-service.interface";
 import type { QualifiedRules, UserPromptConfig } from "@commitlint/types";
-
-import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
 
 /**
  * Service for extracting LLM prompt context from commitlint configuration
