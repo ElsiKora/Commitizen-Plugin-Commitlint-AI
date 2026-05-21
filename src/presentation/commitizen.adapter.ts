@@ -1,17 +1,15 @@
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
+import type { IConfig } from "@application/interface/config.interface";
+import type { ILlmPromptContext } from "@application/interface/llm-service.interface";
 import type { QualifiedRules, UserPromptConfig } from "@commitlint/types";
-
-import type { ICliInterfaceService } from "../application/interface/cli-interface-service.interface.js";
-import type { IConfig } from "../application/interface/config.interface.js";
-import type { ILlmPromptContext } from "../application/interface/llm-service.interface.js";
-import type { CommitMessage } from "../domain/entity/commit-message.entity.js";
-import type { LLMConfiguration } from "../domain/entity/llm-configuration.entity.js";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
 
 import type { ICommitizenAdapterDependencies } from "./interface/commitizen-adapter-dependencies.interface.js";
 
 import load from "@commitlint/load";
-
-import { ECommitMode } from "../domain/enum/commit-mode.enum.js";
-import { addTicketIdToCommitMessage } from "../domain/helper/add-ticket-to-commit.helper.js";
+import { ECommitMode } from "@domain/enum/commit-mode.enum";
+import { addTicketIdToCommitMessage } from "@domain/helper/add-ticket-to-commit.helper";
 
 type TCommit = (message: string) => void;
 type TLoadResult = { prompt?: UserPromptConfig; rules: QualifiedRules };

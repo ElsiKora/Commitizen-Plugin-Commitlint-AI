@@ -1,6 +1,6 @@
 /* eslint-disable @elsikora/sonar/no-duplicate-string,@elsikora/unicorn/no-process-exit */
-import type { ICliInterfaceServiceSelectOptions } from "../../application/interface/cli-interface-service-select-options.interface.js";
-import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
+import type { ICliInterfaceServiceSelectOptions } from "@application/interface/cli-interface-service-select-options.interface";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
 
 import chalk from "chalk";
 // @ts-ignore

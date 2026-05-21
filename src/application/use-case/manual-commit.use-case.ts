@@ -1,9 +1,9 @@
-import type { ICliInterfaceService } from "../interface/cli-interface-service.interface.js";
-import type { ILlmPromptContext } from "../interface/llm-service.interface.js";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
+import type { ILlmPromptContext } from "@application/interface/llm-service.interface";
 
-import { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import { CommitBody } from "../../domain/value-object/commit-body.value-object.js";
-import { CommitHeader } from "../../domain/value-object/commit-header.value-object.js";
+import { CommitMessage } from "@domain/entity/commit-message.entity";
+import { CommitBody } from "@domain/value-object/commit-body.value-object";
+import { CommitHeader } from "@domain/value-object/commit-header.value-object";
 
 /**
  * Use case for manual commit message creation

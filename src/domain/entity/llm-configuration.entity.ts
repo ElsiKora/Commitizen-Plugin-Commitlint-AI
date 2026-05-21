@@ -1,8 +1,7 @@
-import type { ELLMProvider } from "../enum/llm-provider.enum.js";
-import type { ApiKey } from "../value-object/api-key.value-object.js";
+import type { ApiKey } from "@domain/value-object/api-key.value-object";
 
-import { NUMERIC_CONSTANT } from "../constant/numeric.constant.js";
-import { ECommitMode } from "../enum/commit-mode.enum.js";
+import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
+import { ECommitMode } from "@domain/enum/commit-mode.enum";
 
 /**
  * Entity representing LLM configuration
@@ -14,17 +13,11 @@ export class LLMConfiguration {
 
 	private readonly MODE: ECommitMode;
 
-	private readonly MODEL: string | undefined;
-
-	private readonly PROVIDER: ELLMProvider;
-
 	private readonly VALIDATION_MAX_RETRIES: number;
 
-	constructor(provider: ELLMProvider, apiKey: ApiKey, mode: ECommitMode, model?: string, maxRetries: number = NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, validationMaxRetries: number = NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES) {
-		this.PROVIDER = provider;
+	constructor(apiKey: ApiKey, mode: ECommitMode, maxRetries: number = NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, validationMaxRetries: number = NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES) {
 		this.API_KEY = apiKey;
 		this.MODE = mode;
-		this.MODEL = model;
 		this.MAX_RETRIES = maxRetries;
 		this.VALIDATION_MAX_RETRIES = validationMaxRetries;
 	}
@@ -54,22 +47,6 @@ export class LLMConfiguration {
 	}
 
 	/**
-	 * Get the model name
-	 * @returns {string | undefined} The model name or undefined
-	 */
-	getModel(): string | undefined {
-		return this.MODEL;
-	}
-
-	/**
-	 * Get the LLM provider
-	 * @returns {ELLMProvider} The LLM provider
-	 */
-	getProvider(): ELLMProvider {
-		return this.PROVIDER;
-	}
-
-	/**
 	 * Get the validation max retries
 	 * @returns {number} The validation max retries
 	 */
@@ -94,29 +71,11 @@ export class LLMConfiguration {
 	}
 
 	/**
-	 * Create a new configuration with a different API key
-	 * @param {ApiKey} apiKey - The new API key
-	 * @returns {LLMConfiguration} A new configuration with the updated API key
-	 */
-	withApiKey(apiKey: ApiKey): LLMConfiguration {
-		return new LLMConfiguration(this.PROVIDER, apiKey, this.MODE, this.MODEL, this.MAX_RETRIES, this.VALIDATION_MAX_RETRIES);
-	}
-
-	/**
 	 * Create a new configuration with a different mode
 	 * @param {ECommitMode} mode - The new mode
 	 * @returns {LLMConfiguration} A new configuration with the updated mode
 	 */
 	withMode(mode: ECommitMode): LLMConfiguration {
-		return new LLMConfiguration(this.PROVIDER, this.API_KEY, mode, this.MODEL, this.MAX_RETRIES, this.VALIDATION_MAX_RETRIES);
-	}
-
-	/**
-	 * Create a new configuration with updated model
-	 * @param {string} model - The new model name
-	 * @returns {LLMConfiguration} A new configuration with the updated model
-	 */
-	withModel(model: string): LLMConfiguration {
-		return new LLMConfiguration(this.PROVIDER, this.API_KEY, this.MODE, model, this.MAX_RETRIES, this.VALIDATION_MAX_RETRIES);
+		return new LLMConfiguration(this.API_KEY, mode, this.MAX_RETRIES, this.VALIDATION_MAX_RETRIES);
 	}
 }

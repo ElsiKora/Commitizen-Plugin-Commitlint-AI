@@ -1,6 +1,6 @@
 import type { ILlmPromptContext, ILlmService } from "@application/interface/llm-service.interface";
 import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
-import type { AiCoreAdapter, IGenerateResult, IProviderOption, TAiCoreModuleId } from "@elsikora/ai-core";
+import type { AiCoreAdapter, IGenerateResult } from "@elsikora/ai-core";
 
 import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
 import { CommitMessage } from "@domain/entity/commit-message.entity";
@@ -14,11 +14,11 @@ import { EGenerateMode, ELLMMessageRole } from "@elsikora/ai-core";
 export class AiCoreLlmService implements ILlmService {
 	private readonly AI_CORE_ADAPTER: AiCoreAdapter;
 
-	private readonly MODULE_ID: TAiCoreModuleId;
+	private readonly MODULE_ID: string;
 
 	constructor(aiCoreAdapter: AiCoreAdapter, moduleId: string) {
 		this.AI_CORE_ADAPTER = aiCoreAdapter;
-		this.MODULE_ID = moduleId as TAiCoreModuleId;
+		this.MODULE_ID = moduleId;
 	}
 
 	async generateCommitMessage(context: ILlmPromptContext, configuration: LLMConfiguration): Promise<CommitMessage> {
@@ -39,10 +39,6 @@ export class AiCoreLlmService implements ILlmService {
 		});
 
 		return this.parseCommitMessage(result.text);
-	}
-
-	supports(configuration: LLMConfiguration): boolean {
-		return this.AI_CORE_ADAPTER.getProviderOptions().some((option: IProviderOption): boolean => String(option.value) === String(configuration.getProvider()));
 	}
 
 	private buildBodyFormattingRules(context: ILlmPromptContext): string {

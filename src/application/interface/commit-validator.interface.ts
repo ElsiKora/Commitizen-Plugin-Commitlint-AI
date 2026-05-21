@@ -1,5 +1,5 @@
-import type { CommitMessage } from "../../domain/entity/commit-message.entity.js";
-import type { LLMConfiguration } from "../../domain/entity/llm-configuration.entity.js";
+import type { CommitMessage } from "@domain/entity/commit-message.entity";
+import type { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
 
 import type { ILlmPromptContext } from "./llm-service.interface.js";
 

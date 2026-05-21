@@ -8,7 +8,6 @@ import { NUMERIC_CONSTANT } from "@domain/constant/numeric.constant";
 import { TICKET_CONSTANT } from "@domain/constant/ticket.constant";
 import { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
 import { ECommitMode } from "@domain/enum/commit-mode.enum";
-import { ELLMProvider } from "@domain/enum/llm-provider.enum";
 import { ApiKey } from "@domain/value-object/api-key.value-object";
 
 /**
@@ -82,7 +81,7 @@ export class ConfigureLLMUseCase {
 	async getMockConfiguration(): Promise<LLMConfiguration> {
 		const config: IConfig = await this.CONFIG_SERVICE.get();
 
-		return new LLMConfiguration(config.provider ?? ELLMProvider.OPENAI, new ApiKey("mock-mode"), config.mode ?? ECommitMode.AUTO, config.model, config.maxRetries ?? NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES);
+		return new LLMConfiguration(new ApiKey("mock-mode"), config.mode ?? ECommitMode.AUTO, config.maxRetries ?? NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, config.validationMaxRetries ?? NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES);
 	}
 
 	/**
@@ -136,7 +135,7 @@ export class ConfigureLLMUseCase {
 	}
 
 	private createManualConfiguration(config?: IConfig): LLMConfiguration {
-		return new LLMConfiguration(config?.provider ?? ELLMProvider.OPENAI, new ApiKey("manual-mode"), ECommitMode.MANUAL, config?.model, config?.maxRetries ?? NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, config?.validationMaxRetries ?? NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES);
+		return new LLMConfiguration(new ApiKey("manual-mode"), ECommitMode.MANUAL, config?.maxRetries ?? NUMERIC_CONSTANT.DEFAULT_MAX_RETRIES, config?.validationMaxRetries ?? NUMERIC_CONSTANT.DEFAULT_VALIDATION_MAX_RETRIES);
 	}
 
 	private async getConfigWithDefaults(): Promise<IConfig> {

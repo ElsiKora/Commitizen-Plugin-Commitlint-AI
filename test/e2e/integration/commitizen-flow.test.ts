@@ -1,6 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createTestRepo, cleanupTestRepo, stageFiles, createCzConfig, getLastCommitMessage } from "../../helpers/e2e-utils";
 import { execSync } from "child_process";
+import { promises as fs } from "fs";
+import path from "path";
+
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { cleanupTestRepo, createCzConfig, createTestRepo, getLastCommitMessage, stageFiles } from "../../helpers/e2e-utils";
 
 describe("Commitizen Flow E2E", () => {
 	let testRepoPath: string;
@@ -48,17 +52,7 @@ describe("Commitizen Flow E2E", () => {
 
 			await createCzConfig(testRepoPath);
 
-			// Create manual mode config
-			const configContent = JSON.stringify(
-				{
-					mode: "manual",
-					provider: "openai",
-					model: "gpt-4",
-				},
-				null,
-				2,
-			);
-			execSync(`echo '${configContent}' > .cz.config.json`, { cwd: testRepoPath });
+			await writeCommitlintAiConfig(testRepoPath, { mode: "manual" });
 
 			// Act - simulate cancellation (Ctrl+C is hard to simulate, so we'll use empty input)
 			const userInput = "\n\n\n\n"; // All empty inputs should trigger validation errors
@@ -87,17 +81,7 @@ describe("Commitizen Flow E2E", () => {
 			// Arrange - no staged files
 			await createCzConfig(testRepoPath);
 
-			// Create manual mode config
-			const configContent = JSON.stringify(
-				{
-					mode: "manual",
-					provider: "openai",
-					model: "gpt-4",
-				},
-				null,
-				2,
-			);
-			execSync(`echo '${configContent}' > .cz.config.json`, { cwd: testRepoPath });
+			await writeCommitlintAiConfig(testRepoPath, { mode: "manual" });
 
 			// Act & Assert
 			try {
@@ -121,3 +105,11 @@ describe("Commitizen Flow E2E", () => {
 		});
 	});
 });
+
+async function writeCommitlintAiConfig(repoPath: string, config: { mode: "auto" | "manual" }): Promise<void> {
+	const configDirectoryPath: string = path.join(repoPath, ".elsikora");
+	const configContent: string = `export default ${JSON.stringify(config, null, 2)};\n`;
+
+	await fs.mkdir(configDirectoryPath, { recursive: true });
+	await fs.writeFile(path.join(configDirectoryPath, "commitlint-ai.config.js"), configContent);
+}

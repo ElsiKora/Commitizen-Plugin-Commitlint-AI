@@ -1,6 +1,6 @@
-import type { ICliInterfaceServiceSelectOptions } from "../../application/interface/cli-interface-service-select-options.interface.js";
-import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
-import type { ICommandService } from "../../application/interface/command-service.interface.js";
+import type { ICliInterfaceServiceSelectOptions } from "@application/interface/cli-interface-service-select-options.interface";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
+import type { ICommandService } from "@application/interface/command-service.interface";
 
 import { exec } from "node:child_process";
 import { promisify } from "node:util";

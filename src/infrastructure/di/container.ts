@@ -1,38 +1,36 @@
+import type { IAiProfileService } from "@application/interface/ai-profile-service.interface";
+import type { IBranchLintConfigService } from "@application/interface/branch-lint-config.interface";
+import type { ICliInterfaceService } from "@application/interface/cli-interface-service.interface";
+import type { ICommandService } from "@application/interface/command-service.interface";
+import type { ICommitRepository } from "@application/interface/commit-repository.interface";
+import type { ICommitValidator } from "@application/interface/commit-validator.interface";
+import type { IConfigService } from "@application/interface/config-service.interface";
+import type { IFileSystemService } from "@application/interface/file-system-service.interface";
+import type { ILlmService } from "@application/interface/llm-service.interface";
+import type { ITicketIdParser } from "@application/interface/ticket-id-parser.interface";
 import type { IDIContainer, Token } from "@elsikora/cladi";
 
-import type { IAiProfileService } from "../../application/interface/ai-profile-service.interface.js";
-import type { IBranchLintConfigService } from "../../application/interface/branch-lint-config.interface.js";
-import type { ICliInterfaceService } from "../../application/interface/cli-interface-service.interface.js";
-import type { ICommandService } from "../../application/interface/command-service.interface.js";
-import type { ICommitRepository } from "../../application/interface/commit-repository.interface.js";
-import type { ICommitValidator } from "../../application/interface/commit-validator.interface.js";
-import type { IConfigService } from "../../application/interface/config-service.interface.js";
-import type { IFileSystemService } from "../../application/interface/file-system-service.interface.js";
-import type { ILlmService } from "../../application/interface/llm-service.interface.js";
-import type { ITicketIdParser } from "../../application/interface/ticket-id-parser.interface.js";
-
+import { COMMITIZEN_AI_MODULE_CONSTANT } from "@application/constant/ai-core-module.constant";
+import { PromptContextExtractorService } from "@application/service/prompt-context-extractor.service";
+import { ConfigureLLMUseCase as ConfigureLLMUseCaseImpl } from "@application/use-case/configure-llm.use-case";
+import { EditCommitUseCase as EditCommitUseCaseImpl } from "@application/use-case/edit-commit.use-case";
+import { GenerateCommitMessageUseCase as GenerateCommitMessageUseCaseImpl } from "@application/use-case/generate-commit-message.use-case";
+import { ManualCommitUseCase as ManualCommitUseCaseImpl } from "@application/use-case/manual-commit.use-case";
+import { ValidateCommitMessageUseCase as ValidateCommitMessageUseCaseImpl } from "@application/use-case/validate-commit-message.use-case";
 import { AiCoreAdapter } from "@elsikora/ai-core";
 import { createDIContainer, createToken } from "@elsikora/cladi";
-
-import { COMMITIZEN_AI_MODULE_CONSTANT } from "../../application/constant/ai-core-module.constant.js";
-import { PromptContextExtractorService } from "../../application/service/prompt-context-extractor.service.js";
-import { ConfigureLLMUseCase as ConfigureLLMUseCaseImpl } from "../../application/use-case/configure-llm.use-case.js";
-import { EditCommitUseCase as EditCommitUseCaseImpl } from "../../application/use-case/edit-commit.use-case.js";
-import { GenerateCommitMessageUseCase as GenerateCommitMessageUseCaseImpl } from "../../application/use-case/generate-commit-message.use-case.js";
-import { ManualCommitUseCase as ManualCommitUseCaseImpl } from "../../application/use-case/manual-commit.use-case.js";
-import { ValidateCommitMessageUseCase as ValidateCommitMessageUseCaseImpl } from "../../application/use-case/validate-commit-message.use-case.js";
-import { CommitlintValidatorService } from "../commit-validator/commitlint-validator.service.js";
-import { BranchTicketIdParser } from "../git/branch-ticket-id.parser.js";
-import { GitCommitRepository } from "../git/git-commit.repository.js";
-import { AiCoreLlmService } from "../llm/ai-core-llm.service.js";
-import { MockLlmService } from "../llm/mock-llm.service.js";
-import { AiCoreCliInterfaceService } from "../service/ai-core-cli-interface.service.js";
-import { AiCoreProfileService } from "../service/ai-core-profile.service.js";
-import { CosmicBranchLintConfigService } from "../service/cosmic-branch-lint-config.service.js";
-import { CosmicConfigService } from "../service/cosmic-config.service.js";
-import { NodeCommandService } from "../service/node-command.service.js";
-import { NodeFileSystemService } from "../service/node-file-system.service.js";
-import { PromptsCliInterface } from "../service/prompts-cli-interface.service.js";
+import { CommitlintValidatorService } from "@infrastructure/commit-validator/commitlint-validator.service";
+import { BranchTicketIdParser } from "@infrastructure/git/branch-ticket-id.parser";
+import { GitCommitRepository } from "@infrastructure/git/git-commit.repository";
+import { AiCoreLlmService } from "@infrastructure/llm/ai-core-llm.service";
+import { MockLlmService } from "@infrastructure/llm/mock-llm.service";
+import { AiCoreCliInterfaceService } from "@infrastructure/service/ai-core-cli-interface.service";
+import { AiCoreProfileService } from "@infrastructure/service/ai-core-profile.service";
+import { CosmicBranchLintConfigService } from "@infrastructure/service/cosmic-branch-lint-config.service";
+import { CosmicConfigService } from "@infrastructure/service/cosmic-config.service";
+import { NodeCommandService } from "@infrastructure/service/node-command.service";
+import { NodeFileSystemService } from "@infrastructure/service/node-file-system.service";
+import { PromptsCliInterface } from "@infrastructure/service/prompts-cli-interface.service";
 
 // Service tokens
 export const FileSystemServiceToken: Token<IFileSystemService> = createToken<IFileSystemService>("FileSystemService");
@@ -42,7 +40,7 @@ export const ConfigServiceToken: Token<IConfigService> = createToken<IConfigServ
 export const BranchLintConfigServiceToken: Token<IBranchLintConfigService> = createToken<IBranchLintConfigService>("BranchLintConfigService");
 export const CommitValidatorToken: Token<ICommitValidator> = createToken<ICommitValidator>("CommitValidator");
 export const CommitRepositoryToken: Token<ICommitRepository> = createToken<ICommitRepository>("CommitRepository");
-export const LLMServicesToken: Token<Array<ILlmService>> = createToken<Array<ILlmService>>("LLMServices");
+export const LLMServiceToken: Token<ILlmService> = createToken<ILlmService>("LLMService");
 export const AiProfileServiceToken: Token<IAiProfileService> = createToken<IAiProfileService>("AiProfileService");
 export const PromptContextExtractorServiceToken: Token<PromptContextExtractorService> = createToken<PromptContextExtractorService>("PromptContextExtractorService");
 export const TicketIdParserToken: Token<ITicketIdParser> = createToken<ITicketIdParser>("TicketIdParser");
@@ -70,8 +68,8 @@ export function createAppContainer(): IDIContainer {
 	const branchLintConfigService: IBranchLintConfigService = new CosmicBranchLintConfigService();
 	const ticketIdParser: ITicketIdParser = new BranchTicketIdParser(configService, branchLintConfigService);
 	const commitRepository: ICommitRepository = new GitCommitRepository(commandService, ticketIdParser);
-	const llmServices: Array<ILlmService> = [new MockLlmService(), new AiCoreLlmService(aiCoreAdapter, COMMITIZEN_AI_MODULE_CONSTANT.ID)];
-	const validator: ICommitValidator = new CommitlintValidatorService(llmServices);
+	const llmService: ILlmService = isMockLlmEnabled() ? new MockLlmService() : new AiCoreLlmService(aiCoreAdapter, COMMITIZEN_AI_MODULE_CONSTANT.ID);
+	const validator: ICommitValidator = new CommitlintValidatorService(llmService);
 	const promptContextExtractor: PromptContextExtractorService = new PromptContextExtractorService();
 
 	container.register({ provide: FileSystemServiceToken, useValue: fileSystem });
@@ -80,7 +78,7 @@ export function createAppContainer(): IDIContainer {
 	container.register({ provide: BranchLintConfigServiceToken, useValue: branchLintConfigService });
 	container.register({ provide: CommandServiceToken, useValue: commandService });
 	container.register({ provide: CommitRepositoryToken, useValue: commitRepository });
-	container.register({ provide: LLMServicesToken, useValue: llmServices });
+	container.register({ provide: LLMServiceToken, useValue: llmService });
 	container.register({ provide: AiProfileServiceToken, useValue: aiProfileService });
 	container.register({ provide: CommitValidatorToken, useValue: validator });
 	container.register({ provide: PromptContextExtractorServiceToken, useValue: promptContextExtractor });
@@ -88,7 +86,7 @@ export function createAppContainer(): IDIContainer {
 
 	// Register use cases
 	container.register({ provide: ConfigureLLMUseCaseToken, useValue: new ConfigureLLMUseCaseImpl(configService, cliInterface, aiProfileService) });
-	container.register({ provide: GenerateCommitMessageUseCaseToken, useValue: new GenerateCommitMessageUseCaseImpl(llmServices) });
+	container.register({ provide: GenerateCommitMessageUseCaseToken, useValue: new GenerateCommitMessageUseCaseImpl(llmService) });
 	container.register({
 		provide: ValidateCommitMessageUseCaseToken,
 		useValue: new ValidateCommitMessageUseCaseImpl(validator, undefined, (message: string): void => {
@@ -96,7 +94,15 @@ export function createAppContainer(): IDIContainer {
 		}),
 	});
 	container.register({ provide: ManualCommitUseCaseToken, useValue: new ManualCommitUseCaseImpl(cliInterface) });
-	container.register({ provide: EditCommitUseCaseToken, useValue: new EditCommitUseCaseImpl(cliInterface, validator, llmServices, commitRepository) });
+	container.register({ provide: EditCommitUseCaseToken, useValue: new EditCommitUseCaseImpl(cliInterface, validator, llmService, commitRepository) });
 
 	return container;
+}
+
+/**
+ * Check whether the local mock LLM runtime should be used.
+ * @returns {boolean} True when mock mode is enabled.
+ */
+function isMockLlmEnabled(): boolean {
+	return process.env.MOCK_LLM === "true" || process.env.MOCK_LLM === "1";
 }

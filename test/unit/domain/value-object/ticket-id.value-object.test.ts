@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { TicketId } from "../../../../src/domain/value-object/ticket-id.value-object";
+import { TicketId } from "@domain/value-object/ticket-id.value-object";
 
 describe("TicketId", () => {
 	describe("tryCreate", () => {

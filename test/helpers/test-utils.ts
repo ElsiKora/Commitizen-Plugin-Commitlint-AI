@@ -1,5 +1,9 @@
 import { vi } from "vitest";
 
+import { LLMConfiguration } from "@domain/entity/llm-configuration.entity";
+import { ECommitMode } from "@domain/enum/commit-mode.enum";
+import { ApiKey } from "@domain/value-object/api-key.value-object";
+
 /**
  * Creates a mock function with type safety
  */
@@ -25,7 +29,6 @@ export function createTestContext() {
 			getStagedFiles: vi.fn(),
 		},
 		llmService: {
-			supports: vi.fn(),
 			generateCommitMessage: vi.fn(),
 		},
 		commitValidator: {
@@ -37,23 +40,8 @@ export function createTestContext() {
 /**
  * Creates a mock LLM configuration
  */
-export function createMockLLMConfiguration() {
-	return {
-		getProvider: vi.fn().mockReturnValue("openai"),
-		getModel: vi.fn().mockReturnValue("gpt-4"),
-		getApiKey: vi.fn().mockReturnValue("test-api-key"),
-		getMaxRetries: vi.fn().mockReturnValue(3),
-		getTemperature: vi.fn().mockReturnValue(0.7),
-		getMaxTokens: vi.fn().mockReturnValue(500),
-		getTimeout: vi.fn().mockReturnValue(30000),
-		getBaseUrl: vi.fn().mockReturnValue(undefined),
-		getApiVersion: vi.fn().mockReturnValue(undefined),
-		getDeploymentName: vi.fn().mockReturnValue(undefined),
-		getRegion: vi.fn().mockReturnValue(undefined),
-		getAnthropicVersion: vi.fn().mockReturnValue(undefined),
-		isAutoCommit: vi.fn().mockReturnValue(false),
-		getConventionalCommitTypes: vi.fn().mockReturnValue(["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert"]),
-	};
+export function createMockLLMConfiguration(options: { maxRetries?: number; mode?: ECommitMode; validationMaxRetries?: number } = {}): LLMConfiguration {
+	return new LLMConfiguration(new ApiKey("test-api-key"), options.mode ?? ECommitMode.AUTO, options.maxRetries ?? 3, options.validationMaxRetries ?? 3);
 }
 
 /**
