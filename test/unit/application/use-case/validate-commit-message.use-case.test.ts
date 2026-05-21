@@ -1,3 +1,5 @@
+import type { Mock } from "vitest";
+
 import type { ICommitValidationResult, ICommitValidator } from "@application/interface/commit-validator.interface";
 import type { CommitMessage } from "@domain/entity/commit-message.entity";
 
@@ -11,7 +13,7 @@ describe("ValidateCommitMessageUseCase", () => {
 	let useCase: ValidateCommitMessageUseCase;
 	let mockValidator: ICommitValidator;
 	let mockCommitMessage: CommitMessage;
-	let statusReporter: ReturnType<typeof vi.fn>;
+	let statusReporter: Mock<(message: string) => void>;
 
 	beforeEach(() => {
 		// Mock validator
@@ -19,7 +21,7 @@ describe("ValidateCommitMessageUseCase", () => {
 			validate: vi.fn(),
 			fix: vi.fn(),
 		};
-		statusReporter = vi.fn();
+		statusReporter = vi.fn<(message: string) => void>();
 
 		// Create use case
 		useCase = new ValidateCommitMessageUseCase(mockValidator, 3, statusReporter);

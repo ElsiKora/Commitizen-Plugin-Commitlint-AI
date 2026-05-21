@@ -32,6 +32,7 @@ update build, lint, docs, and tests for the new integration.
 
 - **ai:** Provider/model profiles now live in `.elsikora/ai-core.config.js` under the `commitlint-plugin-commitlint-ai` module. `.elsikora/commitlint-ai.config.js` keeps Commitizen mode, retry, and ticket settings only.
 
+
 ## [2.5.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.0...v2.5.1) (2026-05-20)
 
 ### Bug Fixes
