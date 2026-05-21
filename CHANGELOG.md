@@ -1,3 +1,27 @@
+# [3.0.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.2...v3.0.0) (2026-05-20)
+
+
+### Bug Fixes
+
+* **ci:** satisfy clean install lint rules ([05ec324](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/05ec32440172942e14f4c768a94f7df24d2e707f))
+* **release:** keep eslint on v9 ([9147771](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/91477712fb807b437b222c5ea120c88c99926365))
+
+
+### Features
+
+* **llm:** integrate ai core llm profiles ([d36c4fc](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/d36c4fc18ac3c6768c91730b54738d7b7234746f))
+
+
+### BREAKING CHANGES
+
+* **llm:** provider-specific llm services and model enum exports were removed.
+
+add ai core configuration and profile services for llm setup.
+
+replace provider-specific llm adapters with a unified ai core service.
+
+update build, lint, docs, and tests for the new integration.
+
 ## Unreleased
 
 ### Code Refactoring
