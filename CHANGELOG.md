@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v3.0.0...v3.0.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* **ci:** type status reporter mock ([8a2fb3e](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/commit/8a2fb3e6deda782d1a78b7aa138153537ede3950))
+
 # [3.0.0](https://github.com/ElsiKora/Commitizen-Plugin-Commitlint-AI/compare/v2.5.2...v3.0.0) (2026-05-20)
 
 
